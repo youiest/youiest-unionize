@@ -21,6 +21,7 @@ class w extends Document
     name: 'w'
     from: 'orphan'
     username: 'blank'
+    body: 'this should trigger'
 
     # each to has a weight, from only one place but n destinations
     to: 'nowheres'
@@ -38,7 +39,7 @@ class w extends w
   name: 'w'
   replaceParent: true
   fields: (fields) =>
-      fields.to = @ReferenceField w, {reverseName: 'creator'}, true, 'incomming'
+      fields.to = @ReferenceField w, {reverseName: 'username'}, true, 'incoming'
       fields
 
 
@@ -73,11 +74,6 @@ class User extends w
   User.documents.find({}).forEach (person, i, cursor) =>
     console.log i.emails
     #, User.documents.findOne(), User.constructor#
-@app.r = ->
-    console.log 'user'
-    , User.documents.findOne().emails
-
-app.r()
 
 if app.debug 
   printUsers()
@@ -85,10 +81,12 @@ if app.debug
 console.time 'inserts'
 
 # something created by me (should)
+
+# move this to server but getting problem with @
 @testReverse = ->
   @v = w.documents.insert
     from: 'present'
-    # this should trigger an incomming to future
+    body: 'this should trigger an incoming to username:future'
     to: 'future'
     creator: 'me'
     _idd: 'present-future-me'
@@ -104,9 +102,18 @@ console.time 'inserts'
   @vvv = w.documents.findOne
     incoming: 'present-future-me'
 
-  console.log 'anyone got incomming?' , vvv
+  @vvvv = w.documents.findOne
+    incoming: ''
 
-Meteor.setTimeout(testReverse, 1000)
+  console.log 'anyone got incoming?' , vvv
+
+@future = ->
+  x = w.documents.findOne
+    username: 'future'
+  console.log x
+
+Meteor.setTimeout(testReverse, 4000)
+Meteor.setTimeout(future, 5000)
 
 
 console.timeEnd('docs')
