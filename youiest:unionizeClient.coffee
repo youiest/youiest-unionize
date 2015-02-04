@@ -32,8 +32,17 @@ console.log now
   time
 
 
-timer('p')
-timerEnd('p')
+#timer('p')
+
+console.log " bye from unionize client"
+, w.Meta
+, w.documents.findOne()
+#, w.documents.exists({})
+#, w.documents.find({}).exists({})
+, "bye from unionize common, w.documents.findOne(), w.documents.exists({}), w.documents.find({}).exists({})"
+
+
+#timerEnd('p')
 
 
 @getUsername = ->
@@ -42,3 +51,5 @@ timerEnd('p')
   cursorMe = Me.findOne(_id: Session.get("userId"))
   username = cursorMe.username or cursorMe.facebookName or cursorMe.instagramUsername or cursorMe.instagramFullname  if cursorMe
   username
+
+
