@@ -29,7 +29,7 @@ class wNode extends W
       , 'subW.body'
       , 'nested.body']
       # Or an array of Ws
-      subscribers: [@ReferenceField Person]
+      subscribers: [@ReferenceField wApp]
       # Fields can be arbitrary MongoDB projections
       reviewers: [@ReferenceField Person, [username: 1]]
       subW:
@@ -157,8 +157,17 @@ class Person extends W
   @Meta
     name: 'Person'
     fields: =>
-      count: @GeneratedField 'self', ['wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'], (fields) ->
-        [fields._id, (fields.wNodes?.length or 0) + (fields.nestedwNodes?.length or 0) + (fields.subWwNodes?.length or 0) + (fields.subWswNodes?.length or 0)]
+      count: @GeneratedField 'self'
+      , ['wNodes'
+      , 'subWwNodes'
+      , 'subWswNodes'
+      , 'nestedwNodes']
+      , (fields) ->
+        [fields._id
+        , (fields.wNodes?.length or 0) 
+        + (fields.nestedwNodes?.length or 0) 
+        + (fields.subWwNodes?.length or 0) 
+        + (fields.subWswNodes?.length or 0)]
 
 # Store away for testing
 _TestPerson = Person
@@ -233,24 +242,24 @@ assert.equal W._delayed.length, 0
 
 if Meteor.isServer
   # Initialize the database
-  wNode.Ws.remove {}
+  wNodeÏ.Ws.remove {}
   User.Ws.remove {}
   UserLink.Ws.remove {}
-  wNodeLink.Ws.remove {}
+  wNodeÏLink.Ws.remove {}
   CircularFirst.Ws.remove {}
   CircularSecond.Ws.remove {}
   Person.Ws.remove {}
   Recursive.Ws.remove {}
   IdentityGenerator.Ws.remove {}
-  SpecialwNode.Ws.remove {}
+  SpecialwNodeÏ.Ws.remove {}
 
   Meteor.publish null, ->
-    wNode.Ws.find()
+    wNodeÏ.Ws.find()
   # User is already published as Meteor.users
   Meteor.publish null, ->
     UserLink.Ws.find()
   Meteor.publish null, ->
-    wNodeLink.Ws.find()
+    wNodeÏLink.Ws.find()
   Meteor.publish null, ->
     CircularFirst.Ws.find()
   Meteor.publish null, ->
@@ -262,7 +271,7 @@ if Meteor.isServer
   Meteor.publish null, ->
     IdentityGenerator.Ws.find()
   Meteor.publish null, ->
-    SpecialwNode.Ws.find()
+    SpecialwNodeÏ.Ws.find()
 
   Future = Npm.require 'fibers/future'
 
@@ -297,7 +306,7 @@ waitForDatabase = (test, expect) ->
   Meteor.call 'wait-for-database', expect (error) ->
     test.isFalse error, error?.toString?() or error
 
-ALL = @ALL = [User, UserLink, CircularFirst, CircularSecond, SpecialPerson, Recursive, IdentityGenerator, SpecialwNode, wNode, Person, wNodeLink]
+ALL = @ALL = [User, UserLink, CircularFirst, CircularSecond, SpecialPerson, Recursive, IdentityGenerator, SpecialwNodeÏ, wNodeÏ, Person, wNodeÏLink]
 
 testWList = (test, list) ->
   test.equal W.list, list, "expected: #{ (d.Meta._name for d in list) } vs. actual: #{ (d.Meta._name for d in W.list) }"
@@ -320,162 +329,162 @@ testSetEqual = (test, a, b) ->
       expected: JSON.stringify b
 
 testDefinition = (test) ->
-  test.equal wNode.Meta._name, 'wNode'
-  test.equal wNode.Meta.parent, _TestwNode2.Meta
-  test.equal wNode.Meta.W, wNode
-  test.equal wNode.Meta.collection._name, 'wNodes'
-  test.equal _.size(wNode.Meta.triggers), 1
-  test.instanceOf wNode.Meta.triggers.testTrigger, wNode._Trigger
-  test.equal wNode.Meta.triggers.testTrigger.name, 'testTrigger'
-  test.equal wNode.Meta.triggers.testTrigger.W, wNode
-  test.equal wNode.Meta.triggers.testTrigger.collection._name, 'wNodes'
-  test.equal wNode.Meta.triggers.testTrigger.fields, ['body']
-  test.equal _.size(wNode.Meta.fields), 7
-  test.instanceOf wNode.Meta.fields.author, wNode._ReferenceField
-  test.isNull wNode.Meta.fields.author.ancestorArray, wNode.Meta.fields.author.ancestorArray
-  test.isTrue wNode.Meta.fields.author.required
-  test.equal wNode.Meta.fields.author.sourcePath, 'author'
-  test.equal wNode.Meta.fields.author.sourceW, wNode
-  test.equal wNode.Meta.fields.author.targetW, Person
-  test.equal wNode.Meta.fields.author.sourceCollection._name, 'wNodes'
-  test.equal wNode.Meta.fields.author.targetCollection._name, 'Persons'
-  test.equal wNode.Meta.fields.author.sourceW.Meta.collection._name, 'wNodes'
-  test.equal wNode.Meta.fields.author.targetW.Meta.collection._name, 'Persons'
-  test.equal wNode.Meta.fields.author.fields, ['username', 'displayName', 'field1', 'field2']
-  test.equal wNode.Meta.fields.author.reverseName, 'wNodes'
-  test.equal wNode.Meta.fields.author.reverseFields, ['body', 'subW.body', 'nested.body']
-  test.instanceOf wNode.Meta.fields.subscribers, wNode._ReferenceField
-  test.equal wNode.Meta.fields.subscribers.ancestorArray, 'subscribers'
-  test.isTrue wNode.Meta.fields.subscribers.required
-  test.equal wNode.Meta.fields.subscribers.sourcePath, 'subscribers'
-  test.equal wNode.Meta.fields.subscribers.sourceW, wNode
-  test.equal wNode.Meta.fields.subscribers.targetW, Person
-  test.equal wNode.Meta.fields.subscribers.sourceCollection._name, 'wNodes'
-  test.equal wNode.Meta.fields.subscribers.targetCollection._name, 'Persons'
-  test.equal wNode.Meta.fields.subscribers.sourceW.Meta.collection._name, 'wNodes'
-  test.equal wNode.Meta.fields.subscribers.targetW.Meta.collection._name, 'Persons'
-  test.equal wNode.Meta.fields.subscribers.fields, []
-  test.isNull wNode.Meta.fields.subscribers.reverseName
-  test.equal wNode.Meta.fields.subscribers.reverseFields, []
-  test.instanceOf wNode.Meta.fields.reviewers, wNode._ReferenceField
-  test.equal wNode.Meta.fields.reviewers.ancestorArray, 'reviewers'
-  test.isTrue wNode.Meta.fields.reviewers.required
-  test.equal wNode.Meta.fields.reviewers.sourcePath, 'reviewers'
-  test.equal wNode.Meta.fields.reviewers.sourceW, wNode
-  test.equal wNode.Meta.fields.reviewers.targetW, Person
-  test.equal wNode.Meta.fields.reviewers.sourceCollection._name, 'wNodes'
-  test.equal wNode.Meta.fields.reviewers.targetCollection._name, 'Persons'
-  test.equal wNode.Meta.fields.reviewers.sourceW.Meta.collection._name, 'wNodes'
-  test.equal wNode.Meta.fields.reviewers.targetW.Meta.collection._name, 'Persons'
-  test.equal wNode.Meta.fields.reviewers.fields, [username: 1]
-  test.isNull wNode.Meta.fields.reviewers.reverseName
-  test.equal wNode.Meta.fields.reviewers.reverseFields, []
-  test.equal _.size(wNode.Meta.fields.subW), 3
-  test.instanceOf wNode.Meta.fields.subW.person, wNode._ReferenceField
-  test.isNull wNode.Meta.fields.subW.person.ancestorArray, wNode.Meta.fields.subW.person.ancestorArray
-  test.isFalse wNode.Meta.fields.subW.person.required
-  test.equal wNode.Meta.fields.subW.person.sourcePath, 'subW.person'
-  test.equal wNode.Meta.fields.subW.person.sourceW, wNode
-  test.equal wNode.Meta.fields.subW.person.targetW, Person
-  test.equal wNode.Meta.fields.subW.person.sourceCollection._name, 'wNodes'
-  test.equal wNode.Meta.fields.subW.person.targetCollection._name, 'Persons'
-  test.equal wNode.Meta.fields.subW.person.sourceW.Meta.collection._name, 'wNodes'
-  test.equal wNode.Meta.fields.subW.person.targetW.Meta.collection._name, 'Persons'
-  test.equal wNode.Meta.fields.subW.person.fields, ['username', 'displayName', 'field1', 'field2']
-  test.equal wNode.Meta.fields.subW.person.reverseName, 'subWwNodes'
-  test.equal wNode.Meta.fields.subW.person.reverseFields, ['body', 'subW.body', 'nested.body']
-  test.instanceOf wNode.Meta.fields.subW.persons, wNode._ReferenceField
-  test.equal wNode.Meta.fields.subW.persons.ancestorArray, 'subW.persons'
-  test.isTrue wNode.Meta.fields.subW.persons.required
-  test.equal wNode.Meta.fields.subW.persons.sourcePath, 'subW.persons'
-  test.equal wNode.Meta.fields.subW.persons.sourceW, wNode
-  test.equal wNode.Meta.fields.subW.persons.targetW, Person
-  test.equal wNode.Meta.fields.subW.persons.sourceCollection._name, 'wNodes'
-  test.equal wNode.Meta.fields.subW.persons.targetCollection._name, 'Persons'
-  test.equal wNode.Meta.fields.subW.persons.sourceW.Meta.collection._name, 'wNodes'
-  test.equal wNode.Meta.fields.subW.persons.targetW.Meta.collection._name, 'Persons'
-  test.equal wNode.Meta.fields.subW.persons.fields, ['username', 'displayName', 'field1', 'field2']
-  test.equal wNode.Meta.fields.subW.persons.reverseName, 'subWswNodes'
-  test.equal wNode.Meta.fields.subW.persons.reverseFields, ['body', 'subW.body', 'nested.body']
-  test.instanceOf wNode.Meta.fields.subW.slug, wNode._GeneratedField
-  test.isNull wNode.Meta.fields.subW.slug.ancestorArray, wNode.Meta.fields.subW.slug.ancestorArray
-  test.isTrue _.isFunction wNode.Meta.fields.subW.slug.generator
-  test.equal wNode.Meta.fields.subW.slug.sourcePath, 'subW.slug'
-  test.equal wNode.Meta.fields.subW.slug.sourceW, wNode
-  test.equal wNode.Meta.fields.subW.slug.targetW, wNode
-  test.equal wNode.Meta.fields.subW.slug.sourceCollection._name, 'wNodes'
-  test.equal wNode.Meta.fields.subW.slug.targetCollection._name, 'wNodes'
-  test.equal wNode.Meta.fields.subW.slug.sourceW.Meta.collection._name, 'wNodes'
-  test.equal wNode.Meta.fields.subW.slug.targetW.Meta.collection._name, 'wNodes'
-  test.equal wNode.Meta.fields.subW.slug.fields, ['body', 'subW.body']
-  test.isUndefined wNode.Meta.fields.subW.slug.reverseName
-  test.isUndefined wNode.Meta.fields.subW.slug.reverseFields
-  test.equal _.size(wNode.Meta.fields.nested), 3
-  test.instanceOf wNode.Meta.fields.nested.required, wNode._ReferenceField
-  test.equal wNode.Meta.fields.nested.required.ancestorArray, 'nested'
-  test.isTrue wNode.Meta.fields.nested.required.required
-  test.equal wNode.Meta.fields.nested.required.sourcePath, 'nested.required'
-  test.equal wNode.Meta.fields.nested.required.sourceW, wNode
-  test.equal wNode.Meta.fields.nested.required.targetW, Person
-  test.equal wNode.Meta.fields.nested.required.sourceCollection._name, 'wNodes'
-  test.equal wNode.Meta.fields.nested.required.targetCollection._name, 'Persons'
-  test.equal wNode.Meta.fields.nested.required.sourceW.Meta.collection._name, 'wNodes'
-  test.equal wNode.Meta.fields.nested.required.targetW.Meta.collection._name, 'Persons'
-  test.equal wNode.Meta.fields.nested.required.fields, ['username', 'displayName', 'field1', 'field2']
-  test.equal wNode.Meta.fields.nested.required.reverseName, 'nestedwNodes'
-  test.equal wNode.Meta.fields.nested.required.reverseFields, ['body', 'subW.body', 'nested.body']
-  test.instanceOf wNode.Meta.fields.nested.optional, wNode._ReferenceField
-  test.equal wNode.Meta.fields.nested.optional.ancestorArray, 'nested'
-  test.isFalse wNode.Meta.fields.nested.optional.required
-  test.equal wNode.Meta.fields.nested.optional.sourcePath, 'nested.optional'
-  test.equal wNode.Meta.fields.nested.optional.sourceW, wNode
-  test.equal wNode.Meta.fields.nested.optional.targetW, Person
-  test.equal wNode.Meta.fields.nested.optional.sourceCollection._name, 'wNodes'
-  test.equal wNode.Meta.fields.nested.optional.targetCollection._name, 'Persons'
-  test.equal wNode.Meta.fields.nested.optional.sourceW.Meta.collection._name, 'wNodes'
-  test.equal wNode.Meta.fields.nested.optional.targetW.Meta.collection._name, 'Persons'
-  test.equal wNode.Meta.fields.nested.optional.fields, ['username']
-  test.isNull wNode.Meta.fields.nested.optional.reverseName
-  test.equal wNode.Meta.fields.nested.optional.reverseFields, []
-  test.instanceOf wNode.Meta.fields.nested.slug, wNode._GeneratedField
-  test.equal wNode.Meta.fields.nested.slug.ancestorArray, 'nested'
-  test.isTrue _.isFunction wNode.Meta.fields.nested.slug.generator
-  test.equal wNode.Meta.fields.nested.slug.sourcePath, 'nested.slug'
-  test.equal wNode.Meta.fields.nested.slug.sourceW, wNode
-  test.equal wNode.Meta.fields.nested.slug.targetW, wNode
-  test.equal wNode.Meta.fields.nested.slug.sourceCollection._name, 'wNodes'
-  test.equal wNode.Meta.fields.nested.slug.targetCollection._name, 'wNodes'
-  test.equal wNode.Meta.fields.nested.slug.sourceW.Meta.collection._name, 'wNodes'
-  test.equal wNode.Meta.fields.nested.slug.targetW.Meta.collection._name, 'wNodes'
-  test.equal wNode.Meta.fields.nested.slug.fields, ['body', 'nested.body']
-  test.isUndefined wNode.Meta.fields.nested.slug.reverseName
-  test.isUndefined wNode.Meta.fields.nested.slug.reverseFields
-  test.instanceOf wNode.Meta.fields.slug, wNode._GeneratedField
-  test.isNull wNode.Meta.fields.slug.ancestorArray, wNode.Meta.fields.slug.ancestorArray
-  test.isTrue _.isFunction wNode.Meta.fields.slug.generator
-  test.equal wNode.Meta.fields.slug.sourcePath, 'slug'
-  test.equal wNode.Meta.fields.slug.sourceW, wNode
-  test.equal wNode.Meta.fields.slug.targetW, wNode
-  test.equal wNode.Meta.fields.slug.sourceCollection._name, 'wNodes'
-  test.equal wNode.Meta.fields.slug.targetCollection._name, 'wNodes'
-  test.equal wNode.Meta.fields.slug.sourceW.Meta.collection._name, 'wNodes'
-  test.equal wNode.Meta.fields.slug.targetW.Meta.collection._name, 'wNodes'
-  test.equal wNode.Meta.fields.slug.fields, ['body', 'subW.body']
-  test.isUndefined wNode.Meta.fields.slug.reverseName
-  test.isUndefined wNode.Meta.fields.slug.reverseFields
-  test.instanceOf wNode.Meta.fields.tags, wNode._GeneratedField
-  test.equal wNode.Meta.fields.tags.ancestorArray, 'tags'
-  test.isTrue _.isFunction wNode.Meta.fields.tags.generator
-  test.equal wNode.Meta.fields.tags.sourcePath, 'tags'
-  test.equal wNode.Meta.fields.tags.sourceW, wNode
-  test.equal wNode.Meta.fields.tags.targetW, wNode
-  test.equal wNode.Meta.fields.tags.sourceCollection._name, 'wNodes'
-  test.equal wNode.Meta.fields.tags.targetCollection._name, 'wNodes'
-  test.equal wNode.Meta.fields.tags.sourceW.Meta.collection._name, 'wNodes'
-  test.equal wNode.Meta.fields.tags.targetW.Meta.collection._name, 'wNodes'
-  test.equal wNode.Meta.fields.tags.fields, ['body', 'subW.body', 'nested.body']
-  test.isUndefined wNode.Meta.fields.tags.reverseName
-  test.isUndefined wNode.Meta.fields.tags.reverseFields
+  test.equal wNodeÏ.Meta._name, 'wNodeÏ'
+  test.equal wNodeÏ.Meta.parent, _TestwNodeÏ2.Meta
+  test.equal wNodeÏ.Meta.W, wNodeÏ
+  test.equal wNodeÏ.Meta.collection._name, 'wNodeÏs'
+  test.equal _.size(wNodeÏ.Meta.triggers), 1
+  test.instanceOf wNodeÏ.Meta.triggers.testTrigger, wNodeÏ._Trigger
+  test.equal wNodeÏ.Meta.triggers.testTrigger.name, 'testTrigger'
+  test.equal wNodeÏ.Meta.triggers.testTrigger.W, wNodeÏ
+  test.equal wNodeÏ.Meta.triggers.testTrigger.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.triggers.testTrigger.fields, ['body']
+  test.equal _.size(wNodeÏ.Meta.fields), 7
+  test.instanceOf wNodeÏ.Meta.fields.author, wNodeÏ._ReferenceField
+  test.isNull wNodeÏ.Meta.fields.author.ancestorArray, wNodeÏ.Meta.fields.author.ancestorArray
+  test.isTrue wNodeÏ.Meta.fields.author.required
+  test.equal wNodeÏ.Meta.fields.author.sourcePath, 'author'
+  test.equal wNodeÏ.Meta.fields.author.sourceW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.author.targetW, Person
+  test.equal wNodeÏ.Meta.fields.author.sourceCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.author.targetCollection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.author.sourceW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.author.targetW.Meta.collection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.author.fields, ['username', 'displayName', 'field1', 'field2']
+  test.equal wNodeÏ.Meta.fields.author.reverseName, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.author.reverseFields, ['body', 'subW.body', 'nested.body']
+  test.instanceOf wNodeÏ.Meta.fields.subscribers, wNodeÏ._ReferenceField
+  test.equal wNodeÏ.Meta.fields.subscribers.ancestorArray, 'subscribers'
+  test.isTrue wNodeÏ.Meta.fields.subscribers.required
+  test.equal wNodeÏ.Meta.fields.subscribers.sourcePath, 'subscribers'
+  test.equal wNodeÏ.Meta.fields.subscribers.sourceW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.subscribers.targetW, Person
+  test.equal wNodeÏ.Meta.fields.subscribers.sourceCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subscribers.targetCollection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.subscribers.sourceW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subscribers.targetW.Meta.collection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.subscribers.fields, []
+  test.isNull wNodeÏ.Meta.fields.subscribers.reverseName
+  test.equal wNodeÏ.Meta.fields.subscribers.reverseFields, []
+  test.instanceOf wNodeÏ.Meta.fields.reviewers, wNodeÏ._ReferenceField
+  test.equal wNodeÏ.Meta.fields.reviewers.ancestorArray, 'reviewers'
+  test.isTrue wNodeÏ.Meta.fields.reviewers.required
+  test.equal wNodeÏ.Meta.fields.reviewers.sourcePath, 'reviewers'
+  test.equal wNodeÏ.Meta.fields.reviewers.sourceW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.reviewers.targetW, Person
+  test.equal wNodeÏ.Meta.fields.reviewers.sourceCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.reviewers.targetCollection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.reviewers.sourceW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.reviewers.targetW.Meta.collection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.reviewers.fields, [username: 1]
+  test.isNull wNodeÏ.Meta.fields.reviewers.reverseName
+  test.equal wNodeÏ.Meta.fields.reviewers.reverseFields, []
+  test.equal _.size(wNodeÏ.Meta.fields.subW), 3
+  test.instanceOf wNodeÏ.Meta.fields.subW.person, wNodeÏ._ReferenceField
+  test.isNull wNodeÏ.Meta.fields.subW.person.ancestorArray, wNodeÏ.Meta.fields.subW.person.ancestorArray
+  test.isFalse wNodeÏ.Meta.fields.subW.person.required
+  test.equal wNodeÏ.Meta.fields.subW.person.sourcePath, 'subW.person'
+  test.equal wNodeÏ.Meta.fields.subW.person.sourceW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.subW.person.targetW, Person
+  test.equal wNodeÏ.Meta.fields.subW.person.sourceCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subW.person.targetCollection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.subW.person.sourceW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subW.person.targetW.Meta.collection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.subW.person.fields, ['username', 'displayName', 'field1', 'field2']
+  test.equal wNodeÏ.Meta.fields.subW.person.reverseName, 'subWwNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subW.person.reverseFields, ['body', 'subW.body', 'nested.body']
+  test.instanceOf wNodeÏ.Meta.fields.subW.persons, wNodeÏ._ReferenceField
+  test.equal wNodeÏ.Meta.fields.subW.persons.ancestorArray, 'subW.persons'
+  test.isTrue wNodeÏ.Meta.fields.subW.persons.required
+  test.equal wNodeÏ.Meta.fields.subW.persons.sourcePath, 'subW.persons'
+  test.equal wNodeÏ.Meta.fields.subW.persons.sourceW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.subW.persons.targetW, Person
+  test.equal wNodeÏ.Meta.fields.subW.persons.sourceCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subW.persons.targetCollection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.subW.persons.sourceW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subW.persons.targetW.Meta.collection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.subW.persons.fields, ['username', 'displayName', 'field1', 'field2']
+  test.equal wNodeÏ.Meta.fields.subW.persons.reverseName, 'subWswNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subW.persons.reverseFields, ['body', 'subW.body', 'nested.body']
+  test.instanceOf wNodeÏ.Meta.fields.subW.slug, wNodeÏ._GeneratedField
+  test.isNull wNodeÏ.Meta.fields.subW.slug.ancestorArray, wNodeÏ.Meta.fields.subW.slug.ancestorArray
+  test.isTrue _.isFunction wNodeÏ.Meta.fields.subW.slug.generator
+  test.equal wNodeÏ.Meta.fields.subW.slug.sourcePath, 'subW.slug'
+  test.equal wNodeÏ.Meta.fields.subW.slug.sourceW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.subW.slug.targetW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.subW.slug.sourceCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subW.slug.targetCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subW.slug.sourceW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subW.slug.targetW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subW.slug.fields, ['body', 'subW.body']
+  test.isUndefined wNodeÏ.Meta.fields.subW.slug.reverseName
+  test.isUndefined wNodeÏ.Meta.fields.subW.slug.reverseFields
+  test.equal _.size(wNodeÏ.Meta.fields.nested), 3
+  test.instanceOf wNodeÏ.Meta.fields.nested.required, wNodeÏ._ReferenceField
+  test.equal wNodeÏ.Meta.fields.nested.required.ancestorArray, 'nested'
+  test.isTrue wNodeÏ.Meta.fields.nested.required.required
+  test.equal wNodeÏ.Meta.fields.nested.required.sourcePath, 'nested.required'
+  test.equal wNodeÏ.Meta.fields.nested.required.sourceW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.nested.required.targetW, Person
+  test.equal wNodeÏ.Meta.fields.nested.required.sourceCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.nested.required.targetCollection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.nested.required.sourceW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.nested.required.targetW.Meta.collection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.nested.required.fields, ['username', 'displayName', 'field1', 'field2']
+  test.equal wNodeÏ.Meta.fields.nested.required.reverseName, 'nestedwNodeÏs'
+  test.equal wNodeÏ.Meta.fields.nested.required.reverseFields, ['body', 'subW.body', 'nested.body']
+  test.instanceOf wNodeÏ.Meta.fields.nested.optional, wNodeÏ._ReferenceField
+  test.equal wNodeÏ.Meta.fields.nested.optional.ancestorArray, 'nested'
+  test.isFalse wNodeÏ.Meta.fields.nested.optional.required
+  test.equal wNodeÏ.Meta.fields.nested.optional.sourcePath, 'nested.optional'
+  test.equal wNodeÏ.Meta.fields.nested.optional.sourceW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.nested.optional.targetW, Person
+  test.equal wNodeÏ.Meta.fields.nested.optional.sourceCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.nested.optional.targetCollection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.nested.optional.sourceW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.nested.optional.targetW.Meta.collection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.nested.optional.fields, ['username']
+  test.isNull wNodeÏ.Meta.fields.nested.optional.reverseName
+  test.equal wNodeÏ.Meta.fields.nested.optional.reverseFields, []
+  test.instanceOf wNodeÏ.Meta.fields.nested.slug, wNodeÏ._GeneratedField
+  test.equal wNodeÏ.Meta.fields.nested.slug.ancestorArray, 'nested'
+  test.isTrue _.isFunction wNodeÏ.Meta.fields.nested.slug.generator
+  test.equal wNodeÏ.Meta.fields.nested.slug.sourcePath, 'nested.slug'
+  test.equal wNodeÏ.Meta.fields.nested.slug.sourceW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.nested.slug.targetW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.nested.slug.sourceCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.nested.slug.targetCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.nested.slug.sourceW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.nested.slug.targetW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.nested.slug.fields, ['body', 'nested.body']
+  test.isUndefined wNodeÏ.Meta.fields.nested.slug.reverseName
+  test.isUndefined wNodeÏ.Meta.fields.nested.slug.reverseFields
+  test.instanceOf wNodeÏ.Meta.fields.slug, wNodeÏ._GeneratedField
+  test.isNull wNodeÏ.Meta.fields.slug.ancestorArray, wNodeÏ.Meta.fields.slug.ancestorArray
+  test.isTrue _.isFunction wNodeÏ.Meta.fields.slug.generator
+  test.equal wNodeÏ.Meta.fields.slug.sourcePath, 'slug'
+  test.equal wNodeÏ.Meta.fields.slug.sourceW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.slug.targetW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.slug.sourceCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.slug.targetCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.slug.sourceW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.slug.targetW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.slug.fields, ['body', 'subW.body']
+  test.isUndefined wNodeÏ.Meta.fields.slug.reverseName
+  test.isUndefined wNodeÏ.Meta.fields.slug.reverseFields
+  test.instanceOf wNodeÏ.Meta.fields.tags, wNodeÏ._GeneratedField
+  test.equal wNodeÏ.Meta.fields.tags.ancestorArray, 'tags'
+  test.isTrue _.isFunction wNodeÏ.Meta.fields.tags.generator
+  test.equal wNodeÏ.Meta.fields.tags.sourcePath, 'tags'
+  test.equal wNodeÏ.Meta.fields.tags.sourceW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.tags.targetW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.tags.sourceCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.tags.targetCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.tags.sourceW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.tags.targetW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.tags.fields, ['body', 'subW.body', 'nested.body']
+  test.isUndefined wNodeÏ.Meta.fields.tags.reverseName
+  test.isUndefined wNodeÏ.Meta.fields.tags.reverseFields
 
   test.equal User.Meta._name, 'User'
   test.isFalse User.Meta.parent
@@ -503,24 +512,24 @@ testDefinition = (test) ->
   test.isNull UserLink.Meta.fields.user.reverseName
   test.equal UserLink.Meta.fields.user.reverseFields, []
 
-  test.equal wNodeLink.Meta._name, 'wNodeLink'
-  test.equal wNodeLink.Meta.parent, _TestwNodeLink.Meta
-  test.equal wNodeLink.Meta.W, wNodeLink
-  test.equal wNodeLink.Meta.collection._name, 'wNodeLinks'
-  test.equal _.size(wNodeLink.Meta.triggers), 0
-  test.equal _.size(wNodeLink.Meta.fields), 1
-  test.instanceOf wNodeLink.Meta.fields.wNode, wNodeLink._ReferenceField
-  test.isNull wNodeLink.Meta.fields.wNode.ancestorArray, wNodeLink.Meta.fields.wNode.ancestorArray
-  test.isTrue wNodeLink.Meta.fields.wNode.required
-  test.equal wNodeLink.Meta.fields.wNode.sourcePath, 'wNode'
-  test.equal wNodeLink.Meta.fields.wNode.sourceW, wNodeLink
-  test.equal wNodeLink.Meta.fields.wNode.targetW, wNode
-  test.equal wNodeLink.Meta.fields.wNode.sourceCollection._name, 'wNodeLinks'
-  test.equal wNodeLink.Meta.fields.wNode.targetCollection._name, 'wNodes'
-  test.equal wNodeLink.Meta.fields.wNode.sourceW.Meta.collection._name, 'wNodeLinks'
-  test.equal wNodeLink.Meta.fields.wNode.fields, ['subW.person', 'subW.persons']
-  test.isNull wNodeLink.Meta.fields.wNode.reverseName
-  test.equal wNodeLink.Meta.fields.wNode.reverseFields, []
+  test.equal wNodeÏLink.Meta._name, 'wNodeÏLink'
+  test.equal wNodeÏLink.Meta.parent, _TestwNodeÏLink.Meta
+  test.equal wNodeÏLink.Meta.W, wNodeÏLink
+  test.equal wNodeÏLink.Meta.collection._name, 'wNodeÏLinks'
+  test.equal _.size(wNodeÏLink.Meta.triggers), 0
+  test.equal _.size(wNodeÏLink.Meta.fields), 1
+  test.instanceOf wNodeÏLink.Meta.fields.wNodeÏ, wNodeÏLink._ReferenceField
+  test.isNull wNodeÏLink.Meta.fields.wNodeÏ.ancestorArray, wNodeÏLink.Meta.fields.wNodeÏ.ancestorArray
+  test.isTrue wNodeÏLink.Meta.fields.wNodeÏ.required
+  test.equal wNodeÏLink.Meta.fields.wNodeÏ.sourcePath, 'wNodeÏ'
+  test.equal wNodeÏLink.Meta.fields.wNodeÏ.sourceW, wNodeÏLink
+  test.equal wNodeÏLink.Meta.fields.wNodeÏ.targetW, wNodeÏ
+  test.equal wNodeÏLink.Meta.fields.wNodeÏ.sourceCollection._name, 'wNodeÏLinks'
+  test.equal wNodeÏLink.Meta.fields.wNodeÏ.targetCollection._name, 'wNodeÏs'
+  test.equal wNodeÏLink.Meta.fields.wNodeÏ.sourceW.Meta.collection._name, 'wNodeÏLinks'
+  test.equal wNodeÏLink.Meta.fields.wNodeÏ.fields, ['subW.person', 'subW.persons']
+  test.isNull wNodeÏLink.Meta.fields.wNodeÏ.reverseName
+  test.equal wNodeÏLink.Meta.fields.wNodeÏ.reverseFields, []
 
   test.equal CircularFirst.Meta._name, 'CircularFirst'
   test.equal CircularFirst.Meta.parent, _TestCircularFirst.Meta
@@ -595,32 +604,32 @@ testDefinition = (test) ->
   test.equal Person.Meta.collection._name, 'Persons'
   test.equal _.size(Person.Meta.triggers), 0
   test.equal _.size(Person.Meta.fields), 5
-  test.instanceOf Person.Meta.fields.wNodes, Person._ReferenceField
-  test.equal Person.Meta.fields.wNodes.ancestorArray, 'wNodes'
-  test.isTrue Person.Meta.fields.wNodes.required
-  test.equal Person.Meta.fields.wNodes.sourcePath, 'wNodes'
-  test.equal Person.Meta.fields.wNodes.sourceW, Person
-  test.equal Person.Meta.fields.wNodes.targetW, wNode
-  test.equal Person.Meta.fields.wNodes.sourceCollection._name, 'Persons'
-  test.equal Person.Meta.fields.wNodes.targetCollection._name, 'wNodes'
-  test.equal Person.Meta.fields.wNodes.sourceW.Meta.collection._name, 'Persons'
-  test.equal Person.Meta.fields.wNodes.targetW.Meta.collection._name, 'wNodes'
-  test.equal Person.Meta.fields.wNodes.fields, ['body', 'subW.body', 'nested.body']
-  test.isNull Person.Meta.fields.wNodes.reverseName
-  test.equal Person.Meta.fields.wNodes.reverseFields, []
-  test.instanceOf Person.Meta.fields.nestedwNodes, Person._ReferenceField
-  test.equal Person.Meta.fields.nestedwNodes.ancestorArray, 'nestedwNodes'
-  test.isTrue Person.Meta.fields.nestedwNodes.required
-  test.equal Person.Meta.fields.nestedwNodes.sourcePath, 'nestedwNodes'
-  test.equal Person.Meta.fields.nestedwNodes.sourceW, Person
-  test.equal Person.Meta.fields.nestedwNodes.targetW, wNode
-  test.equal Person.Meta.fields.nestedwNodes.sourceCollection._name, 'Persons'
-  test.equal Person.Meta.fields.nestedwNodes.targetCollection._name, 'wNodes'
-  test.equal Person.Meta.fields.nestedwNodes.sourceW.Meta.collection._name, 'Persons'
-  test.equal Person.Meta.fields.nestedwNodes.targetW.Meta.collection._name, 'wNodes'
-  test.equal Person.Meta.fields.nestedwNodes.fields, ['body', 'subW.body', 'nested.body']
-  test.isNull Person.Meta.fields.nestedwNodes.reverseName
-  test.equal Person.Meta.fields.nestedwNodes.reverseFields, []
+  test.instanceOf Person.Meta.fields.wNodeÏs, Person._ReferenceField
+  test.equal Person.Meta.fields.wNodeÏs.ancestorArray, 'wNodeÏs'
+  test.isTrue Person.Meta.fields.wNodeÏs.required
+  test.equal Person.Meta.fields.wNodeÏs.sourcePath, 'wNodeÏs'
+  test.equal Person.Meta.fields.wNodeÏs.sourceW, Person
+  test.equal Person.Meta.fields.wNodeÏs.targetW, wNodeÏ
+  test.equal Person.Meta.fields.wNodeÏs.sourceCollection._name, 'Persons'
+  test.equal Person.Meta.fields.wNodeÏs.targetCollection._name, 'wNodeÏs'
+  test.equal Person.Meta.fields.wNodeÏs.sourceW.Meta.collection._name, 'Persons'
+  test.equal Person.Meta.fields.wNodeÏs.targetW.Meta.collection._name, 'wNodeÏs'
+  test.equal Person.Meta.fields.wNodeÏs.fields, ['body', 'subW.body', 'nested.body']
+  test.isNull Person.Meta.fields.wNodeÏs.reverseName
+  test.equal Person.Meta.fields.wNodeÏs.reverseFields, []
+  test.instanceOf Person.Meta.fields.nestedwNodeÏs, Person._ReferenceField
+  test.equal Person.Meta.fields.nestedwNodeÏs.ancestorArray, 'nestedwNodeÏs'
+  test.isTrue Person.Meta.fields.nestedwNodeÏs.required
+  test.equal Person.Meta.fields.nestedwNodeÏs.sourcePath, 'nestedwNodeÏs'
+  test.equal Person.Meta.fields.nestedwNodeÏs.sourceW, Person
+  test.equal Person.Meta.fields.nestedwNodeÏs.targetW, wNodeÏ
+  test.equal Person.Meta.fields.nestedwNodeÏs.sourceCollection._name, 'Persons'
+  test.equal Person.Meta.fields.nestedwNodeÏs.targetCollection._name, 'wNodeÏs'
+  test.equal Person.Meta.fields.nestedwNodeÏs.sourceW.Meta.collection._name, 'Persons'
+  test.equal Person.Meta.fields.nestedwNodeÏs.targetW.Meta.collection._name, 'wNodeÏs'
+  test.equal Person.Meta.fields.nestedwNodeÏs.fields, ['body', 'subW.body', 'nested.body']
+  test.isNull Person.Meta.fields.nestedwNodeÏs.reverseName
+  test.equal Person.Meta.fields.nestedwNodeÏs.reverseFields, []
   test.instanceOf Person.Meta.fields.count, Person._GeneratedField
   test.isNull Person.Meta.fields.count.ancestorArray, Person.Meta.fields.count.ancestorArray
   test.isTrue _.isFunction Person.Meta.fields.count.generator
@@ -631,35 +640,35 @@ testDefinition = (test) ->
   test.equal Person.Meta.fields.count.targetCollection._name, 'Persons'
   test.equal Person.Meta.fields.count.sourceW.Meta.collection._name, 'Persons'
   test.equal Person.Meta.fields.count.targetW.Meta.collection._name, 'Persons'
-  test.equal Person.Meta.fields.count.fields, ['wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes']
+  test.equal Person.Meta.fields.count.fields, ['wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs']
   test.isUndefined Person.Meta.fields.count.reverseName
   test.isUndefined Person.Meta.fields.count.reverseFields
-  test.instanceOf Person.Meta.fields.subWwNodes, Person._ReferenceField
-  test.equal Person.Meta.fields.subWwNodes.ancestorArray, 'subWwNodes'
-  test.isTrue Person.Meta.fields.subWwNodes.required
-  test.equal Person.Meta.fields.subWwNodes.sourcePath, 'subWwNodes'
-  test.equal Person.Meta.fields.subWwNodes.sourceW, Person
-  test.equal Person.Meta.fields.subWwNodes.targetW, wNode
-  test.equal Person.Meta.fields.subWwNodes.sourceCollection._name, 'Persons'
-  test.equal Person.Meta.fields.subWwNodes.targetCollection._name, 'wNodes'
-  test.equal Person.Meta.fields.subWwNodes.sourceW.Meta.collection._name, 'Persons'
-  test.equal Person.Meta.fields.subWwNodes.targetW.Meta.collection._name, 'wNodes'
-  test.equal Person.Meta.fields.subWwNodes.fields, ['body', 'subW.body', 'nested.body']
-  test.isNull Person.Meta.fields.subWwNodes.reverseName
-  test.equal Person.Meta.fields.subWwNodes.reverseFields, []
-  test.instanceOf Person.Meta.fields.subWswNodes, Person._ReferenceField
-  test.equal Person.Meta.fields.subWswNodes.ancestorArray, 'subWswNodes'
-  test.isTrue Person.Meta.fields.subWswNodes.required
-  test.equal Person.Meta.fields.subWswNodes.sourcePath, 'subWswNodes'
-  test.equal Person.Meta.fields.subWswNodes.sourceW, Person
-  test.equal Person.Meta.fields.subWswNodes.targetW, wNode
-  test.equal Person.Meta.fields.subWswNodes.sourceCollection._name, 'Persons'
-  test.equal Person.Meta.fields.subWswNodes.targetCollection._name, 'wNodes'
-  test.equal Person.Meta.fields.subWswNodes.sourceW.Meta.collection._name, 'Persons'
-  test.equal Person.Meta.fields.subWswNodes.targetW.Meta.collection._name, 'wNodes'
-  test.equal Person.Meta.fields.subWswNodes.fields, ['body', 'subW.body', 'nested.body']
-  test.isNull Person.Meta.fields.subWswNodes.reverseName
-  test.equal Person.Meta.fields.subWswNodes.reverseFields, []
+  test.instanceOf Person.Meta.fields.subWwNodeÏs, Person._ReferenceField
+  test.equal Person.Meta.fields.subWwNodeÏs.ancestorArray, 'subWwNodeÏs'
+  test.isTrue Person.Meta.fields.subWwNodeÏs.required
+  test.equal Person.Meta.fields.subWwNodeÏs.sourcePath, 'subWwNodeÏs'
+  test.equal Person.Meta.fields.subWwNodeÏs.sourceW, Person
+  test.equal Person.Meta.fields.subWwNodeÏs.targetW, wNodeÏ
+  test.equal Person.Meta.fields.subWwNodeÏs.sourceCollection._name, 'Persons'
+  test.equal Person.Meta.fields.subWwNodeÏs.targetCollection._name, 'wNodeÏs'
+  test.equal Person.Meta.fields.subWwNodeÏs.sourceW.Meta.collection._name, 'Persons'
+  test.equal Person.Meta.fields.subWwNodeÏs.targetW.Meta.collection._name, 'wNodeÏs'
+  test.equal Person.Meta.fields.subWwNodeÏs.fields, ['body', 'subW.body', 'nested.body']
+  test.isNull Person.Meta.fields.subWwNodeÏs.reverseName
+  test.equal Person.Meta.fields.subWwNodeÏs.reverseFields, []
+  test.instanceOf Person.Meta.fields.subWswNodeÏs, Person._ReferenceField
+  test.equal Person.Meta.fields.subWswNodeÏs.ancestorArray, 'subWswNodeÏs'
+  test.isTrue Person.Meta.fields.subWswNodeÏs.required
+  test.equal Person.Meta.fields.subWswNodeÏs.sourcePath, 'subWswNodeÏs'
+  test.equal Person.Meta.fields.subWswNodeÏs.sourceW, Person
+  test.equal Person.Meta.fields.subWswNodeÏs.targetW, wNodeÏ
+  test.equal Person.Meta.fields.subWswNodeÏs.sourceCollection._name, 'Persons'
+  test.equal Person.Meta.fields.subWswNodeÏs.targetCollection._name, 'wNodeÏs'
+  test.equal Person.Meta.fields.subWswNodeÏs.sourceW.Meta.collection._name, 'Persons'
+  test.equal Person.Meta.fields.subWswNodeÏs.targetW.Meta.collection._name, 'wNodeÏs'
+  test.equal Person.Meta.fields.subWswNodeÏs.fields, ['body', 'subW.body', 'nested.body']
+  test.isNull Person.Meta.fields.subWswNodeÏs.reverseName
+  test.equal Person.Meta.fields.subWswNodeÏs.reverseFields, []
 
   test.equal SpecialPerson.Meta._name, 'SpecialPerson'
   test.equal SpecialPerson.Meta.parent, Person.Meta
@@ -735,175 +744,175 @@ testDefinition = (test) ->
   test.isUndefined IdentityGenerator.Meta.fields.results.reverseName
   test.isUndefined IdentityGenerator.Meta.fields.results.reverseFields
 
-  test.equal SpecialwNode.Meta._name, 'SpecialwNode'
-  test.equal SpecialwNode.Meta.parent, _TestwNode2.Meta
-  test.equal SpecialwNode.Meta.W, SpecialwNode
-  test.equal SpecialwNode.Meta.collection._name, 'SpecialwNodes'
-  test.equal _.size(SpecialwNode.Meta.triggers), 1
-  test.instanceOf SpecialwNode.Meta.triggers.testTrigger, SpecialwNode._Trigger
-  test.equal SpecialwNode.Meta.triggers.testTrigger.name, 'testTrigger'
-  test.equal SpecialwNode.Meta.triggers.testTrigger.W, SpecialwNode
-  test.equal SpecialwNode.Meta.triggers.testTrigger.collection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.triggers.testTrigger.fields, ['body']
-  test.equal _.size(SpecialwNode.Meta.fields), 8
-  test.instanceOf SpecialwNode.Meta.fields.author, SpecialwNode._ReferenceField
-  test.isNull SpecialwNode.Meta.fields.author.ancestorArray, SpecialwNode.Meta.fields.author.ancestorArray
-  test.isTrue SpecialwNode.Meta.fields.author.required
-  test.equal SpecialwNode.Meta.fields.author.sourcePath, 'author'
-  test.equal SpecialwNode.Meta.fields.author.sourceW, SpecialwNode
-  test.equal SpecialwNode.Meta.fields.author.targetW, Person
-  test.equal SpecialwNode.Meta.fields.author.sourceCollection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.author.targetCollection._name, 'Persons'
-  test.equal SpecialwNode.Meta.fields.author.sourceW.Meta.collection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.author.targetW.Meta.collection._name, 'Persons'
-  test.equal SpecialwNode.Meta.fields.author.fields, ['username', 'displayName', 'field1', 'field2']
-  test.equal SpecialwNode.Meta.fields.author.reverseName, 'wNodes'
-  test.equal SpecialwNode.Meta.fields.author.reverseFields, ['body', 'subW.body', 'nested.body']
-  test.instanceOf SpecialwNode.Meta.fields.subscribers, SpecialwNode._ReferenceField
-  test.equal SpecialwNode.Meta.fields.subscribers.ancestorArray, 'subscribers'
-  test.isTrue SpecialwNode.Meta.fields.subscribers.required
-  test.equal SpecialwNode.Meta.fields.subscribers.sourcePath, 'subscribers'
-  test.equal SpecialwNode.Meta.fields.subscribers.sourceW, SpecialwNode
-  test.equal SpecialwNode.Meta.fields.subscribers.targetW, Person
-  test.equal SpecialwNode.Meta.fields.subscribers.sourceCollection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.subscribers.targetCollection._name, 'Persons'
-  test.equal SpecialwNode.Meta.fields.subscribers.sourceW.Meta.collection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.subscribers.targetW.Meta.collection._name, 'Persons'
-  test.equal SpecialwNode.Meta.fields.subscribers.fields, []
-  test.isNull SpecialwNode.Meta.fields.subscribers.reverseName
-  test.equal SpecialwNode.Meta.fields.subscribers.reverseFields, []
-  test.instanceOf SpecialwNode.Meta.fields.reviewers, SpecialwNode._ReferenceField
-  test.equal SpecialwNode.Meta.fields.reviewers.ancestorArray, 'reviewers'
-  test.isTrue SpecialwNode.Meta.fields.reviewers.required
-  test.equal SpecialwNode.Meta.fields.reviewers.sourcePath, 'reviewers'
-  test.equal SpecialwNode.Meta.fields.reviewers.sourceW, SpecialwNode
-  test.equal SpecialwNode.Meta.fields.reviewers.targetW, Person
-  test.equal SpecialwNode.Meta.fields.reviewers.sourceCollection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.reviewers.targetCollection._name, 'Persons'
-  test.equal SpecialwNode.Meta.fields.reviewers.sourceW.Meta.collection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.reviewers.targetW.Meta.collection._name, 'Persons'
-  test.equal SpecialwNode.Meta.fields.reviewers.fields, [username: 1]
-  test.isNull SpecialwNode.Meta.fields.reviewers.reverseName
-  test.equal SpecialwNode.Meta.fields.reviewers.reverseFields, []
-  test.equal _.size(SpecialwNode.Meta.fields.subW), 3
-  test.instanceOf SpecialwNode.Meta.fields.subW.person, SpecialwNode._ReferenceField
-  test.isNull SpecialwNode.Meta.fields.subW.person.ancestorArray, SpecialwNode.Meta.fields.subW.person.ancestorArray
-  test.isFalse SpecialwNode.Meta.fields.subW.person.required
-  test.equal SpecialwNode.Meta.fields.subW.person.sourcePath, 'subW.person'
-  test.equal SpecialwNode.Meta.fields.subW.person.sourceW, SpecialwNode
-  test.equal SpecialwNode.Meta.fields.subW.person.targetW, Person
-  test.equal SpecialwNode.Meta.fields.subW.person.sourceCollection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.subW.person.targetCollection._name, 'Persons'
-  test.equal SpecialwNode.Meta.fields.subW.person.sourceW.Meta.collection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.subW.person.targetW.Meta.collection._name, 'Persons'
-  test.equal SpecialwNode.Meta.fields.subW.person.fields, ['username', 'displayName', 'field1', 'field2']
-  test.equal SpecialwNode.Meta.fields.subW.person.reverseName, 'subWwNodes'
-  test.equal SpecialwNode.Meta.fields.subW.person.reverseFields, ['body', 'subW.body', 'nested.body']
-  test.instanceOf SpecialwNode.Meta.fields.subW.persons, SpecialwNode._ReferenceField
-  test.equal SpecialwNode.Meta.fields.subW.persons.ancestorArray, 'subW.persons'
-  test.isTrue SpecialwNode.Meta.fields.subW.persons.required
-  test.equal SpecialwNode.Meta.fields.subW.persons.sourcePath, 'subW.persons'
-  test.equal SpecialwNode.Meta.fields.subW.persons.sourceW, SpecialwNode
-  test.equal SpecialwNode.Meta.fields.subW.persons.targetW, Person
-  test.equal SpecialwNode.Meta.fields.subW.persons.sourceCollection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.subW.persons.targetCollection._name, 'Persons'
-  test.equal SpecialwNode.Meta.fields.subW.persons.sourceW.Meta.collection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.subW.persons.targetW.Meta.collection._name, 'Persons'
-  test.equal SpecialwNode.Meta.fields.subW.persons.fields, ['username', 'displayName', 'field1', 'field2']
-  test.equal SpecialwNode.Meta.fields.subW.persons.reverseName, 'subWswNodes'
-  test.equal SpecialwNode.Meta.fields.subW.persons.reverseFields, ['body', 'subW.body', 'nested.body']
-  test.instanceOf SpecialwNode.Meta.fields.subW.slug, SpecialwNode._GeneratedField
-  test.isNull SpecialwNode.Meta.fields.subW.slug.ancestorArray, SpecialwNode.Meta.fields.subW.slug.ancestorArray
-  test.isTrue _.isFunction SpecialwNode.Meta.fields.subW.slug.generator
-  test.equal SpecialwNode.Meta.fields.subW.slug.sourcePath, 'subW.slug'
-  test.equal SpecialwNode.Meta.fields.subW.slug.sourceW, SpecialwNode
-  test.equal SpecialwNode.Meta.fields.subW.slug.targetW, SpecialwNode
-  test.equal SpecialwNode.Meta.fields.subW.slug.sourceCollection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.subW.slug.targetCollection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.subW.slug.sourceW.Meta.collection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.subW.slug.targetW.Meta.collection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.subW.slug.fields, ['body', 'subW.body']
-  test.isUndefined SpecialwNode.Meta.fields.subW.slug.reverseName
-  test.isUndefined SpecialwNode.Meta.fields.subW.slug.reverseFields
-  test.equal _.size(SpecialwNode.Meta.fields.nested), 3
-  test.instanceOf SpecialwNode.Meta.fields.nested.required, SpecialwNode._ReferenceField
-  test.equal SpecialwNode.Meta.fields.nested.required.ancestorArray, 'nested'
-  test.isTrue SpecialwNode.Meta.fields.nested.required.required
-  test.equal SpecialwNode.Meta.fields.nested.required.sourcePath, 'nested.required'
-  test.equal SpecialwNode.Meta.fields.nested.required.sourceW, SpecialwNode
-  test.equal SpecialwNode.Meta.fields.nested.required.targetW, Person
-  test.equal SpecialwNode.Meta.fields.nested.required.sourceCollection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.nested.required.targetCollection._name, 'Persons'
-  test.equal SpecialwNode.Meta.fields.nested.required.sourceW.Meta.collection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.nested.required.targetW.Meta.collection._name, 'Persons'
-  test.equal SpecialwNode.Meta.fields.nested.required.fields, ['username', 'displayName', 'field1', 'field2']
-  test.equal SpecialwNode.Meta.fields.nested.required.reverseName, 'nestedwNodes'
-  test.equal SpecialwNode.Meta.fields.nested.required.reverseFields, ['body', 'subW.body', 'nested.body']
-  test.instanceOf SpecialwNode.Meta.fields.nested.optional, SpecialwNode._ReferenceField
-  test.equal SpecialwNode.Meta.fields.nested.optional.ancestorArray, 'nested'
-  test.isFalse SpecialwNode.Meta.fields.nested.optional.required
-  test.equal SpecialwNode.Meta.fields.nested.optional.sourcePath, 'nested.optional'
-  test.equal SpecialwNode.Meta.fields.nested.optional.sourceW, SpecialwNode
-  test.equal SpecialwNode.Meta.fields.nested.optional.targetW, Person
-  test.equal SpecialwNode.Meta.fields.nested.optional.sourceCollection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.nested.optional.targetCollection._name, 'Persons'
-  test.equal SpecialwNode.Meta.fields.nested.optional.sourceW.Meta.collection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.nested.optional.targetW.Meta.collection._name, 'Persons'
-  test.equal SpecialwNode.Meta.fields.nested.optional.fields, ['username']
-  test.isNull SpecialwNode.Meta.fields.nested.optional.reverseName
-  test.equal SpecialwNode.Meta.fields.nested.optional.reverseFields, []
-  test.instanceOf SpecialwNode.Meta.fields.nested.slug, SpecialwNode._GeneratedField
-  test.equal SpecialwNode.Meta.fields.nested.slug.ancestorArray, 'nested'
-  test.isTrue _.isFunction SpecialwNode.Meta.fields.nested.slug.generator
-  test.equal SpecialwNode.Meta.fields.nested.slug.sourcePath, 'nested.slug'
-  test.equal SpecialwNode.Meta.fields.nested.slug.sourceW, SpecialwNode
-  test.equal SpecialwNode.Meta.fields.nested.slug.targetW, SpecialwNode
-  test.equal SpecialwNode.Meta.fields.nested.slug.sourceCollection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.nested.slug.targetCollection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.nested.slug.sourceW.Meta.collection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.nested.slug.targetW.Meta.collection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.nested.slug.fields, ['body', 'nested.body']
-  test.isUndefined SpecialwNode.Meta.fields.nested.slug.reverseName
-  test.isUndefined SpecialwNode.Meta.fields.nested.slug.reverseFields
-  test.instanceOf SpecialwNode.Meta.fields.slug, SpecialwNode._GeneratedField
-  test.isNull SpecialwNode.Meta.fields.slug.ancestorArray, SpecialwNode.Meta.fields.slug.ancestorArray
-  test.isTrue _.isFunction SpecialwNode.Meta.fields.slug.generator
-  test.equal SpecialwNode.Meta.fields.slug.sourcePath, 'slug'
-  test.equal SpecialwNode.Meta.fields.slug.sourceW, SpecialwNode
-  test.equal SpecialwNode.Meta.fields.slug.targetW, SpecialwNode
-  test.equal SpecialwNode.Meta.fields.slug.sourceCollection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.slug.targetCollection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.slug.sourceW.Meta.collection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.slug.targetW.Meta.collection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.slug.fields, ['body', 'subW.body']
-  test.isUndefined SpecialwNode.Meta.fields.slug.reverseName
-  test.isUndefined SpecialwNode.Meta.fields.slug.reverseFields
-  test.instanceOf SpecialwNode.Meta.fields.tags, SpecialwNode._GeneratedField
-  test.equal SpecialwNode.Meta.fields.tags.ancestorArray, 'tags'
-  test.isTrue _.isFunction SpecialwNode.Meta.fields.tags.generator
-  test.equal SpecialwNode.Meta.fields.tags.sourcePath, 'tags'
-  test.equal SpecialwNode.Meta.fields.tags.sourceW, SpecialwNode
-  test.equal SpecialwNode.Meta.fields.tags.targetW, SpecialwNode
-  test.equal SpecialwNode.Meta.fields.tags.sourceCollection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.tags.targetCollection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.tags.sourceW.Meta.collection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.tags.targetW.Meta.collection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.tags.fields, ['body', 'subW.body', 'nested.body']
-  test.isUndefined SpecialwNode.Meta.fields.tags.reverseName
-  test.isUndefined SpecialwNode.Meta.fields.tags.reverseFields
-  test.instanceOf SpecialwNode.Meta.fields.special, SpecialwNode._ReferenceField
-  test.isNull SpecialwNode.Meta.fields.special.ancestorArray, SpecialwNode.Meta.fields.special.ancestorArray
-  test.isTrue SpecialwNode.Meta.fields.special.required
-  test.equal SpecialwNode.Meta.fields.special.sourcePath, 'special'
-  test.equal SpecialwNode.Meta.fields.special.sourceW, SpecialwNode
-  test.equal SpecialwNode.Meta.fields.special.targetW, Person
-  test.equal SpecialwNode.Meta.fields.special.sourceCollection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.special.targetCollection._name, 'Persons'
-  test.equal SpecialwNode.Meta.fields.special.sourceW.Meta.collection._name, 'SpecialwNodes'
-  test.equal SpecialwNode.Meta.fields.special.targetW.Meta.collection._name, 'Persons'
-  test.equal SpecialwNode.Meta.fields.special.fields, []
-  test.isNull SpecialwNode.Meta.fields.special.reverseName
-  test.equal SpecialwNode.Meta.fields.special.reverseFields, []
+  test.equal SpecialwNodeÏ.Meta._name, 'SpecialwNodeÏ'
+  test.equal SpecialwNodeÏ.Meta.parent, _TestwNodeÏ2.Meta
+  test.equal SpecialwNodeÏ.Meta.W, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal _.size(SpecialwNodeÏ.Meta.triggers), 1
+  test.instanceOf SpecialwNodeÏ.Meta.triggers.testTrigger, SpecialwNodeÏ._Trigger
+  test.equal SpecialwNodeÏ.Meta.triggers.testTrigger.name, 'testTrigger'
+  test.equal SpecialwNodeÏ.Meta.triggers.testTrigger.W, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.triggers.testTrigger.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.triggers.testTrigger.fields, ['body']
+  test.equal _.size(SpecialwNodeÏ.Meta.fields), 8
+  test.instanceOf SpecialwNodeÏ.Meta.fields.author, SpecialwNodeÏ._ReferenceField
+  test.isNull SpecialwNodeÏ.Meta.fields.author.ancestorArray, SpecialwNodeÏ.Meta.fields.author.ancestorArray
+  test.isTrue SpecialwNodeÏ.Meta.fields.author.required
+  test.equal SpecialwNodeÏ.Meta.fields.author.sourcePath, 'author'
+  test.equal SpecialwNodeÏ.Meta.fields.author.sourceW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.author.targetW, Person
+  test.equal SpecialwNodeÏ.Meta.fields.author.sourceCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.author.targetCollection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.author.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.author.targetW.Meta.collection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.author.fields, ['username', 'displayName', 'field1', 'field2']
+  test.equal SpecialwNodeÏ.Meta.fields.author.reverseName, 'wNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.author.reverseFields, ['body', 'subW.body', 'nested.body']
+  test.instanceOf SpecialwNodeÏ.Meta.fields.subscribers, SpecialwNodeÏ._ReferenceField
+  test.equal SpecialwNodeÏ.Meta.fields.subscribers.ancestorArray, 'subscribers'
+  test.isTrue SpecialwNodeÏ.Meta.fields.subscribers.required
+  test.equal SpecialwNodeÏ.Meta.fields.subscribers.sourcePath, 'subscribers'
+  test.equal SpecialwNodeÏ.Meta.fields.subscribers.sourceW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.subscribers.targetW, Person
+  test.equal SpecialwNodeÏ.Meta.fields.subscribers.sourceCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subscribers.targetCollection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.subscribers.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subscribers.targetW.Meta.collection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.subscribers.fields, []
+  test.isNull SpecialwNodeÏ.Meta.fields.subscribers.reverseName
+  test.equal SpecialwNodeÏ.Meta.fields.subscribers.reverseFields, []
+  test.instanceOf SpecialwNodeÏ.Meta.fields.reviewers, SpecialwNodeÏ._ReferenceField
+  test.equal SpecialwNodeÏ.Meta.fields.reviewers.ancestorArray, 'reviewers'
+  test.isTrue SpecialwNodeÏ.Meta.fields.reviewers.required
+  test.equal SpecialwNodeÏ.Meta.fields.reviewers.sourcePath, 'reviewers'
+  test.equal SpecialwNodeÏ.Meta.fields.reviewers.sourceW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.reviewers.targetW, Person
+  test.equal SpecialwNodeÏ.Meta.fields.reviewers.sourceCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.reviewers.targetCollection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.reviewers.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.reviewers.targetW.Meta.collection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.reviewers.fields, [username: 1]
+  test.isNull SpecialwNodeÏ.Meta.fields.reviewers.reverseName
+  test.equal SpecialwNodeÏ.Meta.fields.reviewers.reverseFields, []
+  test.equal _.size(SpecialwNodeÏ.Meta.fields.subW), 3
+  test.instanceOf SpecialwNodeÏ.Meta.fields.subW.person, SpecialwNodeÏ._ReferenceField
+  test.isNull SpecialwNodeÏ.Meta.fields.subW.person.ancestorArray, SpecialwNodeÏ.Meta.fields.subW.person.ancestorArray
+  test.isFalse SpecialwNodeÏ.Meta.fields.subW.person.required
+  test.equal SpecialwNodeÏ.Meta.fields.subW.person.sourcePath, 'subW.person'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.person.sourceW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.subW.person.targetW, Person
+  test.equal SpecialwNodeÏ.Meta.fields.subW.person.sourceCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.person.targetCollection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.person.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.person.targetW.Meta.collection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.person.fields, ['username', 'displayName', 'field1', 'field2']
+  test.equal SpecialwNodeÏ.Meta.fields.subW.person.reverseName, 'subWwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.person.reverseFields, ['body', 'subW.body', 'nested.body']
+  test.instanceOf SpecialwNodeÏ.Meta.fields.subW.persons, SpecialwNodeÏ._ReferenceField
+  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.ancestorArray, 'subW.persons'
+  test.isTrue SpecialwNodeÏ.Meta.fields.subW.persons.required
+  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.sourcePath, 'subW.persons'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.sourceW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.targetW, Person
+  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.sourceCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.targetCollection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.targetW.Meta.collection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.fields, ['username', 'displayName', 'field1', 'field2']
+  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.reverseName, 'subWswNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.reverseFields, ['body', 'subW.body', 'nested.body']
+  test.instanceOf SpecialwNodeÏ.Meta.fields.subW.slug, SpecialwNodeÏ._GeneratedField
+  test.isNull SpecialwNodeÏ.Meta.fields.subW.slug.ancestorArray, SpecialwNodeÏ.Meta.fields.subW.slug.ancestorArray
+  test.isTrue _.isFunction SpecialwNodeÏ.Meta.fields.subW.slug.generator
+  test.equal SpecialwNodeÏ.Meta.fields.subW.slug.sourcePath, 'subW.slug'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.slug.sourceW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.subW.slug.targetW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.subW.slug.sourceCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.slug.targetCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.slug.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.slug.targetW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.slug.fields, ['body', 'subW.body']
+  test.isUndefined SpecialwNodeÏ.Meta.fields.subW.slug.reverseName
+  test.isUndefined SpecialwNodeÏ.Meta.fields.subW.slug.reverseFields
+  test.equal _.size(SpecialwNodeÏ.Meta.fields.nested), 3
+  test.instanceOf SpecialwNodeÏ.Meta.fields.nested.required, SpecialwNodeÏ._ReferenceField
+  test.equal SpecialwNodeÏ.Meta.fields.nested.required.ancestorArray, 'nested'
+  test.isTrue SpecialwNodeÏ.Meta.fields.nested.required.required
+  test.equal SpecialwNodeÏ.Meta.fields.nested.required.sourcePath, 'nested.required'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.required.sourceW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.nested.required.targetW, Person
+  test.equal SpecialwNodeÏ.Meta.fields.nested.required.sourceCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.required.targetCollection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.required.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.required.targetW.Meta.collection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.required.fields, ['username', 'displayName', 'field1', 'field2']
+  test.equal SpecialwNodeÏ.Meta.fields.nested.required.reverseName, 'nestedwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.required.reverseFields, ['body', 'subW.body', 'nested.body']
+  test.instanceOf SpecialwNodeÏ.Meta.fields.nested.optional, SpecialwNodeÏ._ReferenceField
+  test.equal SpecialwNodeÏ.Meta.fields.nested.optional.ancestorArray, 'nested'
+  test.isFalse SpecialwNodeÏ.Meta.fields.nested.optional.required
+  test.equal SpecialwNodeÏ.Meta.fields.nested.optional.sourcePath, 'nested.optional'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.optional.sourceW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.nested.optional.targetW, Person
+  test.equal SpecialwNodeÏ.Meta.fields.nested.optional.sourceCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.optional.targetCollection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.optional.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.optional.targetW.Meta.collection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.optional.fields, ['username']
+  test.isNull SpecialwNodeÏ.Meta.fields.nested.optional.reverseName
+  test.equal SpecialwNodeÏ.Meta.fields.nested.optional.reverseFields, []
+  test.instanceOf SpecialwNodeÏ.Meta.fields.nested.slug, SpecialwNodeÏ._GeneratedField
+  test.equal SpecialwNodeÏ.Meta.fields.nested.slug.ancestorArray, 'nested'
+  test.isTrue _.isFunction SpecialwNodeÏ.Meta.fields.nested.slug.generator
+  test.equal SpecialwNodeÏ.Meta.fields.nested.slug.sourcePath, 'nested.slug'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.slug.sourceW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.nested.slug.targetW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.nested.slug.sourceCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.slug.targetCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.slug.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.slug.targetW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.slug.fields, ['body', 'nested.body']
+  test.isUndefined SpecialwNodeÏ.Meta.fields.nested.slug.reverseName
+  test.isUndefined SpecialwNodeÏ.Meta.fields.nested.slug.reverseFields
+  test.instanceOf SpecialwNodeÏ.Meta.fields.slug, SpecialwNodeÏ._GeneratedField
+  test.isNull SpecialwNodeÏ.Meta.fields.slug.ancestorArray, SpecialwNodeÏ.Meta.fields.slug.ancestorArray
+  test.isTrue _.isFunction SpecialwNodeÏ.Meta.fields.slug.generator
+  test.equal SpecialwNodeÏ.Meta.fields.slug.sourcePath, 'slug'
+  test.equal SpecialwNodeÏ.Meta.fields.slug.sourceW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.slug.targetW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.slug.sourceCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.slug.targetCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.slug.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.slug.targetW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.slug.fields, ['body', 'subW.body']
+  test.isUndefined SpecialwNodeÏ.Meta.fields.slug.reverseName
+  test.isUndefined SpecialwNodeÏ.Meta.fields.slug.reverseFields
+  test.instanceOf SpecialwNodeÏ.Meta.fields.tags, SpecialwNodeÏ._GeneratedField
+  test.equal SpecialwNodeÏ.Meta.fields.tags.ancestorArray, 'tags'
+  test.isTrue _.isFunction SpecialwNodeÏ.Meta.fields.tags.generator
+  test.equal SpecialwNodeÏ.Meta.fields.tags.sourcePath, 'tags'
+  test.equal SpecialwNodeÏ.Meta.fields.tags.sourceW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.tags.targetW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.tags.sourceCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.tags.targetCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.tags.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.tags.targetW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.tags.fields, ['body', 'subW.body', 'nested.body']
+  test.isUndefined SpecialwNodeÏ.Meta.fields.tags.reverseName
+  test.isUndefined SpecialwNodeÏ.Meta.fields.tags.reverseFields
+  test.instanceOf SpecialwNodeÏ.Meta.fields.special, SpecialwNodeÏ._ReferenceField
+  test.isNull SpecialwNodeÏ.Meta.fields.special.ancestorArray, SpecialwNodeÏ.Meta.fields.special.ancestorArray
+  test.isTrue SpecialwNodeÏ.Meta.fields.special.required
+  test.equal SpecialwNodeÏ.Meta.fields.special.sourcePath, 'special'
+  test.equal SpecialwNodeÏ.Meta.fields.special.sourceW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.special.targetW, Person
+  test.equal SpecialwNodeÏ.Meta.fields.special.sourceCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.special.targetCollection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.special.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.special.targetW.Meta.collection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.special.fields, []
+  test.isNull SpecialwNodeÏ.Meta.fields.special.reverseName
+  test.equal SpecialwNodeÏ.Meta.fields.special.reverseFields, []
 
   testWList test, ALL
 
@@ -959,11 +968,11 @@ testAsyncMulti 'peerdb - references', [
         test.isTrue person3Id
         @person3Id = person3Id
 
-    # Wait so that observers have time to run (but no wNode is yet made, so nothing really happens).
+    # Wait so that observers have time to run (but no wNodeÏ is yet made, so nothing really happens).
     # We want to wait here so that we catch possible errors in source observers, otherwise target
-    # observers can patch things up. For example, if we create a wNode first and target observers
+    # observers can patch things up. For example, if we create a wNodeÏ first and target observers
     # (triggered by person inserts, but pending) run afterwards, then they can patch things which
-    # should in fact be done by source observers (on wNode), like setting usernames in wNode's
+    # should in fact be done by source observers (on wNodeÏ), like setting usernames in wNodeÏ's
     # references to persons.
     waitForDatabase test, expect
 ,
@@ -1032,7 +1041,7 @@ testAsyncMulti 'peerdb - references', [
       field2: 'Field 3 - 2'
       count: 0
 
-    wNode.Ws.insert
+    wNodeÏ.Ws.insert
       author:
         _id: @person1._id
         # To test what happens if all fields are not up to date
@@ -1074,22 +1083,22 @@ testAsyncMulti 'peerdb - references', [
       ]
       body: 'FooBar'
     ,
-      expect (error, wNodeId) =>
+      expect (error, wNodeÏId) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue wNodeId
-        @wNodeId = wNodeId
+        test.isTrue wNodeÏId
+        @wNodeÏId = wNodeÏId
 
     # Wait so that observers have time to update Ws
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
     # We inserted the W only with ids - subWs should be
     # automatically populated with additional fields as defined in @ReferenceField
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -1196,8 +1205,8 @@ testAsyncMulti 'peerdb - references', [
       displayName: 'Person 1'
       field1: 'Field 1 - 1'
       field2: 'Field 1 - 2'
-      wNodes: [
-        _id: @wNodeId
+      wNodeÏs: [
+        _id: @wNodeÏId
         body: 'FooBar'
         nested: [
           body: 'NestedFooBar'
@@ -1212,8 +1221,8 @@ testAsyncMulti 'peerdb - references', [
       displayName: 'Person 2'
       field1: 'Field 2 - 1'
       field2: 'Field 2 - 2'
-      subWwNodes: [
-        _id: @wNodeId
+      subWwNodeÏs: [
+        _id: @wNodeÏId
         body: 'FooBar'
         nested: [
           body: 'NestedFooBar'
@@ -1221,8 +1230,8 @@ testAsyncMulti 'peerdb - references', [
         subW:
           body: 'SubWFooBar'
       ]
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         body: 'FooBar'
         nested: [
           body: 'NestedFooBar'
@@ -1230,8 +1239,8 @@ testAsyncMulti 'peerdb - references', [
         subW:
           body: 'SubWFooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         body: 'FooBar'
         nested: [
           body: 'NestedFooBar'
@@ -1246,8 +1255,8 @@ testAsyncMulti 'peerdb - references', [
       displayName: 'Person 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         body: 'FooBar'
         nested: [
           body: 'NestedFooBar'
@@ -1261,13 +1270,13 @@ testAsyncMulti 'peerdb - references', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
     # All persons had usernames changed, they should
-    # be updated in the wNode as well, automatically
-    test.equal @wNode,
-      _id: @wNodeId
+    # be updated in the wNodeÏ as well, automatically
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -1336,12 +1345,12 @@ testAsyncMulti 'peerdb - references', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
     # person3 was removed, references should be removed as well, automatically
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -1397,13 +1406,13 @@ testAsyncMulti 'peerdb - references', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
     # person2 was removed, references should be removed as well, automatically,
     # but lists should be kept as empty lists
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -1432,18 +1441,18 @@ testAsyncMulti 'peerdb - references', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
     # If directly referenced W is removed, dependency is removed as well
-    test.isFalse @wNode, @wNode
+    test.isFalse @wNodeÏ, @wNodeÏ
 ]
 
 Tinytest.add 'peerdb - invalid optional', (test) ->
   test.throws ->
-    class BadwNode1 extends W
+    class BadwNodeÏ1 extends W
       @Meta
-        name: 'BadwNode1'
+        name: 'BadwNodeÏ1'
         fields: =>
           reviewers: [@ReferenceField Person, ['username'], false]
   , /Reference field directly in an array cannot be optional/
@@ -1456,9 +1465,9 @@ Tinytest.add 'peerdb - invalid optional', (test) ->
 
 Tinytest.add 'peerdb - invalid nested arrays', (test) ->
   test.throws ->
-    class BadwNode2 extends W
+    class BadwNodeÏ2 extends W
       @Meta
-        name: 'BadwNode2'
+        name: 'BadwNodeÏ2'
         fields: =>
           nested: [
             many: [@ReferenceField Person, ['username']]
@@ -1474,9 +1483,9 @@ Tinytest.add 'peerdb - invalid nested arrays', (test) ->
 unless CODE_MINIMIZED
   Tinytest.add 'peerdb - invalid name', (test) ->
     test.throws ->
-      class BadwNode3 extends W
+      class BadwNodeÏ3 extends W
         @Meta
-          name: 'wNode'
+          name: 'wNodeÏ'
     , /W name does not match class name/
 
     # Invalid W should not be added to the list
@@ -1487,7 +1496,7 @@ unless CODE_MINIMIZED
 
 Tinytest.add 'peerdb - abstract with parent', (test) ->
   test.throws ->
-    class BadwNode4 extends wNode
+    class BadwNodeÏ4 extends wNodeÏ
       @Meta
         abstract: true
   , /Abstract W with a parent/
@@ -2134,7 +2143,7 @@ if Meteor.isServer and W.instances is 1
   Tinytest.add 'peerdb - errors', (test) ->
     Log._intercept 2 # Two to see if we catch more than expected
 
-    wNodeId = wNode.Ws.insert
+    wNodeÏId = wNodeÏ.Ws.insert
       author:
         _id: 'nonexistent'
 
@@ -2148,12 +2157,12 @@ if Meteor.isServer and W.instances is 1
     test.isTrue _.isString(intercepted[0]), intercepted[0]
     intercepted = EJSON.parse intercepted[0]
 
-    test.equal intercepted.message, "W 'wNode' '#{ wNodeId }' field 'author' is referencing a nonexistent W 'nonexistent'"
+    test.equal intercepted.message, "W 'wNodeÏ' '#{ wNodeÏId }' field 'author' is referencing a nonexistent W 'nonexistent'"
     test.equal intercepted.level, 'error'
 
     Log._intercept 2 # Two to see if we catch more than expected
 
-    wNodeId = wNode.Ws.insert
+    wNodeÏId = wNodeÏ.Ws.insert
       subscribers: 'foobar'
 
     # Wait so that observers have time to update Ws
@@ -2166,12 +2175,12 @@ if Meteor.isServer and W.instances is 1
     test.isTrue _.isString(intercepted[0]), intercepted[0]
     intercepted = EJSON.parse intercepted[0]
 
-    test.equal intercepted.message, "W 'wNode' '#{ wNodeId }' field 'subscribers' was updated with a non-array value: 'foobar'"
+    test.equal intercepted.message, "W 'wNodeÏ' '#{ wNodeÏId }' field 'subscribers' was updated with a non-array value: 'foobar'"
     test.equal intercepted.level, 'error'
 
     Log._intercept 2 # Two to see if we catch more than expected
 
-    wNodeId = wNode.Ws.insert
+    wNodeÏId = wNodeÏ.Ws.insert
       author: null
 
     # Wait so that observers have time to update Ws
@@ -2184,7 +2193,7 @@ if Meteor.isServer and W.instances is 1
     test.isTrue _.isString(intercepted[0]), intercepted[0]
     intercepted = EJSON.parse intercepted[0]
 
-    test.equal intercepted.message, "W 'wNode' '#{ wNodeId }' field 'author' was updated with an invalid value: null"
+    test.equal intercepted.message, "W 'wNodeÏ' '#{ wNodeÏId }' field 'author' was updated with an invalid value: null"
     test.equal intercepted.level, 'error'
 
     Log._intercept 1
@@ -2202,9 +2211,9 @@ if Meteor.isServer and W.instances is 1
 
 testAsyncMulti 'peerdb - delayed defintion', [
   (test, expect) ->
-    class BadwNode5 extends W
+    class BadwNodeÏ5 extends W
       @Meta
-        name: 'BadwNode5'
+        name: 'BadwNodeÏ5'
         fields: =>
           author: @ReferenceField undefined, ['username']
 
@@ -2221,11 +2230,11 @@ testAsyncMulti 'peerdb - delayed defintion', [
 
     # Let's find it
     for i in intercepted
-      break if i.indexOf('BadwNode5') isnt -1
+      break if i.indexOf('BadwNodeÏ5') isnt -1
     test.isTrue _.isString(i), i
     intercepted = EJSON.parse i
 
-    test.equal intercepted.message.lastIndexOf("Not all delayed W definitions were successfully retried:\nBadwNode5 from"), 0, intercepted.message
+    test.equal intercepted.message.lastIndexOf("Not all delayed W definitions were successfully retried:\nBadwNodeÏ5 from"), 0, intercepted.message
     test.equal intercepted.level, 'error'
 
     testWList test, ALL
@@ -2304,7 +2313,7 @@ testAsyncMulti 'peerdb - subW fields', [
       field2: 'Field 3 - 2'
       count: 0
 
-    wNode.Ws.insert
+    wNodeÏ.Ws.insert
       author:
         _id: @person1._id
       subscribers: [
@@ -2335,20 +2344,20 @@ testAsyncMulti 'peerdb - subW fields', [
       ]
       body: 'FooBar'
     ,
-      expect (error, wNodeId) =>
+      expect (error, wNodeÏId) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue wNodeId
-        @wNodeId = wNodeId
+        test.isTrue wNodeÏId
+        @wNodeÏId = wNodeÏId
 
     # Wait so that observers have time to update Ws
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -2409,26 +2418,26 @@ testAsyncMulti 'peerdb - subW fields', [
         'tag-1-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    wNodeLink.Ws.insert
-      wNode:
-        _id: @wNode._id
+    wNodeÏLink.Ws.insert
+      wNodeÏ:
+        _id: @wNodeÏ._id
     ,
-      expect (error, wNodeLinkId) =>
+      expect (error, wNodeÏLinkId) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue wNodeLinkId
-        @wNodeLinkId = wNodeLinkId
+        test.isTrue wNodeÏLinkId
+        @wNodeÏLinkId = wNodeÏLinkId
 
     # Wait so that observers have time to update Ws
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNodeLink = wNodeLink.Ws.findOne @wNodeLinkId,
+    @wNodeÏLink = wNodeÏLink.Ws.findOne @wNodeÏLinkId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNodeLink,
-      _id: @wNodeLinkId
-      wNode:
-        _id: @wNode._id
+    test.equal @wNodeÏLink,
+      _id: @wNodeÏLinkId
+      wNodeÏ:
+        _id: @wNodeÏ._id
         subW:
           person:
             _id: @person2._id
@@ -2471,8 +2480,8 @@ testAsyncMulti 'peerdb - subW fields', [
       displayName: 'Person 2'
       field1: 'Field 2 - 1'
       field2: 'Field 2 - 2'
-      subWwNodes: [
-        _id: @wNodeId
+      subWwNodeÏs: [
+        _id: @wNodeÏId
         body: 'FooBar'
         nested: [
           body: 'NestedFooBar'
@@ -2480,8 +2489,8 @@ testAsyncMulti 'peerdb - subW fields', [
         subW:
           body: 'SubWFooBar'
       ]
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         body: 'FooBar'
         nested: [
           body: 'NestedFooBar'
@@ -2489,8 +2498,8 @@ testAsyncMulti 'peerdb - subW fields', [
         subW:
           body: 'SubWFooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         body: 'FooBar'
         nested: [
           body: 'NestedFooBar'
@@ -2500,13 +2509,13 @@ testAsyncMulti 'peerdb - subW fields', [
       ]
       count: 3
 
-    @wNodeLink = wNodeLink.Ws.findOne @wNodeLinkId,
+    @wNodeÏLink = wNodeÏLink.Ws.findOne @wNodeÏLinkId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNodeLink,
-      _id: @wNodeLinkId
-      wNode:
-        _id: @wNode._id
+    test.equal @wNodeÏLink,
+      _id: @wNodeÏLinkId
+      wNodeÏ:
+        _id: @wNodeÏ._id
         subW:
           person:
             _id: @person2._id
@@ -2536,13 +2545,13 @@ testAsyncMulti 'peerdb - subW fields', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNodeLink = wNodeLink.Ws.findOne @wNodeLinkId,
+    @wNodeÏLink = wNodeÏLink.Ws.findOne @wNodeÏLinkId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNodeLink,
-      _id: @wNodeLinkId
-      wNode:
-        _id: @wNode._id
+    test.equal @wNodeÏLink,
+      _id: @wNodeÏLinkId
+      wNodeÏ:
+        _id: @wNodeÏ._id
         subW:
           person: null
           persons: [
@@ -2553,7 +2562,7 @@ testAsyncMulti 'peerdb - subW fields', [
             field2: @person3.field2
           ]
 
-    wNode.Ws.remove @wNode._id,
+    wNodeÏ.Ws.remove @wNodeÏ._id,
       expect (error) =>
         test.isFalse error, error?.toString?() or error
 
@@ -2561,10 +2570,10 @@ testAsyncMulti 'peerdb - subW fields', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNodeLink = wNodeLink.Ws.findOne @wNodeLinkId,
+    @wNodeÏLink = wNodeÏLink.Ws.findOne @wNodeÏLinkId,
       transform: null # So that we can use test.equal
 
-    test.isFalse @wNodeLink, @wNodeLink
+    test.isFalse @wNodeÏLink, @wNodeÏLink
 ]
 
 testAsyncMulti 'peerdb - generated fields', [
@@ -2623,7 +2632,7 @@ testAsyncMulti 'peerdb - generated fields', [
       displayName: 'Person 3'
       count: 0
 
-    wNode.Ws.insert
+    wNodeÏ.Ws.insert
       author:
         _id: @person1._id
       subscribers: [
@@ -2654,20 +2663,20 @@ testAsyncMulti 'peerdb - generated fields', [
       ]
       body: 'FooBar'
     ,
-      expect (error, wNodeId) =>
+      expect (error, wNodeÏId) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue wNodeId
-        @wNodeId = wNodeId
+        test.isTrue wNodeÏId
+        @wNodeÏId = wNodeÏId
 
     # Wait so that observers have time to update Ws
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -2718,7 +2727,7 @@ testAsyncMulti 'peerdb - generated fields', [
         'tag-1-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    wNode.Ws.update @wNodeId,
+    wNodeÏ.Ws.update @wNodeÏId,
       $set:
         body: 'FooBarZ'
     ,
@@ -2732,13 +2741,13 @@ testAsyncMulti 'peerdb - generated fields', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
     # All persons had usernames changed, they should
-    # be updated in the wNode as well, automatically
-    test.equal @wNode,
-      _id: @wNodeId
+    # be updated in the wNodeÏ as well, automatically
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -2789,7 +2798,7 @@ testAsyncMulti 'peerdb - generated fields', [
         'tag-1-prefix-foobarz-nestedfoobar-suffix'
       ]
 
-    wNode.Ws.update @wNodeId,
+    wNodeÏ.Ws.update @wNodeÏId,
       $set:
         'subW.body': 'SubWFooBarZ'
     ,
@@ -2803,13 +2812,13 @@ testAsyncMulti 'peerdb - generated fields', [
     waitForDatabase test, expect
 ,
    (test, expect) ->
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
     # All persons had usernames changed, they should
-    # be updated in the wNode as well, automatically
-    test.equal @wNode,
-      _id: @wNodeId
+    # be updated in the wNodeÏ as well, automatically
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -2860,7 +2869,7 @@ testAsyncMulti 'peerdb - generated fields', [
         'tag-1-prefix-foobarz-nestedfoobar-suffix'
       ]
 
-    wNode.Ws.update @wNodeId,
+    wNodeÏ.Ws.update @wNodeÏId,
       $set:
         'nested.0.body': 'NestedFooBarZ'
     ,
@@ -2874,13 +2883,13 @@ testAsyncMulti 'peerdb - generated fields', [
     waitForDatabase test, expect
 ,
    (test, expect) ->
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
     # All persons had usernames changed, they should
-    # be updated in the wNode as well, automatically
-    test.equal @wNode,
-      _id: @wNodeId
+    # be updated in the wNodeÏ as well, automatically
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -2931,7 +2940,7 @@ testAsyncMulti 'peerdb - generated fields', [
         'tag-1-prefix-foobarz-nestedfoobarz-suffix'
       ]
 
-    wNode.Ws.update @wNodeId,
+    wNodeÏ.Ws.update @wNodeÏId,
       $set:
         body: null
     ,
@@ -2943,11 +2952,11 @@ testAsyncMulti 'peerdb - generated fields', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -2995,7 +3004,7 @@ testAsyncMulti 'peerdb - generated fields', [
       slug: null
       tags: []
 
-    wNode.Ws.update @wNodeId,
+    wNodeÏ.Ws.update @wNodeÏId,
       $unset:
         body: ''
     ,
@@ -3007,11 +3016,11 @@ testAsyncMulti 'peerdb - generated fields', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -3074,7 +3083,7 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
     @Meta
       name: 'Second'
       fields: (fields) =>
-        fields.second = @ReferenceField wNode # Not undefined, but overall meta will still be delayed
+        fields.second = @ReferenceField wNodeÏ # Not undefined, but overall meta will still be delayed
         fields
 
   class Third extends Second
@@ -3213,7 +3222,7 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
   test.isNull Second.Meta.fields.second.reverseName
   test.equal Second.Meta.fields.second.reverseFields, []
 
-  firstReferenceB = wNode
+  firstReferenceB = wNodeÏ
   W._retryDelayed()
 
   testWList test, ALL.concat [Second, First]
@@ -3332,7 +3341,7 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
   test.isNull First.Meta.fields.first.reverseName
   test.equal First.Meta.fields.first.reverseFields, []
 
-  secondReferenceB = wNode
+  secondReferenceB = wNodeÏ
   W._retryDelayed()
 
   testWList test, ALL.concat [Second, First, Third]
@@ -3412,11 +3421,11 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
   test.isTrue Third.Meta.fields.second.required
   test.equal Third.Meta.fields.second.sourcePath, 'second'
   test.equal Third.Meta.fields.second.sourceW, Third
-  test.equal Third.Meta.fields.second.targetW, wNode
+  test.equal Third.Meta.fields.second.targetW, wNodeÏ
   test.equal Third.Meta.fields.second.sourceCollection._name, 'Thirds'
-  test.equal Third.Meta.fields.second.targetCollection._name, 'wNodes'
+  test.equal Third.Meta.fields.second.targetCollection._name, 'wNodeÏs'
   test.equal Third.Meta.fields.second.sourceW.Meta.collection._name, 'Thirds'
-  test.equal Third.Meta.fields.second.targetW.Meta.collection._name, 'wNodes'
+  test.equal Third.Meta.fields.second.targetW.Meta.collection._name, 'wNodeÏs'
   test.equal Third.Meta.fields.second.fields, []
   test.isNull Third.Meta.fields.second.reverseName
   test.equal Third.Meta.fields.second.reverseFields, []
@@ -3510,11 +3519,11 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
   test.isTrue Third.Meta.fields.second.required
   test.equal Third.Meta.fields.second.sourcePath, 'second'
   test.equal Third.Meta.fields.second.sourceW, Third
-  test.equal Third.Meta.fields.second.targetW, wNode
+  test.equal Third.Meta.fields.second.targetW, wNodeÏ
   test.equal Third.Meta.fields.second.sourceCollection._name, 'Thirds'
-  test.equal Third.Meta.fields.second.targetCollection._name, 'wNodes'
+  test.equal Third.Meta.fields.second.targetCollection._name, 'wNodeÏs'
   test.equal Third.Meta.fields.second.sourceW.Meta.collection._name, 'Thirds'
-  test.equal Third.Meta.fields.second.targetW.Meta.collection._name, 'wNodes'
+  test.equal Third.Meta.fields.second.targetW.Meta.collection._name, 'wNodeÏs'
   test.equal Third.Meta.fields.second.fields, []
   test.isNull Third.Meta.fields.second.reverseName
   test.equal Third.Meta.fields.second.reverseFields, []
@@ -3774,7 +3783,7 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       field2: 'Field 3 - 2'
       count: 0
 
-    wNode.Ws.insert
+    wNodeÏ.Ws.insert
       author:
         _id: @person1._id
         # To test what happens if fields are partially not up to date
@@ -3863,20 +3872,20 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       body: 'FooBar'
     ,
-      expect (error, wNodeId) =>
+      expect (error, wNodeÏId) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue wNodeId
-        @wNodeId = wNodeId
+        test.isTrue wNodeÏId
+        @wNodeÏId = wNodeÏId
 
     # Wait so that observers have time to update Ws
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -4066,8 +4075,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 1'
       field1: 'Field 1 - 1'
       field2: 'Field 1 - 2'
-      wNodes: [
-        _id: @wNodeId
+      wNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -4092,8 +4101,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 2'
       field1: 'Field 2 - 1'
       field2: 'Field 2 - 2'
-      subWwNodes: [
-        _id: @wNodeId
+      subWwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -4111,8 +4120,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -4130,8 +4139,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -4156,8 +4165,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -4175,8 +4184,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -4200,11 +4209,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -4371,8 +4380,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
-      wNodes: [
-        _id: @wNodeId
+      wNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -4392,11 +4401,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 1
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -4559,8 +4568,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
-      wNodes: [
-        _id: @wNodeId
+      wNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -4580,11 +4589,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 1
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         displayName: @person1.displayName
@@ -4746,8 +4755,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 2'
       field1: 'Field 2 - 1'
       field2: 'Field 2 - 2'
-      subWwNodes: [
-        _id: @wNodeId
+      subWwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -4765,8 +4774,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -4784,8 +4793,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -4805,11 +4814,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 3
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         displayName: @person1.displayName
@@ -4961,8 +4970,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -4980,8 +4989,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -5001,11 +5010,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 2
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         displayName: @person1.displayName
@@ -5148,8 +5157,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
-      wNodes: [
-        _id: @wNodeId
+      wNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -5169,11 +5178,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 1
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -5317,8 +5326,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 2'
       field1: 'Field 2 - 1'
       field2: 'Field 2 - 2'
-      subWwNodes: [
-        _id: @wNodeId
+      subWwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -5336,8 +5345,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -5355,8 +5364,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -5376,11 +5385,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 3
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -5534,8 +5543,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -5553,8 +5562,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -5574,11 +5583,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 2
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -5743,8 +5752,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       _id: @person2Id
       username: 'person2b'
       displayName: 'Person 2'
-      subWwNodes: [
-        _id: @wNodeId
+      subWwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -5762,8 +5771,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -5781,8 +5790,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -5802,11 +5811,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 3
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -5961,8 +5970,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 2'
       field1: 'Field 2 - 1b'
       field2: 'Field 2 - 2b'
-      subWwNodes: [
-        _id: @wNodeId
+      subWwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -5980,8 +5989,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -5999,8 +6008,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBar'
         nested: [
@@ -6020,11 +6029,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 3
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -6167,7 +6176,7 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         'tag-6-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    wNode.Ws.update @wNodeId,
+    wNodeÏ.Ws.update @wNodeÏId,
       $set:
         'subW.body': 'SubWFooBarZ'
     ,
@@ -6192,8 +6201,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
-      wNodes: [
-        _id: @wNodeId
+      wNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6218,8 +6227,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 2'
       field1: 'Field 2 - 1b'
       field2: 'Field 2 - 2b'
-      subWwNodes: [
-        _id: @wNodeId
+      subWwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6237,8 +6246,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6256,8 +6265,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6282,8 +6291,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6301,8 +6310,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6322,11 +6331,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 2
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -6469,7 +6478,7 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         'tag-6-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    wNode.Ws.update @wNodeId,
+    wNodeÏ.Ws.update @wNodeÏId,
       $set:
         'nested.0.body': 'NestedFooBarZ'
     ,
@@ -6494,8 +6503,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
-      wNodes: [
-        _id: @wNodeId
+      wNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6520,8 +6529,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 2'
       field1: 'Field 2 - 1b'
       field2: 'Field 2 - 2b'
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6539,8 +6548,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      subWwNodes: [
-        _id: @wNodeId
+      subWwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6558,8 +6567,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6584,8 +6593,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6603,8 +6612,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6624,11 +6633,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 2
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -6771,7 +6780,7 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         'tag-6-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    wNode.Ws.update @wNodeId,
+    wNodeÏ.Ws.update @wNodeÏId,
       $set:
         'nested.4.body': 'NestedFooBarA'
     ,
@@ -6796,8 +6805,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
-      wNodes: [
-        _id: @wNodeId
+      wNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6822,8 +6831,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 2'
       field1: 'Field 2 - 1b'
       field2: 'Field 2 - 2b'
-      subWwNodes: [
-        _id: @wNodeId
+      subWwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6841,8 +6850,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6860,8 +6869,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6886,8 +6895,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6905,8 +6914,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -6926,11 +6935,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 2
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -7073,7 +7082,7 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         'tag-6-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    wNode.Ws.update @wNodeId,
+    wNodeÏ.Ws.update @wNodeÏId,
       $set:
         'nested.3.body': null
     ,
@@ -7098,8 +7107,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
-      wNodes: [
-        _id: @wNodeId
+      wNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7124,8 +7133,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 2'
       field1: 'Field 2 - 1b'
       field2: 'Field 2 - 2b'
-      subWwNodes: [
-        _id: @wNodeId
+      subWwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7143,8 +7152,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7162,8 +7171,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7188,8 +7197,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7207,8 +7216,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7228,11 +7237,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 2
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -7374,7 +7383,7 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         'tag-5-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    wNode.Ws.update @wNodeId,
+    wNodeÏ.Ws.update @wNodeÏId,
       $unset:
         'nested.2.body': ''
     ,
@@ -7399,8 +7408,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
-      wNodes: [
-        _id: @wNodeId
+      wNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7425,8 +7434,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 2'
       field1: 'Field 2 - 1b'
       field2: 'Field 2 - 2b'
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7444,8 +7453,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      subWwNodes: [
-        _id: @wNodeId
+      subWwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7463,8 +7472,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7489,8 +7498,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7508,8 +7517,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBar'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7529,11 +7538,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 2
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -7672,7 +7681,7 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         'tag-4-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    wNode.Ws.update @wNodeId,
+    wNodeÏ.Ws.update @wNodeÏId,
       $set:
         body: 'FooBarZ'
     ,
@@ -7697,8 +7706,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
-      wNodes: [
-        _id: @wNodeId
+      wNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7723,8 +7732,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 2'
       field1: 'Field 2 - 1b'
       field2: 'Field 2 - 2b'
-      subWwNodes: [
-        _id: @wNodeId
+      subWwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7742,8 +7751,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBarZ'
       ]
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7761,8 +7770,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBarZ'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7787,8 +7796,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7806,8 +7815,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBarZ'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -7827,11 +7836,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 2
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -7970,7 +7979,7 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         'tag-4-prefix-foobarz-nestedfoobar-suffix'
       ]
 
-    wNode.Ws.update @wNodeId,
+    wNodeÏ.Ws.update @wNodeÏId,
       $push:
         nested:
           required:
@@ -8000,8 +8009,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
-      wNodes: [
-        _id: @wNodeId
+      wNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -8028,8 +8037,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 2'
       field1: 'Field 2 - 1b'
       field2: 'Field 2 - 2b'
-      subWwNodes: [
-        _id: @wNodeId
+      subWwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -8049,8 +8058,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBarZ'
       ]
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -8070,8 +8079,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBarZ'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -8098,8 +8107,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -8119,8 +8128,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBarZ'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -8142,11 +8151,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 2
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -8317,8 +8326,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
-      wNodes: [
-        _id: @wNodeId
+      wNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -8337,8 +8346,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
-      subWswNodes: [
-        _id: @wNodeId
+      subWswNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -8350,8 +8359,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         ]
         body: 'FooBarZ'
       ]
-      nestedwNodes: [
-        _id: @wNodeId
+      nestedwNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: [
@@ -8365,11 +8374,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 2
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -8458,8 +8467,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       displayName: 'Person 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
-      wNodes: [
-        _id: @wNodeId
+      wNodeÏs: [
+        _id: @wNodeÏId
         subW:
           body: 'SubWFooBarZ'
         nested: []
@@ -8467,11 +8476,11 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
       count: 1
 
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode,
-      _id: @wNodeId
+    test.equal @wNodeÏ,
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -8500,10 +8509,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode = wNode.Ws.findOne @wNodeId,
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    test.isFalse @wNode, @wNode
+    test.isFalse @wNodeÏ, @wNodeÏ
 ]
 
 if Meteor.isServer and W.instances is 1
@@ -8613,7 +8622,7 @@ testAsyncMulti 'peerdb - instances', [
     test.equal @person2.formatName(), 'person2-Person 2'
     test.equal @person3.formatName(), 'person3-Person 3'
 
-    wNode.Ws.insert
+    wNodeÏ.Ws.insert
       author:
         _id: @person1._id
       subscribers: [
@@ -8644,33 +8653,33 @@ testAsyncMulti 'peerdb - instances', [
       ]
       body: 'FooBar'
     ,
-      expect (error, wNodeId) =>
+      expect (error, wNodeÏId) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue wNodeId
-        @wNodeId = wNodeId
+        test.isTrue wNodeÏId
+        @wNodeÏId = wNodeÏId
 
     # Wait so that observers have time to update Ws
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode = wNode.Ws.findOne @wNodeId
+    @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId
 
-    test.instanceOf @wNode, wNode
-    test.instanceOf @wNode.author, Person
-    test.instanceOf @wNode.subscribers[0], Person
-    test.instanceOf @wNode.subscribers[1], Person
-    test.instanceOf @wNode.reviewers[0], Person
-    test.instanceOf @wNode.reviewers[1], Person
-    test.instanceOf @wNode.subW.person, Person
-    test.instanceOf @wNode.subW.persons[0], Person
-    test.instanceOf @wNode.subW.persons[1], Person
-    test.instanceOf @wNode.nested[0].required, Person
-    test.instanceOf @wNode.nested[0].optional, Person
+    test.instanceOf @wNodeÏ, wNodeÏ
+    test.instanceOf @wNodeÏ.author, Person
+    test.instanceOf @wNodeÏ.subscribers[0], Person
+    test.instanceOf @wNodeÏ.subscribers[1], Person
+    test.instanceOf @wNodeÏ.reviewers[0], Person
+    test.instanceOf @wNodeÏ.reviewers[1], Person
+    test.instanceOf @wNodeÏ.subW.person, Person
+    test.instanceOf @wNodeÏ.subW.persons[0], Person
+    test.instanceOf @wNodeÏ.subW.persons[1], Person
+    test.instanceOf @wNodeÏ.nested[0].required, Person
+    test.instanceOf @wNodeÏ.nested[0].optional, Person
 
-    test.equal @wNode.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
+    test.equal @wNodeÏ.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
 
-    test.equal plainObject(@wNode),
-      _id: @wNodeId
+    test.equal plainObject(@wNodeÏ),
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -8723,7 +8732,7 @@ testAsyncMulti 'peerdb - instances', [
         'tag-1-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    SpecialwNode.Ws.insert
+    SpecialwNodeÏ.Ws.insert
       author:
         _id: @person1._id
       subscribers: [
@@ -8756,34 +8765,34 @@ testAsyncMulti 'peerdb - instances', [
       special:
         _id: @person1._id
     ,
-      expect (error, wNodeId) =>
+      expect (error, wNodeÏId) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue wNodeId
-        @wNodeId = wNodeId
+        test.isTrue wNodeÏId
+        @wNodeÏId = wNodeÏId
 
     # Wait so that observers have time to update Ws
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode = SpecialwNode.Ws.findOne @wNodeId
+    @wNodeÏ = SpecialwNodeÏ.Ws.findOne @wNodeÏId
 
-    test.instanceOf @wNode, SpecialwNode
-    test.instanceOf @wNode.author, Person
-    test.instanceOf @wNode.subscribers[0], Person
-    test.instanceOf @wNode.subscribers[1], Person
-    test.instanceOf @wNode.reviewers[0], Person
-    test.instanceOf @wNode.reviewers[1], Person
-    test.instanceOf @wNode.subW.person, Person
-    test.instanceOf @wNode.subW.persons[0], Person
-    test.instanceOf @wNode.subW.persons[1], Person
-    test.instanceOf @wNode.nested[0].required, Person
-    test.instanceOf @wNode.nested[0].optional, Person
-    test.instanceOf @wNode.special, Person
+    test.instanceOf @wNodeÏ, SpecialwNodeÏ
+    test.instanceOf @wNodeÏ.author, Person
+    test.instanceOf @wNodeÏ.subscribers[0], Person
+    test.instanceOf @wNodeÏ.subscribers[1], Person
+    test.instanceOf @wNodeÏ.reviewers[0], Person
+    test.instanceOf @wNodeÏ.reviewers[1], Person
+    test.instanceOf @wNodeÏ.subW.person, Person
+    test.instanceOf @wNodeÏ.subW.persons[0], Person
+    test.instanceOf @wNodeÏ.subW.persons[1], Person
+    test.instanceOf @wNodeÏ.nested[0].required, Person
+    test.instanceOf @wNodeÏ.nested[0].optional, Person
+    test.instanceOf @wNodeÏ.special, Person
 
-    test.equal @wNode.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
+    test.equal @wNodeÏ.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
 
-    test.equal plainObject(@wNode),
-      _id: @wNodeId
+    test.equal plainObject(@wNodeÏ),
+      _id: @wNodeÏId
       author:
         _id: @person1._id
         username: @person1.username
@@ -8866,13 +8875,13 @@ Tinytest.add 'peerdb - bad instances', (test) ->
     test.isTrue new W
 
   # Something simple
-  test.isTrue new wNode
+  test.isTrue new wNodeÏ
     author:
       _id: Random.id()
       username: 'Foobar'
 
   test.throws ->
-    new wNode
+    new wNodeÏ
       author: [
         _id: Random.id()
         username: 'Foobar'
@@ -8880,33 +8889,33 @@ Tinytest.add 'peerdb - bad instances', (test) ->
   , /W does not match schema, not a plain object/
 
   test.throws ->
-    new wNode
+    new wNodeÏ
       subscribers: [
         Random.id()
       ]
   , /W does not match schema, not a plain object/
 
   test.throws ->
-    new wNode
+    new wNodeÏ
       subW: []
   , /W does not match schema, an unexpected array/
 
   test.throws ->
-    new wNode
+    new wNodeÏ
       subW: [
         persons: []
       ]
   , /W does not match schema, an unexpected array/
 
   test.throws ->
-    new wNode
+    new wNodeÏ
       subW: [[
         persons: []
       ]]
   , /W does not match schema, an unexpected array/
 
   test.throws ->
-    new wNode
+    new wNodeÏ
       subW:
         persons: [
           Random.id()
@@ -8914,20 +8923,20 @@ Tinytest.add 'peerdb - bad instances', (test) ->
   , /W does not match schema, not a plain object/
 
   test.throws ->
-    new wNode
+    new wNodeÏ
       nested:
         _id: Random.id()
   , /W does not match schema, expected an array/
 
   test.throws ->
-    new wNode
+    new wNodeÏ
       nested: [
         required: Random.id()
       ]
   , /W does not match schema, not a plain object/
 
   test.throws ->
-    new wNode
+    new wNodeÏ
       nested:
         required: [
           _id: Random.id()
@@ -8935,14 +8944,14 @@ Tinytest.add 'peerdb - bad instances', (test) ->
   , /W does not match schema, expected an array/
 
   test.throws ->
-    new wNode
+    new wNodeÏ
       nested:
         required:
           _id: Random.id()
   , /W does not match schema, expected an array/
 
   test.throws ->
-    new wNode
+    new wNodeÏ
       nested: [
         required: [
           _id: Random.id()
@@ -8990,7 +8999,7 @@ if Meteor.isServer and not W.instanceDisabled
       @person2 = Person.Ws.findOne @person2Id
       @person3 = Person.Ws.findOne @person3Id
 
-      wNode.Ws.insert
+      wNodeÏ.Ws.insert
         author:
           _id: @person1._id
           # To test what happens if one field is already up to date, but the other is not
@@ -9024,20 +9033,20 @@ if Meteor.isServer and not W.instanceDisabled
         ]
         body: 'FooBar'
       ,
-        expect (error, wNodeId) =>
+        expect (error, wNodeÏId) =>
           test.isFalse error, error?.toString?() or error
-          test.isTrue wNodeId
-          @wNodeId = wNodeId
+          test.isTrue wNodeÏId
+          @wNodeÏId = wNodeÏId
 
       # Wait so that observers have time to update Ws
       waitForDatabase test, expect
   ,
     (test, expect) ->
-      @wNode = wNode.Ws.findOne @wNodeId,
+      @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
         transform: null # So that we can use test.equal
 
-      test.equal @wNode,
-        _id: @wNodeId
+      test.equal @wNodeÏ,
+        _id: @wNodeÏId
         author:
           _id: @person1._id
           username: @person1.username
@@ -9090,7 +9099,7 @@ if Meteor.isServer and not W.instanceDisabled
           'tag-1-prefix-foobar-nestedfoobar-suffix'
         ]
 
-      wNode.Ws.update @wNodeId,
+      wNodeÏ.Ws.update @wNodeÏId,
         $set:
           'author.username': 'wrong'
           'reviewers.0.username': 'wrong'
@@ -9111,12 +9120,12 @@ if Meteor.isServer and not W.instanceDisabled
       waitForDatabase test, expect
   ,
     (test, expect) ->
-      @wNode = wNode.Ws.findOne @wNodeId,
+      @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
         transform: null # So that we can use test.equal
 
       # Reference fields are automatically updated back, but generated fields are not
-      test.equal @wNode,
-        _id: @wNodeId
+      test.equal @wNodeÏ,
+        _id: @wNodeÏId
         author:
           _id: @person1._id
           username: @person1.username
@@ -9173,11 +9182,11 @@ if Meteor.isServer and not W.instanceDisabled
       waitForDatabase test, expect
   ,
     (test, expect) ->
-      @wNode = wNode.Ws.findOne @wNodeId,
+      @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
         transform: null # So that we can use test.equal
 
-      test.equal @wNode,
-        _id: @wNodeId
+      test.equal @wNodeÏ,
+        _id: @wNodeÏId
         author:
           _id: @person1._id
           username: @person1.username
@@ -9231,7 +9240,7 @@ if Meteor.isServer and not W.instanceDisabled
         ]
   ]
 
-testAsyncMulti 'peerdb - reverse wNodes', [
+testAsyncMulti 'peerdb - reverse wNodeÏs', [
   (test, expect) ->
     Person.Ws.insert
       username: 'person1'
@@ -9264,7 +9273,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    wNode.Ws.insert
+    wNodeÏ.Ws.insert
       author:
         _id: @person1Id
       nested: [
@@ -9291,12 +9300,12 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'SubWFooBar1'
       body: 'FooBar1'
     ,
-      expect (error, wNodeId) =>
+      expect (error, wNodeÏId) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue wNodeId
-        @wNodeId1 = wNodeId
+        test.isTrue wNodeÏId
+        @wNodeÏId1 = wNodeÏId
 
-    wNode.Ws.insert
+    wNodeÏ.Ws.insert
       author:
         _id: @person1Id
       nested: [
@@ -9323,12 +9332,12 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'SubWFooBar2'
       body: 'FooBar2'
     ,
-      expect (error, wNodeId) =>
+      expect (error, wNodeÏId) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue wNodeId
-        @wNodeId2 = wNodeId
+        test.isTrue wNodeÏId
+        @wNodeÏId2 = wNodeÏId
 
-    wNode.Ws.insert
+    wNodeÏ.Ws.insert
       author:
         _id: @person1Id
       nested: [
@@ -9355,24 +9364,24 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'SubWFooBar3'
       body: 'FooBar3'
     ,
-      expect (error, wNodeId) =>
+      expect (error, wNodeÏId) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue wNodeId
-        @wNodeId3 = wNodeId
+        test.isTrue wNodeÏId
+        @wNodeÏId3 = wNodeÏId
 
     # Wait so that observers have time to update Ws
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode1 = wNode.Ws.findOne @wNodeId1,
+    @wNodeÏ1 = wNodeÏ.Ws.findOne @wNodeÏId1,
       transform: null # So that we can use test.equal
-    @wNode2 = wNode.Ws.findOne @wNodeId2,
+    @wNodeÏ2 = wNodeÏ.Ws.findOne @wNodeÏId2,
       transform: null # So that we can use test.equal
-    @wNode3 = wNode.Ws.findOne @wNodeId3,
+    @wNodeÏ3 = wNodeÏ.Ws.findOne @wNodeÏId3,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode1,
-      _id: @wNodeId1
+    test.equal @wNodeÏ1,
+      _id: @wNodeÏId1
       author:
         _id: @person1Id
         username: 'person1'
@@ -9424,8 +9433,8 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         'tag-1-prefix-foobar1-nestedfoobar1-suffix'
       ]
 
-    test.equal @wNode2,
-      _id: @wNodeId2
+    test.equal @wNodeÏ2,
+      _id: @wNodeÏId2
       author:
         _id: @person1Id
         username: 'person1'
@@ -9477,8 +9486,8 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         'tag-1-prefix-foobar2-nestedfoobar2-suffix'
       ]
 
-    test.equal @wNode3,
-      _id: @wNodeId3
+    test.equal @wNodeÏ3,
+      _id: @wNodeÏId3
       author:
         _id: @person1Id
         username: 'person1'
@@ -9537,15 +9546,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 8
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1'
         nested: [
@@ -9553,7 +9562,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2'
         nested: [
@@ -9561,7 +9570,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3'
         nested: [
@@ -9569,9 +9578,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1'
         nested: [
@@ -9579,7 +9588,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3'
         nested: [
@@ -9587,9 +9596,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1'
         nested: [
@@ -9597,7 +9606,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2'
         nested: [
@@ -9605,7 +9614,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3'
         nested: [
@@ -9613,18 +9622,18 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3'
       ]
-    testSetEqual test, @person1.nestedwNodes, []
+    testSetEqual test, @person1.nestedwNodeÏs, []
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 5
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2'
         nested: [
@@ -9632,9 +9641,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1'
         nested: [
@@ -9642,7 +9651,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2'
         nested: [
@@ -9650,7 +9659,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3'
         nested: [
@@ -9658,9 +9667,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1'
         nested: [
@@ -9669,17 +9678,17 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar1'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 5
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes, []
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs, []
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1'
         nested: [
@@ -9687,7 +9696,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2'
         nested: [
@@ -9695,7 +9704,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3'
         nested: [
@@ -9703,9 +9712,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2'
         nested: [
@@ -9713,7 +9722,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3'
         nested: [
@@ -9722,7 +9731,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar3'
       ]
 
-    wNode.Ws.insert
+    wNodeÏ.Ws.insert
       author:
         _id: @person1Id
       nested: [
@@ -9777,12 +9786,12 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'SubWFooBar4'
       body: 'FooBar4'
     ,
-      expect (error, wNodeId) =>
+      expect (error, wNodeÏId) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue wNodeId
-        @wNodeId4 = wNodeId
+        test.isTrue wNodeÏId
+        @wNodeÏId4 = wNodeÏId
 
-    wNode.Ws.insert
+    wNodeÏ.Ws.insert
       author:
         _id: @person1Id
       nested: [
@@ -9817,10 +9826,10 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'SubWFooBar5'
       body: 'FooBar5'
     ,
-      expect (error, wNodeId) =>
+      expect (error, wNodeÏId) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue wNodeId
-        @wNodeId5 = wNodeId
+        test.isTrue wNodeÏId
+        @wNodeÏId5 = wNodeÏId
 
     # Wait so that observers have time to update Ws
     waitForDatabase test, expect
@@ -9833,15 +9842,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 13
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1'
         nested: [
@@ -9849,7 +9858,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2'
         nested: [
@@ -9857,7 +9866,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3'
         nested: [
@@ -9865,7 +9874,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4'
         nested: [
@@ -9887,7 +9896,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5'
         nested: [
@@ -9899,9 +9908,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1'
         nested: [
@@ -9909,7 +9918,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3'
         nested: [
@@ -9917,7 +9926,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4'
         nested: [
@@ -9939,9 +9948,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1'
         nested: [
@@ -9949,7 +9958,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2'
         nested: [
@@ -9957,7 +9966,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3'
         nested: [
@@ -9965,7 +9974,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4'
         nested: [
@@ -9987,9 +9996,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4'
         nested: [
@@ -10012,16 +10021,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 8
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2'
         nested: [
@@ -10029,9 +10038,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1'
         nested: [
@@ -10039,7 +10048,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2'
         nested: [
@@ -10047,7 +10056,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3'
         nested: [
@@ -10055,7 +10064,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4'
         nested: [
@@ -10077,7 +10086,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5'
         nested: [
@@ -10089,9 +10098,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1'
         nested: [
@@ -10099,7 +10108,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4'
         nested: [
@@ -10122,16 +10131,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 9
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs,
       [
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5'
         nested: [
@@ -10143,9 +10152,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5'
       ]
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1'
         nested: [
@@ -10153,7 +10162,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2'
         nested: [
@@ -10161,7 +10170,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3'
         nested: [
@@ -10169,7 +10178,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5'
         nested: [
@@ -10181,9 +10190,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2'
         nested: [
@@ -10191,7 +10200,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3'
         nested: [
@@ -10199,7 +10208,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4'
         nested: [
@@ -10221,7 +10230,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5'
         nested: [
@@ -10234,7 +10243,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar5'
       ]
 
-    wNode.Ws.update @wNodeId1,
+    wNodeÏ.Ws.update @wNodeÏId1,
       $set:
         'body': 'FooBar1a'
         'subW.body': 'SubWFooBar1a'
@@ -10244,7 +10253,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         test.isFalse error, error?.toString?() or error
         test.isTrue res
 
-    wNode.Ws.update @wNodeId2,
+    wNodeÏ.Ws.update @wNodeÏId2,
       $set:
         'body': 'FooBar2a'
         'subW.body': 'SubWFooBar2a'
@@ -10254,7 +10263,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         test.isFalse error, error?.toString?() or error
         test.isTrue res
 
-    wNode.Ws.update @wNodeId3,
+    wNodeÏ.Ws.update @wNodeÏId3,
       $set:
         'body': 'FooBar3a'
         'subW.body': 'SubWFooBar3a'
@@ -10264,7 +10273,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         test.isFalse error, error?.toString?() or error
         test.isTrue res
 
-    wNode.Ws.update @wNodeId4,
+    wNodeÏ.Ws.update @wNodeÏId4,
       $set:
         'body': 'FooBar4a'
         'subW.body': 'SubWFooBar4a'
@@ -10275,7 +10284,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         test.isFalse error, error?.toString?() or error
         test.isTrue res
 
-    wNode.Ws.update @wNodeId5,
+    wNodeÏ.Ws.update @wNodeÏId5,
       $set:
         'body': 'FooBar5a'
         'subW.body': 'SubWFooBar5a'
@@ -10296,15 +10305,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 13
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -10312,7 +10321,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -10320,7 +10329,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -10328,7 +10337,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -10350,7 +10359,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -10362,9 +10371,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -10372,7 +10381,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -10380,7 +10389,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -10402,9 +10411,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -10412,7 +10421,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -10420,7 +10429,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -10428,7 +10437,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -10450,9 +10459,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -10475,16 +10484,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 8
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -10492,9 +10501,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -10502,7 +10511,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -10510,7 +10519,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -10518,7 +10527,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -10540,7 +10549,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -10552,9 +10561,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -10562,7 +10571,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -10585,16 +10594,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 9
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs,
       [
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -10606,9 +10615,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -10616,7 +10625,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -10624,7 +10633,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -10632,7 +10641,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -10644,9 +10653,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -10654,7 +10663,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -10662,7 +10671,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -10684,7 +10693,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -10697,7 +10706,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar5a'
       ]
 
-    wNode.Ws.update @wNodeId2,
+    wNodeÏ.Ws.update @wNodeÏId2,
       $push:
         nested:
           required:
@@ -10712,11 +10721,11 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode2 = wNode.Ws.findOne @wNodeId2,
+    @wNodeÏ2 = wNodeÏ.Ws.findOne @wNodeÏId2,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode2,
-      _id: @wNodeId2
+    test.equal @wNodeÏ2,
+      _id: @wNodeÏId2
       author:
         _id: @person1Id
         username: 'person1'
@@ -10783,15 +10792,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 13
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -10799,7 +10808,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -10809,7 +10818,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -10817,7 +10826,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -10839,7 +10848,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -10851,9 +10860,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -10861,7 +10870,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -10869,7 +10878,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -10891,9 +10900,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -10901,7 +10910,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -10911,7 +10920,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -10919,7 +10928,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -10941,9 +10950,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -10966,16 +10975,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 9
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -10985,9 +10994,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -10995,7 +11004,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -11005,7 +11014,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -11013,7 +11022,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -11035,7 +11044,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -11047,9 +11056,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -11057,7 +11066,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -11079,7 +11088,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -11090,16 +11099,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar2a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 9
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs,
       [
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -11111,9 +11120,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -11121,7 +11130,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -11131,7 +11140,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -11139,7 +11148,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -11151,9 +11160,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -11163,7 +11172,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -11171,7 +11180,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -11193,7 +11202,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -11206,7 +11215,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar5a'
       ]
 
-    wNode.Ws.update @wNodeId2,
+    wNodeÏ.Ws.update @wNodeÏId2,
       $pop:
         nested: 1
     ,
@@ -11218,11 +11227,11 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode2 = wNode.Ws.findOne @wNodeId2,
+    @wNodeÏ2 = wNodeÏ.Ws.findOne @wNodeÏId2,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode2,
-      _id: @wNodeId2
+    test.equal @wNodeÏ2,
+      _id: @wNodeÏId2
       author:
         _id: @person1Id
         username: 'person1'
@@ -11281,15 +11290,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 13
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -11297,7 +11306,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -11305,7 +11314,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -11313,7 +11322,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -11335,7 +11344,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -11347,9 +11356,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -11357,7 +11366,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -11365,7 +11374,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -11387,9 +11396,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -11397,7 +11406,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -11405,7 +11414,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -11413,7 +11422,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -11435,9 +11444,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -11460,16 +11469,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 8
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -11477,9 +11486,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -11487,7 +11496,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -11495,7 +11504,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -11503,7 +11512,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -11525,7 +11534,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -11537,9 +11546,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -11547,7 +11556,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -11570,16 +11579,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 9
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs,
       [
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -11591,9 +11600,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -11601,7 +11610,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -11609,7 +11618,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -11617,7 +11626,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -11629,9 +11638,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -11639,7 +11648,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -11647,7 +11656,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -11669,7 +11678,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -11683,7 +11692,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
       ]
 
     # Add one which already exist
-    wNode.Ws.update @wNodeId2,
+    wNodeÏ.Ws.update @wNodeÏId2,
       $push:
         nested:
           required:
@@ -11698,11 +11707,11 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode2 = wNode.Ws.findOne @wNodeId2,
+    @wNodeÏ2 = wNodeÏ.Ws.findOne @wNodeÏId2,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode2,
-      _id: @wNodeId2
+    test.equal @wNodeÏ2,
+      _id: @wNodeÏId2
       author:
         _id: @person1Id
         username: 'person1'
@@ -11769,15 +11778,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 13
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -11785,7 +11794,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -11795,7 +11804,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -11803,7 +11812,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -11825,7 +11834,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -11837,9 +11846,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -11847,7 +11856,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -11855,7 +11864,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -11877,9 +11886,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -11887,7 +11896,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -11897,7 +11906,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -11905,7 +11914,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -11927,9 +11936,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -11952,16 +11961,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 8
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -11971,9 +11980,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -11981,7 +11990,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -11991,7 +12000,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -11999,7 +12008,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -12021,7 +12030,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -12033,9 +12042,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -12043,7 +12052,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -12066,16 +12075,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 9
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs,
       [
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -12087,9 +12096,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -12097,7 +12106,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -12107,7 +12116,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -12115,7 +12124,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -12127,9 +12136,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -12139,7 +12148,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -12147,7 +12156,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -12169,7 +12178,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -12182,7 +12191,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar5a'
       ]
 
-    wNode.Ws.update @wNodeId2,
+    wNodeÏ.Ws.update @wNodeÏId2,
       $pop:
         nested: 1
     ,
@@ -12194,11 +12203,11 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode2 = wNode.Ws.findOne @wNodeId2,
+    @wNodeÏ2 = wNodeÏ.Ws.findOne @wNodeÏId2,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode2,
-      _id: @wNodeId2
+    test.equal @wNodeÏ2,
+      _id: @wNodeÏId2
       author:
         _id: @person1Id
         username: 'person1'
@@ -12257,15 +12266,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 13
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -12273,7 +12282,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -12281,7 +12290,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -12289,7 +12298,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -12311,7 +12320,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -12323,9 +12332,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -12333,7 +12342,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -12341,7 +12350,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -12363,9 +12372,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -12373,7 +12382,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -12381,7 +12390,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -12389,7 +12398,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -12411,9 +12420,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -12436,16 +12445,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 8
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -12453,9 +12462,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -12463,7 +12472,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -12471,7 +12480,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -12479,7 +12488,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -12501,7 +12510,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -12513,9 +12522,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -12523,7 +12532,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -12546,16 +12555,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 9
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs,
       [
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -12567,9 +12576,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -12577,7 +12586,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -12585,7 +12594,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -12593,7 +12602,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -12605,9 +12614,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -12615,7 +12624,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -12623,7 +12632,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -12645,7 +12654,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -12658,7 +12667,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar5a'
       ]
 
-    wNode.Ws.update @wNodeId5,
+    wNodeÏ.Ws.update @wNodeÏId5,
       $set:
         'nested.0.required._id': @person2Id
     ,
@@ -12670,11 +12679,11 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode5 = wNode.Ws.findOne @wNodeId5,
+    @wNodeÏ5 = wNodeÏ.Ws.findOne @wNodeÏId5,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode5,
-      _id: @wNodeId5
+    test.equal @wNodeÏ5,
+      _id: @wNodeÏId5
       author:
         _id: @person1Id
         username: 'person1'
@@ -12749,15 +12758,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 13
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -12765,7 +12774,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -12773,7 +12782,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -12781,7 +12790,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -12803,7 +12812,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -12815,9 +12824,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -12825,7 +12834,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -12833,7 +12842,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -12855,9 +12864,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -12865,7 +12874,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -12873,7 +12882,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -12881,7 +12890,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -12903,9 +12912,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -12928,16 +12937,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 9
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -12945,9 +12954,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -12955,7 +12964,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -12963,7 +12972,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -12971,7 +12980,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -12993,7 +13002,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -13005,9 +13014,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -13015,7 +13024,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -13037,7 +13046,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -13050,16 +13059,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar5a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 9
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs,
       [
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -13071,9 +13080,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -13081,7 +13090,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -13089,7 +13098,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -13097,7 +13106,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -13109,9 +13118,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -13119,7 +13128,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -13127,7 +13136,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -13149,7 +13158,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -13162,7 +13171,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar5a'
       ]
 
-    wNode.Ws.update @wNodeId5,
+    wNodeÏ.Ws.update @wNodeÏId5,
       $set:
         'nested.0.required._id': @person3Id
     ,
@@ -13174,11 +13183,11 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode5 = wNode.Ws.findOne @wNodeId5,
+    @wNodeÏ5 = wNodeÏ.Ws.findOne @wNodeÏId5,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode5,
-      _id: @wNodeId5
+    test.equal @wNodeÏ5,
+      _id: @wNodeÏId5
       author:
         _id: @person1Id
         username: 'person1'
@@ -13253,15 +13262,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 13
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -13269,7 +13278,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -13277,7 +13286,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -13285,7 +13294,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -13307,7 +13316,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -13319,9 +13328,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -13329,7 +13338,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -13337,7 +13346,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -13359,9 +13368,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -13369,7 +13378,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -13377,7 +13386,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -13385,7 +13394,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -13407,9 +13416,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -13432,16 +13441,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 8
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -13449,9 +13458,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -13459,7 +13468,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -13467,7 +13476,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -13475,7 +13484,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -13497,7 +13506,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -13509,9 +13518,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -13519,7 +13528,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -13542,16 +13551,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 9
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs,
       [
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -13563,9 +13572,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -13573,7 +13582,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -13581,7 +13590,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -13589,7 +13598,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -13601,9 +13610,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -13611,7 +13620,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -13619,7 +13628,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -13641,7 +13650,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -13654,7 +13663,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar5a'
       ]
 
-    wNode.Ws.update @wNodeId5,
+    wNodeÏ.Ws.update @wNodeÏId5,
       $push:
         'subW.persons':
           _id: @person1Id
@@ -13667,11 +13676,11 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode5 = wNode.Ws.findOne @wNodeId5,
+    @wNodeÏ5 = wNodeÏ.Ws.findOne @wNodeÏId5,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode5,
-      _id: @wNodeId5
+    test.equal @wNodeÏ5,
+      _id: @wNodeÏId5
       author:
         _id: @person1Id
         username: 'person1'
@@ -13750,15 +13759,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 14
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -13766,7 +13775,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -13774,7 +13783,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -13782,7 +13791,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -13804,7 +13813,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -13816,9 +13825,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -13826,7 +13835,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -13834,7 +13843,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -13856,9 +13865,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -13866,7 +13875,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -13874,7 +13883,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -13882,7 +13891,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -13904,7 +13913,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -13916,9 +13925,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -13941,16 +13950,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 8
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -13958,9 +13967,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -13968,7 +13977,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -13976,7 +13985,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -13984,7 +13993,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -14006,7 +14015,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -14018,9 +14027,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -14028,7 +14037,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -14051,16 +14060,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 9
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs,
       [
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -14072,9 +14081,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -14082,7 +14091,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -14090,7 +14099,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -14098,7 +14107,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -14110,9 +14119,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -14120,7 +14129,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -14128,7 +14137,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -14150,7 +14159,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -14163,7 +14172,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar5a'
       ]
 
-    wNode.Ws.update @wNodeId5,
+    wNodeÏ.Ws.update @wNodeÏId5,
       $pop:
         'subW.persons': 1
     ,
@@ -14175,11 +14184,11 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode5 = wNode.Ws.findOne @wNodeId5,
+    @wNodeÏ5 = wNodeÏ.Ws.findOne @wNodeÏId5,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode5,
-      _id: @wNodeId5
+    test.equal @wNodeÏ5,
+      _id: @wNodeÏId5
       author:
         _id: @person1Id
         username: 'person1'
@@ -14254,15 +14263,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 13
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -14270,7 +14279,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -14278,7 +14287,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -14286,7 +14295,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -14308,7 +14317,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -14320,9 +14329,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -14330,7 +14339,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -14338,7 +14347,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -14360,9 +14369,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -14370,7 +14379,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -14378,7 +14387,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -14386,7 +14395,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -14408,9 +14417,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -14433,16 +14442,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 8
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -14450,9 +14459,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -14460,7 +14469,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -14468,7 +14477,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -14476,7 +14485,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -14498,7 +14507,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -14510,9 +14519,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -14520,7 +14529,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -14543,16 +14552,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 9
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs,
       [
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -14564,9 +14573,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -14574,7 +14583,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -14582,7 +14591,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -14590,7 +14599,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -14602,9 +14611,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -14612,7 +14621,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -14620,7 +14629,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -14642,7 +14651,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -14656,7 +14665,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
       ]
 
     # Add one which already exist
-    wNode.Ws.update @wNodeId5,
+    wNodeÏ.Ws.update @wNodeÏId5,
       $push:
         'subW.persons':
           _id: @person3Id
@@ -14669,11 +14678,11 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode5 = wNode.Ws.findOne @wNodeId5,
+    @wNodeÏ5 = wNodeÏ.Ws.findOne @wNodeÏId5,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode5,
-      _id: @wNodeId5
+    test.equal @wNodeÏ5,
+      _id: @wNodeÏId5
       author:
         _id: @person1Id
         username: 'person1'
@@ -14752,15 +14761,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 13
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -14768,7 +14777,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -14776,7 +14785,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -14784,7 +14793,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -14806,7 +14815,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -14818,9 +14827,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -14828,7 +14837,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -14836,7 +14845,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -14858,9 +14867,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -14868,7 +14877,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -14876,7 +14885,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -14884,7 +14893,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -14906,9 +14915,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -14931,16 +14940,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 8
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -14948,9 +14957,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -14958,7 +14967,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -14966,7 +14975,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -14974,7 +14983,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -14996,7 +15005,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -15008,9 +15017,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -15018,7 +15027,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -15041,16 +15050,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 9
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs,
       [
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -15062,9 +15071,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -15072,7 +15081,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -15080,7 +15089,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -15088,7 +15097,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -15100,9 +15109,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -15110,7 +15119,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -15118,7 +15127,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -15140,7 +15149,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -15153,7 +15162,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar5a'
       ]
 
-    wNode.Ws.update @wNodeId5,
+    wNodeÏ.Ws.update @wNodeÏId5,
       $pop:
         'subW.persons': 1
     ,
@@ -15165,11 +15174,11 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode5 = wNode.Ws.findOne @wNodeId5,
+    @wNodeÏ5 = wNodeÏ.Ws.findOne @wNodeÏId5,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode5,
-      _id: @wNodeId5
+    test.equal @wNodeÏ5,
+      _id: @wNodeÏId5
       author:
         _id: @person1Id
         username: 'person1'
@@ -15244,15 +15253,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 13
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -15260,7 +15269,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -15268,7 +15277,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -15276,7 +15285,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -15298,7 +15307,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -15310,9 +15319,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -15320,7 +15329,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -15328,7 +15337,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -15350,9 +15359,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -15360,7 +15369,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -15368,7 +15377,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -15376,7 +15385,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -15398,9 +15407,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -15423,16 +15432,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 8
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -15440,9 +15449,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -15450,7 +15459,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -15458,7 +15467,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -15466,7 +15475,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -15488,7 +15497,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -15500,9 +15509,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -15510,7 +15519,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -15533,16 +15542,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 9
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs,
       [
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -15554,9 +15563,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -15564,7 +15573,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -15572,7 +15581,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -15580,7 +15589,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -15592,9 +15601,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -15602,7 +15611,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -15610,7 +15619,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -15632,7 +15641,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -15645,7 +15654,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar5a'
       ]
 
-    wNode.Ws.update @wNodeId5,
+    wNodeÏ.Ws.update @wNodeÏId5,
       $set:
         'subW.persons.2._id': @person1Id
     ,
@@ -15657,11 +15666,11 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode5 = wNode.Ws.findOne @wNodeId5,
+    @wNodeÏ5 = wNodeÏ.Ws.findOne @wNodeÏId5,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode5,
-      _id: @wNodeId5
+    test.equal @wNodeÏ5,
+      _id: @wNodeÏId5
       author:
         _id: @person1Id
         username: 'person1'
@@ -15736,15 +15745,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 14
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -15752,7 +15761,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -15760,7 +15769,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -15768,7 +15777,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -15790,7 +15799,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -15802,9 +15811,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -15812,7 +15821,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -15820,7 +15829,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -15842,9 +15851,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -15852,7 +15861,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -15860,7 +15869,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -15868,7 +15877,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -15890,7 +15899,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -15902,9 +15911,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -15927,16 +15936,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 8
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -15944,9 +15953,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -15954,7 +15963,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -15962,7 +15971,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -15970,7 +15979,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -15992,7 +16001,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -16004,9 +16013,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -16014,7 +16023,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -16037,16 +16046,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 9
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs,
       [
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -16058,9 +16067,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -16068,7 +16077,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -16076,7 +16085,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -16084,7 +16093,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -16096,9 +16105,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -16106,7 +16115,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -16114,7 +16123,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -16136,7 +16145,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -16150,7 +16159,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
       ]
 
     # Add one which already exist
-    wNode.Ws.update @wNodeId5,
+    wNodeÏ.Ws.update @wNodeÏId5,
       $set:
         'subW.persons.2._id': @person3Id
     ,
@@ -16162,11 +16171,11 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode5 = wNode.Ws.findOne @wNodeId5,
+    @wNodeÏ5 = wNodeÏ.Ws.findOne @wNodeÏId5,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode5,
-      _id: @wNodeId5
+    test.equal @wNodeÏ5,
+      _id: @wNodeÏId5
       author:
         _id: @person1Id
         username: 'person1'
@@ -16241,15 +16250,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 13
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -16257,7 +16266,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -16265,7 +16274,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -16273,7 +16282,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -16295,7 +16304,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -16307,9 +16316,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -16317,7 +16326,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -16325,7 +16334,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -16347,9 +16356,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -16357,7 +16366,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -16365,7 +16374,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -16373,7 +16382,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -16395,9 +16404,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -16420,16 +16429,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 8
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -16437,9 +16446,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -16447,7 +16456,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -16455,7 +16464,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -16463,7 +16472,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -16485,7 +16494,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -16497,9 +16506,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -16507,7 +16516,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -16530,16 +16539,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 9
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs,
       [
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -16551,9 +16560,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -16561,7 +16570,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -16569,7 +16578,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -16577,7 +16586,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -16589,9 +16598,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -16599,7 +16608,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -16607,7 +16616,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -16629,7 +16638,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -16642,7 +16651,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar5a'
       ]
 
-    wNode.Ws.update @wNodeId5,
+    wNodeÏ.Ws.update @wNodeÏId5,
       $set:
         'subW.person': null
     ,
@@ -16654,11 +16663,11 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode5 = wNode.Ws.findOne @wNodeId5,
+    @wNodeÏ5 = wNodeÏ.Ws.findOne @wNodeÏId5,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode5,
-      _id: @wNodeId5
+    test.equal @wNodeÏ5,
+      _id: @wNodeÏId5
       author:
         _id: @person1Id
         username: 'person1'
@@ -16730,15 +16739,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 13
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -16746,7 +16755,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -16754,7 +16763,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -16762,7 +16771,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -16784,7 +16793,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -16796,9 +16805,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -16806,7 +16815,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -16814,7 +16823,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -16836,9 +16845,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -16846,7 +16855,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -16854,7 +16863,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -16862,7 +16871,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -16884,9 +16893,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -16909,16 +16918,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 8
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -16926,9 +16935,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -16936,7 +16945,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -16944,7 +16953,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -16952,7 +16961,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -16974,7 +16983,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -16986,9 +16995,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -16996,7 +17005,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -17019,17 +17028,17 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 8
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes, []
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs, []
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -17037,7 +17046,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -17045,7 +17054,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -17053,7 +17062,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -17065,9 +17074,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -17075,7 +17084,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -17083,7 +17092,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -17105,7 +17114,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -17118,7 +17127,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar5a'
       ]
 
-    wNode.Ws.update @wNodeId5,
+    wNodeÏ.Ws.update @wNodeÏId5,
       $set:
         'subW.person':
           _id: @person3Id
@@ -17131,11 +17140,11 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode5 = wNode.Ws.findOne @wNodeId5,
+    @wNodeÏ5 = wNodeÏ.Ws.findOne @wNodeÏId5,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode5,
-      _id: @wNodeId5
+    test.equal @wNodeÏ5,
+      _id: @wNodeÏId5
       author:
         _id: @person1Id
         username: 'person1'
@@ -17210,15 +17219,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 13
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -17226,7 +17235,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -17234,7 +17243,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -17242,7 +17251,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -17264,7 +17273,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -17276,9 +17285,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -17286,7 +17295,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -17294,7 +17303,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -17316,9 +17325,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -17326,7 +17335,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -17334,7 +17343,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -17342,7 +17351,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -17364,9 +17373,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -17389,16 +17398,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 8
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -17406,9 +17415,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -17416,7 +17425,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -17424,7 +17433,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -17432,7 +17441,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -17454,7 +17463,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -17466,9 +17475,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -17476,7 +17485,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -17499,16 +17508,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 9
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs,
       [
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -17520,9 +17529,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -17530,7 +17539,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -17538,7 +17547,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -17546,7 +17555,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -17558,9 +17567,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -17568,7 +17577,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -17576,7 +17585,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -17598,7 +17607,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -17611,7 +17620,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar5a'
       ]
 
-    wNode.Ws.update @wNodeId5,
+    wNodeÏ.Ws.update @wNodeÏId5,
       $set:
         'subW.person':
           _id: @person1Id
@@ -17624,11 +17633,11 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode5 = wNode.Ws.findOne @wNodeId5,
+    @wNodeÏ5 = wNodeÏ.Ws.findOne @wNodeÏId5,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode5,
-      _id: @wNodeId5
+    test.equal @wNodeÏ5,
+      _id: @wNodeÏId5
       author:
         _id: @person1Id
         username: 'person1'
@@ -17703,15 +17712,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 14
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -17719,7 +17728,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -17727,7 +17736,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -17735,7 +17744,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -17757,7 +17766,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -17769,9 +17778,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -17779,7 +17788,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -17787,7 +17796,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -17809,7 +17818,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -17821,9 +17830,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -17831,7 +17840,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -17839,7 +17848,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -17847,7 +17856,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -17869,9 +17878,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -17894,16 +17903,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 8
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -17911,9 +17920,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -17921,7 +17930,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -17929,7 +17938,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -17937,7 +17946,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -17959,7 +17968,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -17971,9 +17980,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -17981,7 +17990,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -18004,17 +18013,17 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 8
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes, []
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs, []
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -18022,7 +18031,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -18030,7 +18039,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -18038,7 +18047,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -18050,9 +18059,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -18060,7 +18069,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -18068,7 +18077,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -18090,7 +18099,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -18103,7 +18112,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar5a'
       ]
 
-    wNode.Ws.update @wNodeId5,
+    wNodeÏ.Ws.update @wNodeÏId5,
       $unset:
         'subW.person': ''
     ,
@@ -18115,11 +18124,11 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode5 = wNode.Ws.findOne @wNodeId5,
+    @wNodeÏ5 = wNodeÏ.Ws.findOne @wNodeÏId5,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode5,
-      _id: @wNodeId5
+    test.equal @wNodeÏ5,
+      _id: @wNodeÏId5
       author:
         _id: @person1Id
         username: 'person1'
@@ -18190,15 +18199,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 13
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -18206,7 +18215,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -18214,7 +18223,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -18222,7 +18231,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -18244,7 +18253,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -18256,9 +18265,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -18266,7 +18275,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -18274,7 +18283,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -18296,9 +18305,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -18306,7 +18315,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -18314,7 +18323,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -18322,7 +18331,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -18344,9 +18353,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -18369,16 +18378,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 8
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -18386,9 +18395,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -18396,7 +18405,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -18404,7 +18413,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -18412,7 +18421,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -18434,7 +18443,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -18446,9 +18455,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -18456,7 +18465,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -18479,17 +18488,17 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 8
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes, []
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs, []
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -18497,7 +18506,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -18505,7 +18514,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -18513,7 +18522,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -18525,9 +18534,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -18535,7 +18544,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -18543,7 +18552,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -18565,7 +18574,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -18578,7 +18587,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar5a'
       ]
 
-    wNode.Ws.update @wNodeId5,
+    wNodeÏ.Ws.update @wNodeÏId5,
       $set:
         author:
           _id: @person2Id
@@ -18591,11 +18600,11 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @wNode5 = wNode.Ws.findOne @wNodeId5,
+    @wNodeÏ5 = wNodeÏ.Ws.findOne @wNodeÏId5,
       transform: null # So that we can use test.equal
 
-    test.equal @wNode5,
-      _id: @wNodeId5
+    test.equal @wNodeÏ5,
+      _id: @wNodeÏId5
       author:
         _id: @person2Id
         username: 'person2'
@@ -18666,15 +18675,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 12
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -18682,7 +18691,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -18690,7 +18699,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -18698,7 +18707,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -18720,9 +18729,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -18730,7 +18739,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -18738,7 +18747,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -18760,9 +18769,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -18770,7 +18779,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -18778,7 +18787,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -18786,7 +18795,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -18808,9 +18817,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -18833,15 +18842,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 9
 
-    testSetEqual test, @person2.wNodes,
+    testSetEqual test, @person2.wNodeÏs,
       [
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -18853,9 +18862,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -18863,9 +18872,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -18873,7 +18882,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -18881,7 +18890,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -18889,7 +18898,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -18911,7 +18920,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -18923,9 +18932,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -18933,7 +18942,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -18956,17 +18965,17 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 8
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes, []
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs, []
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -18974,7 +18983,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -18982,7 +18991,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -18990,7 +18999,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -19002,9 +19011,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -19012,7 +19021,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -19020,7 +19029,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19042,7 +19051,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ,
-        _id: @wNodeId5
+        _id: @wNodeÏId5
         subW:
           body: 'SubWFooBar5a'
         nested: [
@@ -19055,7 +19064,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar5a'
       ]
 
-    wNode.Ws.remove @wNodeId5,
+    wNodeÏ.Ws.remove @wNodeÏId5,
       expect (error) =>
         test.isFalse error, error?.toString?() or error
 
@@ -19070,15 +19079,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 12
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19086,7 +19095,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -19094,7 +19103,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -19102,7 +19111,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19124,9 +19133,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19134,7 +19143,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -19142,7 +19151,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19164,9 +19173,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19174,7 +19183,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -19182,7 +19191,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -19190,7 +19199,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19212,9 +19221,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19237,16 +19246,16 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 7
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -19254,9 +19263,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19264,7 +19273,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -19272,7 +19281,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -19280,7 +19289,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19302,9 +19311,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19312,7 +19321,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19335,17 +19344,17 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 6
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes, []
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs, []
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19353,7 +19362,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -19361,7 +19370,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -19369,9 +19378,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId2
+        _id: @wNodeÏId2
         subW:
           body: 'SubWFooBar2a'
         nested: [
@@ -19379,7 +19388,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar2a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -19387,7 +19396,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19410,7 +19419,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    wNode.Ws.remove @wNodeId2,
+    wNodeÏ.Ws.remove @wNodeÏId2,
       expect (error) =>
         test.isFalse error, error?.toString?() or error
 
@@ -19425,15 +19434,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 10
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19441,7 +19450,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -19449,7 +19458,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19471,9 +19480,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19481,7 +19490,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -19489,7 +19498,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19511,9 +19520,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19521,7 +19530,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -19529,7 +19538,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19551,9 +19560,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19576,17 +19585,17 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 5
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes, []
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs, []
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19594,7 +19603,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -19602,7 +19611,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19624,9 +19633,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19634,7 +19643,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19657,17 +19666,17 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 4
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes, []
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs, []
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19675,7 +19684,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -19683,9 +19692,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId3
+        _id: @wNodeÏId3
         subW:
           body: 'SubWFooBar3a'
         nested: [
@@ -19693,7 +19702,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar3a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19716,7 +19725,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    wNode.Ws.remove @wNodeId3,
+    wNodeÏ.Ws.remove @wNodeÏId3,
       expect (error) =>
         test.isFalse error, error?.toString?() or error
 
@@ -19731,15 +19740,15 @@ testAsyncMulti 'peerdb - reverse wNodes', [
     @person3 = Person.Ws.findOne @person3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person1Id
       username: 'person1'
       displayName: 'Person 1'
       count: 7
 
-    testSetEqual test, @person1.wNodes,
+    testSetEqual test, @person1.wNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19747,7 +19756,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19769,9 +19778,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWwNodes,
+    testSetEqual test, @person1.subWwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19779,7 +19788,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19801,9 +19810,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodes,
+    testSetEqual test, @person1.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19811,7 +19820,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19833,9 +19842,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodes,
+    testSetEqual test, @person1.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19858,17 +19867,17 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person2Id
       username: 'person2'
       displayName: 'Person 2'
       count: 4
 
-    testSetEqual test, @person2.wNodes, []
-    testSetEqual test, @person2.subWwNodes, []
-    testSetEqual test, @person2.subWswNodes,
+    testSetEqual test, @person2.wNodeÏs, []
+    testSetEqual test, @person2.subWwNodeÏs, []
+    testSetEqual test, @person2.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19876,7 +19885,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19898,9 +19907,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person2.nestedwNodes,
+    testSetEqual test, @person2.nestedwNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19908,7 +19917,7 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ,
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -19931,17 +19940,17 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodes', 'subWwNodes', 'subWswNodes', 'nestedwNodes'),
+    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
       _id: @person3Id
       username: 'person3'
       displayName: 'Person 3'
       count: 2
 
-    testSetEqual test, @person3.wNodes, []
-    testSetEqual test, @person3.subWwNodes, []
-    testSetEqual test, @person3.subWswNodes,
+    testSetEqual test, @person3.wNodeÏs, []
+    testSetEqual test, @person3.subWwNodeÏs, []
+    testSetEqual test, @person3.subWswNodeÏs,
       [
-        _id: @wNodeId1
+        _id: @wNodeÏId1
         subW:
           body: 'SubWFooBar1a'
         nested: [
@@ -19949,9 +19958,9 @@ testAsyncMulti 'peerdb - reverse wNodes', [
         ]
         body: 'FooBar1a'
       ]
-    testSetEqual test, @person3.nestedwNodes,
+    testSetEqual test, @person3.nestedwNodeÏs,
       [
-        _id: @wNodeId4
+        _id: @wNodeÏId4
         subW:
           body: 'SubWFooBar4a'
         nested: [
@@ -20005,30 +20014,30 @@ if Meteor.isServer
 
       test.equal @person1.formatName(), 'person1-Person 1'
 
-      wNode.Ws.insert
+      wNodeÏ.Ws.insert
         author:
           _id: @person1._id
         subW: {}
         body: 'FooBar'
       ,
-        expect (error, wNodeId) =>
+        expect (error, wNodeÏId) =>
           test.isFalse error, error?.toString?() or error
-          test.isTrue wNodeId
-          @wNodeId = wNodeId
+          test.isTrue wNodeÏId
+          @wNodeÏId = wNodeÏId
 
       # Wait so that observers have time to update Ws
       waitForDatabase test, expect
   ,
     (test, expect) ->
-      @wNode = wNode.Ws.findOne @wNodeId
+      @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId
 
-      test.instanceOf @wNode, wNode
-      test.instanceOf @wNode.author, Person
+      test.instanceOf @wNodeÏ, wNodeÏ
+      test.instanceOf @wNodeÏ.author, Person
 
-      test.equal @wNode.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
+      test.equal @wNodeÏ.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
 
-      test.equal plainObject(@wNode),
-        _id: @wNodeId
+      test.equal plainObject(@wNodeÏ),
+        _id: @wNodeÏId
         author:
           _id: @person1._id
           username: @person1.username
@@ -20037,7 +20046,7 @@ if Meteor.isServer
         body: 'FooBar'
         tags: []
 
-      SpecialwNode.Ws.insert
+      SpecialwNodeÏ.Ws.insert
         author:
           _id: @person1._id
         subW: {}
@@ -20045,25 +20054,25 @@ if Meteor.isServer
         special:
           _id: @person1._id
       ,
-        expect (error, wNodeId) =>
+        expect (error, wNodeÏId) =>
           test.isFalse error, error?.toString?() or error
-          test.isTrue wNodeId
-          @specialwNodeId = wNodeId
+          test.isTrue wNodeÏId
+          @specialwNodeÏId = wNodeÏId
 
       # Wait so that observers have time to update Ws
       waitForDatabase test, expect
   ,
     (test, expect) ->
-      @specialwNode = SpecialwNode.Ws.findOne @specialwNodeId
+      @specialwNodeÏ = SpecialwNodeÏ.Ws.findOne @specialwNodeÏId
 
-      test.instanceOf @specialwNode, SpecialwNode
-      test.instanceOf @specialwNode.author, Person
-      test.instanceOf @specialwNode.special, Person
+      test.instanceOf @specialwNodeÏ, SpecialwNodeÏ
+      test.instanceOf @specialwNodeÏ.author, Person
+      test.instanceOf @specialwNodeÏ.special, Person
 
-      test.equal @specialwNode.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
+      test.equal @specialwNodeÏ.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
 
-      test.equal plainObject(@specialwNode),
-        _id: @specialwNodeId
+      test.equal plainObject(@specialwNodeÏ),
+        _id: @specialwNodeÏId
         author:
           _id: @person1._id
           username: @person1.username
@@ -20074,10 +20083,10 @@ if Meteor.isServer
         special:
           _id: @person1._id
 
-      test.equal globalTestTriggerCounters[@wNodeId], 1
-      test.equal globalTestTriggerCounters[@specialwNodeId], 1
+      test.equal globalTestTriggerCounters[@wNodeÏId], 1
+      test.equal globalTestTriggerCounters[@specialwNodeÏId], 1
 
-      wNode.Ws.update @wNodeId,
+      wNodeÏ.Ws.update @wNodeÏId,
         $set:
           body: 'FooBar 1'
       ,
@@ -20085,7 +20094,7 @@ if Meteor.isServer
           test.isFalse error, error?.toString?() or error
           test.isTrue res
 
-      SpecialwNode.Ws.update @specialwNodeId,
+      SpecialwNodeÏ.Ws.update @specialwNodeÏId,
         $set:
           body: 'FooBar 1'
       ,
@@ -20097,15 +20106,15 @@ if Meteor.isServer
       waitForDatabase test, expect
   ,
     (test, expect) ->
-      @wNode = wNode.Ws.findOne @wNodeId
+      @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId
 
-      test.instanceOf @wNode, wNode
-      test.instanceOf @wNode.author, Person
+      test.instanceOf @wNodeÏ, wNodeÏ
+      test.instanceOf @wNodeÏ.author, Person
 
-      test.equal @wNode.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
+      test.equal @wNodeÏ.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
 
-      test.equal plainObject(@wNode),
-        _id: @wNodeId
+      test.equal plainObject(@wNodeÏ),
+        _id: @wNodeÏId
         author:
           _id: @person1._id
           username: @person1.username
@@ -20114,16 +20123,16 @@ if Meteor.isServer
         body: 'FooBar 1'
         tags: []
 
-      @specialwNode = SpecialwNode.Ws.findOne @specialwNodeId
+      @specialwNodeÏ = SpecialwNodeÏ.Ws.findOne @specialwNodeÏId
 
-      test.instanceOf @specialwNode, SpecialwNode
-      test.instanceOf @specialwNode.author, Person
-      test.instanceOf @specialwNode.special, Person
+      test.instanceOf @specialwNodeÏ, SpecialwNodeÏ
+      test.instanceOf @specialwNodeÏ.author, Person
+      test.instanceOf @specialwNodeÏ.special, Person
 
-      test.equal @specialwNode.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
+      test.equal @specialwNodeÏ.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
 
-      test.equal plainObject(@specialwNode),
-        _id: @specialwNodeId
+      test.equal plainObject(@specialwNodeÏ),
+        _id: @specialwNodeÏId
         author:
           _id: @person1._id
           username: @person1.username
@@ -20134,10 +20143,10 @@ if Meteor.isServer
         special:
           _id: @person1._id
 
-      test.equal globalTestTriggerCounters[@wNodeId], 2
-      test.equal globalTestTriggerCounters[@specialwNodeId], 2
+      test.equal globalTestTriggerCounters[@wNodeÏId], 2
+      test.equal globalTestTriggerCounters[@specialwNodeÏId], 2
 
-      wNode.Ws.update @wNodeId,
+      wNodeÏ.Ws.update @wNodeÏId,
         $set:
           'subW.body': 'FooBar zzz'
       ,
@@ -20145,7 +20154,7 @@ if Meteor.isServer
           test.isFalse error, error?.toString?() or error
           test.isTrue res
 
-      SpecialwNode.Ws.update @specialwNodeId,
+      SpecialwNodeÏ.Ws.update @specialwNodeÏId,
         $set:
           'subW.body': 'FooBar zzz'
       ,
@@ -20157,15 +20166,15 @@ if Meteor.isServer
       waitForDatabase test, expect
   ,
     (test, expect) ->
-      @wNode = wNode.Ws.findOne @wNodeId
+      @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId
 
-      test.instanceOf @wNode, wNode
-      test.instanceOf @wNode.author, Person
+      test.instanceOf @wNodeÏ, wNodeÏ
+      test.instanceOf @wNodeÏ.author, Person
 
-      test.equal @wNode.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
+      test.equal @wNodeÏ.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
 
-      test.equal plainObject(@wNode),
-        _id: @wNodeId
+      test.equal plainObject(@wNodeÏ),
+        _id: @wNodeÏId
         author:
           _id: @person1._id
           username: @person1.username
@@ -20179,16 +20188,16 @@ if Meteor.isServer
           'tag-0-prefix-foobar 1-foobar zzz-suffix'
         ]
 
-      @specialwNode = SpecialwNode.Ws.findOne @specialwNodeId
+      @specialwNodeÏ = SpecialwNodeÏ.Ws.findOne @specialwNodeÏId
 
-      test.instanceOf @specialwNode, SpecialwNode
-      test.instanceOf @specialwNode.author, Person
-      test.instanceOf @specialwNode.special, Person
+      test.instanceOf @specialwNodeÏ, SpecialwNodeÏ
+      test.instanceOf @specialwNodeÏ.author, Person
+      test.instanceOf @specialwNodeÏ.special, Person
 
-      test.equal @specialwNode.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
+      test.equal @specialwNodeÏ.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
 
-      test.equal plainObject(@specialwNode),
-        _id: @specialwNodeId
+      test.equal plainObject(@specialwNodeÏ),
+        _id: @specialwNodeÏId
         author:
           _id: @person1._id
           username: @person1.username
@@ -20204,8 +20213,8 @@ if Meteor.isServer
         special:
           _id: @person1._id
 
-      test.equal globalTestTriggerCounters[@wNodeId], 2
-      test.equal globalTestTriggerCounters[@specialwNodeId], 2
+      test.equal globalTestTriggerCounters[@wNodeÏId], 2
+      test.equal globalTestTriggerCounters[@specialwNodeÏId], 2
   ]
 ###
 

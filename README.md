@@ -161,14 +161,14 @@ multiple documents at the same time.
 Luckily, in many cases we can observe that we are mostly interested only in few fields of a related document, again
 and again. Instead of recomputing joins every time we read, we could use MongoDB's sub-documents feature to embed
 those fields along with the reference. Instead of just storing the `_id` of a related document, we could store also
-those few often used fields. For example, if you are displaying blog posts, you want to display the author's name together
-with the blog post. You won't really need only the blog post without the author name. An example blog post document
+those few often used fields. For example, if you are displaying blog Ws, you want to display the author's name together
+with the blog W. You won't really need only the blog W without the author name. An example blog W document
 could then look like:
 
 ```json
 {
   "_id": "frqejWeGWjDTPMj7P",
-  "body": "A simple blog post",
+  "body": "A simple blog W",
   "author": {
     "_id": "yeK7R5Lws6MSeRQad",
     "username": "wesley",
@@ -195,10 +195,10 @@ could then look like:
 }
 ```
 
-Great! Now we have to fetch only this one document and we have everything needed to display a blog post. It is easy
+Great! Now we have to fetch only this one document and we have everything needed to display a blog W. It is easy
 for us to publish it with Meteor and use it as any other document, with direct access to author's fields.
 
-Now, storing the author's name along with every blog post document brings an issue. What if user changes their
+Now, storing the author's name along with every blog W document brings an issue. What if user changes their
 name? Then you have to update all those fields in documents referencing the user. So you would have to make sure that
 anywhere in your code where you are changing the name, you are also updating fields in references. What about changes
 to the database coming from outside of your code? Here is when PeerDB comes into action. With PeerDB you define those
@@ -218,12 +218,12 @@ class Person extends Document
   @Meta
     name: 'Person'
 
-class Post extends Document
+class W extends Document
   # Other fields:
   #   body
 
   @Meta
-    name: 'Post'
+    name: 'W'
     fields: =>
       # We can reference other document
       author: @ReferenceField Person, ['username', 'displayName']
@@ -236,7 +236,7 @@ We are using `@Meta`'s `fields` argument to define references.
 
 In the above definition, the `author` field will be a subdocument containing `_id` (always added) and the `username`
 and `displayName` fields. If the `displayName` field in the referenced `Person` document is changed, the `author` field
-in all related `Post` documents will be automatically updated with the new value for the `displayName` field.
+in all related `W` documents will be automatically updated with the new value for the `displayName` field.
 
 ```coffee
 Person.documents.update 'tMgj8mF2zF3gjCftS',
@@ -244,10 +244,10 @@ Person.documents.update 'tMgj8mF2zF3gjCftS',
     displayName: 'Deanna Troi-Riker'
 
 # Returns "Deanna Troi-Riker"
-Post.documents.findOne('frqejWeGWjDTPMj7P').reviewers[0].displayName
+W.documents.findOne('frqejWeGWjDTPMj7P').reviewers[0].displayName
 
 # Returns "Deanna Troi-Riker", sub-documents are objectified into document instances as well
-Post.documents.findOne('frqejWeGWjDTPMj7P').reviewers[0].getDisplayName()
+W.documents.findOne('frqejWeGWjDTPMj7P').reviewers[0].getDisplayName()
 ```
 
 The `subscribers` field is an array of references to `Person` documents, where every element in the array will
@@ -337,19 +337,19 @@ Reverse references
 ------------------
 
 Sometimes you want also to have easy access to information about all the documents referencing a given document.
-For example, for each author you might want to have a list of all blog posts they wrote, as part of their document.
+For example, for each author you might want to have a list of all blog Ws they wrote, as part of their document.
 
 ```coffee
-class Post extends Post
+class W extends W
   @Meta
-    name: 'Post'
+    name: 'W'
     replaceParent: true
     fields: (fields) =>
-      fields.author = @ReferenceField Person, ['username', 'displayName'], true, 'posts'
+      fields.author = @ReferenceField Person, ['username', 'displayName'], true, 'Ws'
       fields
 ```
 
-We [redefine](#abstract-documents-and-replaceparent) the `Post` document and replace it with a new definition which enables
+We [redefine](#abstract-documents-and-replaceparent) the `W` document and replace it with a new definition which enables
 reverse references for the `author` field. Now `Person.documents.findOne('yeK7R5Lws6MSeRQad')` returns:
 
 ```json
@@ -359,7 +359,7 @@ reverse references for the `author` field. Now `Person.documents.findOne('yeK7R5
   "displayName": "Wesley Crusher",
   "email": "wesley@enterprise.starfleet",
   "homepage": "https://gww.enterprise.starfleet/~wesley/",
-  "posts": [
+  "Ws": [
     {
       "_id": "frqejWeGWjDTPMj7P"
     }
@@ -374,12 +374,12 @@ Sometimes you need fields in a document which are based on other fields. PeerDB 
 such auto-generated fields:
 
 ```coffee
-class Post extends Post
+class W extends W
   # Other fields:
   #   title
 
   @Meta
-    name: 'Post'
+    name: 'W'
     replaceParent: true
     fields: (fields) =>
       fields.slug = @GeneratedField 'self', ['title'], (fields) ->
@@ -391,13 +391,13 @@ class Post extends Post
 ```
 
 The last argument of `GeneratedField` is a function which receives an object populated with values based on the list of
-fields you are interested in. In the example above, this is one field named `title` from the `Posts` collection. The `_id`
+fields you are interested in. In the example above, this is one field named `title` from the `Ws` collection. The `_id`
 field is always available in `fields`. Generator function receives or just `_id` (when document containing fields is being
 removed) or all fields requested. Generator function should return two values, a selector (often just the ID of a document)
 and a new value. If the value is undefined, the auto-generated field is removed. If the selector is undefined, nothing is done.
 
 You can define auto-generated fields across documents. Furthermore, you can combine reactivity. Maybe you want to also
-have a count of all posts made by a person?
+have a count of all Ws made by a person?
 
 ```coffee
 class Person extends Person
@@ -405,8 +405,8 @@ class Person extends Person
     name: 'Person'
     replaceParent: true
     fields: (fields) =>
-      fields.postsCount = @GeneratedField 'self', ['posts'], (fields) ->
-        [fields._id, fields.posts?.length or 0]
+      fields.WsCount = @GeneratedField 'self', ['Ws'], (fields) ->
+        [fields._id, fields.Ws?.length or 0]
       fields
 ```
 
@@ -416,12 +416,12 @@ Triggers
 You can define triggers which are run every time any of the specified fields changes:
 
 ```coffee
-class Post extends Post
+class W extends W
   # Other fields:
   #   updatedAt
 
   @Meta
-    name: 'Post'
+    name: 'W'
     replaceParent: true
     triggers: =>
       updateUpdatedAt: @Trigger ['title', 'body'], (newDocument, oldDocument) ->
@@ -429,7 +429,7 @@ class Post extends Post
         return unless newDocument._id
 
         timestamp = new Date()
-        Post.documents.update
+        W.documents.update
           _id: newDocument._id
           updatedAt:
             $lt: timestamp
