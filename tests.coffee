@@ -311,7 +311,7 @@ testSetEqual = (test, a, b) ->
 
 testDefinition = (test) ->
   test.equal W.Meta._name, 'W'
-  ###
+
   test.equal W.Meta.parent, _TestW2.Meta
   test.equal W.Meta.document, W
   test.equal W.Meta.collection._name, 'Ws'
@@ -907,7 +907,6 @@ testDefinition = (test) ->
   test.equal SpecialW.Meta.fields.special.fields, []
   test.isNull SpecialW.Meta.fields.special.reverseName
   test.equal SpecialW.Meta.fields.special.reverseFields, []
-###
   testDocumentList test, ALL
 
 plainObject = (obj) ->
