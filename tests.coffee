@@ -29,9 +29,9 @@ class wNode extends W
       , 'subW.body'
       , 'nested.body']
       # Or an array of Ws
-      subscribers: [@ReferenceField wApp]
+      outgoing: [@ReferenceField Person, [username: 1]]
       # Fields can be arbitrary MongoDB projections
-      reviewers: [@ReferenceField Person, [username: 1]]
+      incoming: [@ReferenceField Person, [username: 1]]
       subW:
         person: @ReferenceField Person, ['username', 'displayName', 'field1', 'field2'], false, 'subWwNodes', ['body', 'subW.body', 'nested.body']
         slug: @GeneratedField 'self', ['body', 'subW.body'], (fields) ->
@@ -161,13 +161,8 @@ class Person extends W
       , ['wNodes'
       , 'subWwNodes'
       , 'subWswNodes'
-      , 'nestedwNodes']
-      , (fields) ->
-        [fields._id
-        , (fields.wNodes?.length or 0) 
-        + (fields.nestedwNodes?.length or 0) 
-        + (fields.subWwNodes?.length or 0) 
-        + (fields.subWswNodes?.length or 0)]
+      , 'nestedwNodes'], (fields) ->
+        [fields._id, (fields.wNodes?.length or 0) + (fields.nestedwNodes?.length or 0) + (fields.subWwNodes?.length or 0) + (fields.subWswNodes?.length or 0)]
 
 # Store away for testing
 _TestPerson = Person
@@ -353,32 +348,32 @@ testDefinition = (test) ->
   test.equal wNodeÏ.Meta.fields.author.fields, ['username', 'displayName', 'field1', 'field2']
   test.equal wNodeÏ.Meta.fields.author.reverseName, 'wNodeÏs'
   test.equal wNodeÏ.Meta.fields.author.reverseFields, ['body', 'subW.body', 'nested.body']
-  test.instanceOf wNodeÏ.Meta.fields.subscribers, wNodeÏ._ReferenceField
-  test.equal wNodeÏ.Meta.fields.subscribers.ancestorArray, 'subscribers'
-  test.isTrue wNodeÏ.Meta.fields.subscribers.required
-  test.equal wNodeÏ.Meta.fields.subscribers.sourcePath, 'subscribers'
-  test.equal wNodeÏ.Meta.fields.subscribers.sourceW, wNodeÏ
-  test.equal wNodeÏ.Meta.fields.subscribers.targetW, Person
-  test.equal wNodeÏ.Meta.fields.subscribers.sourceCollection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.subscribers.targetCollection._name, 'Persons'
-  test.equal wNodeÏ.Meta.fields.subscribers.sourceW.Meta.collection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.subscribers.targetW.Meta.collection._name, 'Persons'
-  test.equal wNodeÏ.Meta.fields.subscribers.fields, []
-  test.isNull wNodeÏ.Meta.fields.subscribers.reverseName
-  test.equal wNodeÏ.Meta.fields.subscribers.reverseFields, []
-  test.instanceOf wNodeÏ.Meta.fields.reviewers, wNodeÏ._ReferenceField
-  test.equal wNodeÏ.Meta.fields.reviewers.ancestorArray, 'reviewers'
-  test.isTrue wNodeÏ.Meta.fields.reviewers.required
-  test.equal wNodeÏ.Meta.fields.reviewers.sourcePath, 'reviewers'
-  test.equal wNodeÏ.Meta.fields.reviewers.sourceW, wNodeÏ
-  test.equal wNodeÏ.Meta.fields.reviewers.targetW, Person
-  test.equal wNodeÏ.Meta.fields.reviewers.sourceCollection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.reviewers.targetCollection._name, 'Persons'
-  test.equal wNodeÏ.Meta.fields.reviewers.sourceW.Meta.collection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.reviewers.targetW.Meta.collection._name, 'Persons'
-  test.equal wNodeÏ.Meta.fields.reviewers.fields, [username: 1]
-  test.isNull wNodeÏ.Meta.fields.reviewers.reverseName
-  test.equal wNodeÏ.Meta.fields.reviewers.reverseFields, []
+  test.instanceOf wNodeÏ.Meta.fields.outgoing, wNodeÏ._ReferenceField
+  test.equal wNodeÏ.Meta.fields.outgoing.ancestorArray, 'outgoing'
+  test.isTrue wNodeÏ.Meta.fields.outgoing.required
+  test.equal wNodeÏ.Meta.fields.outgoing.sourcePath, 'outgoing'
+  test.equal wNodeÏ.Meta.fields.outgoing.sourceW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.outgoing.targetW, Person
+  test.equal wNodeÏ.Meta.fields.outgoing.sourceCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.outgoing.targetCollection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.outgoing.sourceW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.outgoing.targetW.Meta.collection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.outgoing.fields, []
+  test.isNull wNodeÏ.Meta.fields.outgoing.reverseName
+  test.equal wNodeÏ.Meta.fields.outgoing.reverseFields, []
+  test.instanceOf wNodeÏ.Meta.fields.incoming, wNodeÏ._ReferenceField
+  test.equal wNodeÏ.Meta.fields.incoming.ancestorArray, 'incoming'
+  test.isTrue wNodeÏ.Meta.fields.incoming.required
+  test.equal wNodeÏ.Meta.fields.incoming.sourcePath, 'incoming'
+  test.equal wNodeÏ.Meta.fields.incoming.sourceW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.incoming.targetW, Person
+  test.equal wNodeÏ.Meta.fields.incoming.sourceCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.incoming.targetCollection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.incoming.sourceW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.incoming.targetW.Meta.collection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.incoming.fields, [username: 1]
+  test.isNull wNodeÏ.Meta.fields.incoming.reverseName
+  test.equal wNodeÏ.Meta.fields.incoming.reverseFields, []
   test.equal _.size(wNodeÏ.Meta.fields.subW), 3
   test.instanceOf wNodeÏ.Meta.fields.subW.person, wNodeÏ._ReferenceField
   test.isNull wNodeÏ.Meta.fields.subW.person.ancestorArray, wNodeÏ.Meta.fields.subW.person.ancestorArray
@@ -768,32 +763,32 @@ testDefinition = (test) ->
   test.equal SpecialwNodeÏ.Meta.fields.author.fields, ['username', 'displayName', 'field1', 'field2']
   test.equal SpecialwNodeÏ.Meta.fields.author.reverseName, 'wNodeÏs'
   test.equal SpecialwNodeÏ.Meta.fields.author.reverseFields, ['body', 'subW.body', 'nested.body']
-  test.instanceOf SpecialwNodeÏ.Meta.fields.subscribers, SpecialwNodeÏ._ReferenceField
-  test.equal SpecialwNodeÏ.Meta.fields.subscribers.ancestorArray, 'subscribers'
-  test.isTrue SpecialwNodeÏ.Meta.fields.subscribers.required
-  test.equal SpecialwNodeÏ.Meta.fields.subscribers.sourcePath, 'subscribers'
-  test.equal SpecialwNodeÏ.Meta.fields.subscribers.sourceW, SpecialwNodeÏ
-  test.equal SpecialwNodeÏ.Meta.fields.subscribers.targetW, Person
-  test.equal SpecialwNodeÏ.Meta.fields.subscribers.sourceCollection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.subscribers.targetCollection._name, 'Persons'
-  test.equal SpecialwNodeÏ.Meta.fields.subscribers.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.subscribers.targetW.Meta.collection._name, 'Persons'
-  test.equal SpecialwNodeÏ.Meta.fields.subscribers.fields, []
-  test.isNull SpecialwNodeÏ.Meta.fields.subscribers.reverseName
-  test.equal SpecialwNodeÏ.Meta.fields.subscribers.reverseFields, []
-  test.instanceOf SpecialwNodeÏ.Meta.fields.reviewers, SpecialwNodeÏ._ReferenceField
-  test.equal SpecialwNodeÏ.Meta.fields.reviewers.ancestorArray, 'reviewers'
-  test.isTrue SpecialwNodeÏ.Meta.fields.reviewers.required
-  test.equal SpecialwNodeÏ.Meta.fields.reviewers.sourcePath, 'reviewers'
-  test.equal SpecialwNodeÏ.Meta.fields.reviewers.sourceW, SpecialwNodeÏ
-  test.equal SpecialwNodeÏ.Meta.fields.reviewers.targetW, Person
-  test.equal SpecialwNodeÏ.Meta.fields.reviewers.sourceCollection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.reviewers.targetCollection._name, 'Persons'
-  test.equal SpecialwNodeÏ.Meta.fields.reviewers.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.reviewers.targetW.Meta.collection._name, 'Persons'
-  test.equal SpecialwNodeÏ.Meta.fields.reviewers.fields, [username: 1]
-  test.isNull SpecialwNodeÏ.Meta.fields.reviewers.reverseName
-  test.equal SpecialwNodeÏ.Meta.fields.reviewers.reverseFields, []
+  test.instanceOf SpecialwNodeÏ.Meta.fields.outgoing, SpecialwNodeÏ._ReferenceField
+  test.equal SpecialwNodeÏ.Meta.fields.outgoing.ancestorArray, 'outgoing'
+  test.isTrue SpecialwNodeÏ.Meta.fields.outgoing.required
+  test.equal SpecialwNodeÏ.Meta.fields.outgoing.sourcePath, 'outgoing'
+  test.equal SpecialwNodeÏ.Meta.fields.outgoing.sourceW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.outgoing.targetW, Person
+  test.equal SpecialwNodeÏ.Meta.fields.outgoing.sourceCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.outgoing.targetCollection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.outgoing.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.outgoing.targetW.Meta.collection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.outgoing.fields, []
+  test.isNull SpecialwNodeÏ.Meta.fields.outgoing.reverseName
+  test.equal SpecialwNodeÏ.Meta.fields.outgoing.reverseFields, []
+  test.instanceOf SpecialwNodeÏ.Meta.fields.incoming, SpecialwNodeÏ._ReferenceField
+  test.equal SpecialwNodeÏ.Meta.fields.incoming.ancestorArray, 'incoming'
+  test.isTrue SpecialwNodeÏ.Meta.fields.incoming.required
+  test.equal SpecialwNodeÏ.Meta.fields.incoming.sourcePath, 'incoming'
+  test.equal SpecialwNodeÏ.Meta.fields.incoming.sourceW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.incoming.targetW, Person
+  test.equal SpecialwNodeÏ.Meta.fields.incoming.sourceCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.incoming.targetCollection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.incoming.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.incoming.targetW.Meta.collection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.incoming.fields, [username: 1]
+  test.isNull SpecialwNodeÏ.Meta.fields.incoming.reverseName
+  test.equal SpecialwNodeÏ.Meta.fields.incoming.reverseFields, []
   test.equal _.size(SpecialwNodeÏ.Meta.fields.subW), 3
   test.instanceOf SpecialwNodeÏ.Meta.fields.subW.person, SpecialwNodeÏ._ReferenceField
   test.isNull SpecialwNodeÏ.Meta.fields.subW.person.ancestorArray, SpecialwNodeÏ.Meta.fields.subW.person.ancestorArray
@@ -1049,12 +1044,12 @@ testAsyncMulti 'peerdb - references', [
         displayName: 'wrong'
         field1: 'wrong'
         field2: 'wrong'
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: 'wrong'
       ,
@@ -1105,14 +1100,14 @@ testAsyncMulti 'peerdb - references', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      # subscribers have only ids
-      subscribers: [
+      # outgoing have only ids
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      # But reviewers have usernames as well
-      reviewers: [
+      # But incoming have usernames as well
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -1283,12 +1278,12 @@ testAsyncMulti 'peerdb - references', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -1357,10 +1352,10 @@ testAsyncMulti 'peerdb - references', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ]
@@ -1419,8 +1414,8 @@ testAsyncMulti 'peerdb - references', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: []
-      reviewers: []
+      outgoing: []
+      incoming: []
       subW:
         person: null
         persons: []
@@ -1454,7 +1449,7 @@ Tinytest.add 'peerdb - invalid optional', (test) ->
       @Meta
         name: 'BadwNodeÏ1'
         fields: =>
-          reviewers: [@ReferenceField Person, ['username'], false]
+          incoming: [@ReferenceField Person, ['username'], false]
   , /Reference field directly in an array cannot be optional/
 
   # Invalid W should not be added to the list
@@ -2163,7 +2158,7 @@ if Meteor.isServer and W.instances is 1
     Log._intercept 2 # Two to see if we catch more than expected
 
     wNodeÏId = wNodeÏ.Ws.insert
-      subscribers: 'foobar'
+      outgoing: 'foobar'
 
     # Wait so that observers have time to update Ws
     Meteor.call 'wait-for-database'
@@ -2175,7 +2170,7 @@ if Meteor.isServer and W.instances is 1
     test.isTrue _.isString(intercepted[0]), intercepted[0]
     intercepted = EJSON.parse intercepted[0]
 
-    test.equal intercepted.message, "W 'wNodeÏ' '#{ wNodeÏId }' field 'subscribers' was updated with a non-array value: 'foobar'"
+    test.equal intercepted.message, "W 'wNodeÏ' '#{ wNodeÏId }' field 'outgoing' was updated with a non-array value: 'foobar'"
     test.equal intercepted.level, 'error'
 
     Log._intercept 2 # Two to see if we catch more than expected
@@ -2316,12 +2311,12 @@ testAsyncMulti 'peerdb - subW fields', [
     wNodeÏ.Ws.insert
       author:
         _id: @person1._id
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
       ,
         _id: @person3._id
@@ -2364,12 +2359,12 @@ testAsyncMulti 'peerdb - subW fields', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -2635,12 +2630,12 @@ testAsyncMulti 'peerdb - generated fields', [
     wNodeÏ.Ws.insert
       author:
         _id: @person1._id
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
       ,
         _id: @person3._id
@@ -2681,12 +2676,12 @@ testAsyncMulti 'peerdb - generated fields', [
         _id: @person1._id
         username: @person1.username
         displayName: @person1.displayName
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -2752,12 +2747,12 @@ testAsyncMulti 'peerdb - generated fields', [
         _id: @person1._id
         username: @person1.username
         displayName: @person1.displayName
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -2823,12 +2818,12 @@ testAsyncMulti 'peerdb - generated fields', [
         _id: @person1._id
         username: @person1.username
         displayName: @person1.displayName
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -2894,12 +2889,12 @@ testAsyncMulti 'peerdb - generated fields', [
         _id: @person1._id
         username: @person1.username
         displayName: @person1.displayName
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -2961,12 +2956,12 @@ testAsyncMulti 'peerdb - generated fields', [
         _id: @person1._id
         username: @person1.username
         displayName: @person1.displayName
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -3025,12 +3020,12 @@ testAsyncMulti 'peerdb - generated fields', [
         _id: @person1._id
         username: @person1.username
         displayName: @person1.displayName
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -3789,14 +3784,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         # To test what happens if fields are partially not up to date
         username: 'wrong'
         displayName: 'wrong'
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
       ,
         _id: @person3._id
@@ -3892,14 +3887,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -4220,14 +4215,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -4412,14 +4407,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -4599,14 +4594,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -4824,14 +4819,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
       ,
         _id: @person3._id
@@ -5020,14 +5015,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
       ,
         _id: @person3._id
@@ -5189,14 +5184,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
       ,
         _id: @person3._id
@@ -5396,14 +5391,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -5594,14 +5589,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -5822,14 +5817,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -6040,14 +6035,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -6342,14 +6337,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -6644,14 +6639,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -6946,14 +6941,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -7248,14 +7243,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -7549,14 +7544,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -7847,14 +7842,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -8162,14 +8157,14 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -8385,10 +8380,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: [
+      outgoing: [
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person3._id
         username: @person3.username
       ,
@@ -8487,8 +8482,8 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         displayName: @person1.displayName
         field1: @person1.field1
         field2: @person1.field2
-      subscribers: []
-      reviewers: []
+      outgoing: []
+      incoming: []
       subW:
         person: null
         persons: []
@@ -8625,12 +8620,12 @@ testAsyncMulti 'peerdb - instances', [
     wNodeÏ.Ws.insert
       author:
         _id: @person1._id
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
       ,
         _id: @person3._id
@@ -8666,10 +8661,10 @@ testAsyncMulti 'peerdb - instances', [
 
     test.instanceOf @wNodeÏ, wNodeÏ
     test.instanceOf @wNodeÏ.author, Person
-    test.instanceOf @wNodeÏ.subscribers[0], Person
-    test.instanceOf @wNodeÏ.subscribers[1], Person
-    test.instanceOf @wNodeÏ.reviewers[0], Person
-    test.instanceOf @wNodeÏ.reviewers[1], Person
+    test.instanceOf @wNodeÏ.outgoing[0], Person
+    test.instanceOf @wNodeÏ.outgoing[1], Person
+    test.instanceOf @wNodeÏ.incoming[0], Person
+    test.instanceOf @wNodeÏ.incoming[1], Person
     test.instanceOf @wNodeÏ.subW.person, Person
     test.instanceOf @wNodeÏ.subW.persons[0], Person
     test.instanceOf @wNodeÏ.subW.persons[1], Person
@@ -8684,14 +8679,14 @@ testAsyncMulti 'peerdb - instances', [
         _id: @person1._id
         username: @person1.username
         displayName: @person1.displayName
-      # subscribers have only ids
-      subscribers: [
+      # outgoing have only ids
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      # But reviewers have usernames as well
-      reviewers: [
+      # But incoming have usernames as well
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -8735,12 +8730,12 @@ testAsyncMulti 'peerdb - instances', [
     SpecialwNodeÏ.Ws.insert
       author:
         _id: @person1._id
-      subscribers: [
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      reviewers: [
+      incoming: [
         _id: @person2._id
       ,
         _id: @person3._id
@@ -8778,10 +8773,10 @@ testAsyncMulti 'peerdb - instances', [
 
     test.instanceOf @wNodeÏ, SpecialwNodeÏ
     test.instanceOf @wNodeÏ.author, Person
-    test.instanceOf @wNodeÏ.subscribers[0], Person
-    test.instanceOf @wNodeÏ.subscribers[1], Person
-    test.instanceOf @wNodeÏ.reviewers[0], Person
-    test.instanceOf @wNodeÏ.reviewers[1], Person
+    test.instanceOf @wNodeÏ.outgoing[0], Person
+    test.instanceOf @wNodeÏ.outgoing[1], Person
+    test.instanceOf @wNodeÏ.incoming[0], Person
+    test.instanceOf @wNodeÏ.incoming[1], Person
     test.instanceOf @wNodeÏ.subW.person, Person
     test.instanceOf @wNodeÏ.subW.persons[0], Person
     test.instanceOf @wNodeÏ.subW.persons[1], Person
@@ -8797,14 +8792,14 @@ testAsyncMulti 'peerdb - instances', [
         _id: @person1._id
         username: @person1.username
         displayName: @person1.displayName
-      # subscribers have only ids
-      subscribers: [
+      # outgoing have only ids
+      outgoing: [
         _id: @person2._id
       ,
         _id: @person3._id
       ]
-      # But reviewers have usernames as well
-      reviewers: [
+      # But incoming have usernames as well
+      incoming: [
         _id: @person2._id
         username: @person2.username
       ,
@@ -8890,7 +8885,7 @@ Tinytest.add 'peerdb - bad instances', (test) ->
 
   test.throws ->
     new wNodeÏ
-      subscribers: [
+      outgoing: [
         Random.id()
       ]
   , /W does not match schema, not a plain object/
@@ -9005,12 +9000,12 @@ if Meteor.isServer and not W.instanceDisabled
           # To test what happens if one field is already up to date, but the other is not
           username: @person1.username
           displayName: 'wrong'
-        subscribers: [
+        outgoing: [
           _id: @person2._id
         ,
           _id: @person3._id
         ]
-        reviewers: [
+        incoming: [
           _id: @person2._id
         ,
           _id: @person3._id
@@ -9051,14 +9046,14 @@ if Meteor.isServer and not W.instanceDisabled
           _id: @person1._id
           username: @person1.username
           displayName: @person1.displayName
-        # subscribers have only ids
-        subscribers: [
+        # outgoing have only ids
+        outgoing: [
           _id: @person2._id
         ,
           _id: @person3._id
         ]
-        # But reviewers have usernames as well
-        reviewers: [
+        # But incoming have usernames as well
+        incoming: [
           _id: @person2._id
           username: @person2.username
         ,
@@ -9102,8 +9097,8 @@ if Meteor.isServer and not W.instanceDisabled
       wNodeÏ.Ws.update @wNodeÏId,
         $set:
           'author.username': 'wrong'
-          'reviewers.0.username': 'wrong'
-          'reviewers.1.username': 'wrong'
+          'incoming.0.username': 'wrong'
+          'incoming.1.username': 'wrong'
           'subW.person.username': 'wrong'
           'subW.persons.0.username': 'wrong'
           'subW.persons.1.username': 'wrong'
@@ -9130,14 +9125,14 @@ if Meteor.isServer and not W.instanceDisabled
           _id: @person1._id
           username: @person1.username
           displayName: @person1.displayName
-        # subscribers have only ids
-        subscribers: [
+        # outgoing have only ids
+        outgoing: [
           _id: @person2._id
         ,
           _id: @person3._id
         ]
-        # But reviewers have usernames as well
-        reviewers: [
+        # But incoming have usernames as well
+        incoming: [
           _id: @person2._id
           username: @person2.username
         ,
@@ -9191,14 +9186,14 @@ if Meteor.isServer and not W.instanceDisabled
           _id: @person1._id
           username: @person1.username
           displayName: @person1.displayName
-        # subscribers have only ids
-        subscribers: [
+        # outgoing have only ids
+        outgoing: [
           _id: @person2._id
         ,
           _id: @person3._id
         ]
-        # But reviewers have usernames as well
-        reviewers: [
+        # But incoming have usernames as well
+        incoming: [
           _id: @person2._id
           username: @person2.username
         ,
