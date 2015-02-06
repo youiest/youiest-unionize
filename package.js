@@ -14,7 +14,7 @@ Package.onUse(function(api) {
   api.versionsFrom('1.0.3.1');
   api.use('coffeescript')
   api.use('peerlibrary:peerdb@0.15.3',['client', 'server']);
-  api.addFiles('youiest:unionize.coffee',['client', 'server']);
+  api.addFiles('youiest:unionizeCommon.coffee',['client', 'server']);
   api.addFiles('youiest:unionizeClient.coffee',['client']);
   api.addFiles('youiest:unionizeServer.coffee',['server']);
   

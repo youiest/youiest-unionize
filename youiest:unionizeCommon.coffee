@@ -16,7 +16,7 @@ if Meteor.absoluteUrl.defaultOptions.rootUrl.match('localhost:3000')
 # everything gets inserted here, thenmirrored into wApp to speed up app load
 
 
-class w extends Document
+class @w extends Document
   @Meta 
     name: 'w'
     from: 'orphan'
@@ -35,22 +35,25 @@ class w extends Document
       #fields.to = @ReferenceField w, ['_id'], true, 'incoming' 
       #, true, '_id', 'to'
       #fields
-class w extends w
+class @w extends w
   name: 'w'
   replaceParent: true
   fields: (fields) =>
-      fields.to = @ReferenceField w, {reverseName: 'username'}, true, 'incoming'
+      fields.to = @ReferenceField w
+        , {reverseName: 'username'}
+        , true
+        , 'incoming'
       fields
 
 
 
 
-class wApp extends w
+class @wApp extends w
   @Meta 
     name: 'wApp'
 
 
-class wApp extends w
+class @wApp extends w
   @Meta 
     name: 'wApp'
     replaceParent: true  # redefine to later understand when it breaks
@@ -58,11 +61,11 @@ class wApp extends w
       
 
 # this is meant to be the testing collection so we find the bottlenecks
-class wLogs extends Document
+class @wLogs extends Document
   @Meta
     name: 'wLogs'
 
-class User extends w
+class @User extends w
   @Meta
     name: 'User'
     collection: Meteor.users
