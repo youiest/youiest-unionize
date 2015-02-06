@@ -18,7 +18,7 @@ class wNode extends W
     name: 'wNode'
     fields: =>
       # We can reference other W
-      author: @ReferenceField Person
+      author: @ReferenceField wApp
       , ['username'
       , 'displayName'
       , 'field1'
@@ -29,11 +29,11 @@ class wNode extends W
       , 'subW.body'
       , 'nested.body']
       # Or an array of Ws
-      outgoing: [@ReferenceField Person, [username: 1]]
+      outgoing: [@ReferenceField wApp, [username: 1]]
       # Fields can be arbitrary MongoDB projections
-      incoming: [@ReferenceField Person, [username: 1]]
+      incoming: [@ReferenceField wApp, [username: 1]]
       subW:
-        person: @ReferenceField Person, ['username', 'displayName', 'field1', 'field2'], false, 'subWwNodes', ['body', 'subW.body', 'nested.body']
+        wApp: @ReferenceField wApp, ['username', 'displayName', 'field1', 'field2'], false, 'subWwNodes', ['body', 'subW.body', 'nested.body']
         slug: @GeneratedField 'self', ['body', 'subW.body'], (fields) ->
           if _.isUndefined(fields.body) or _.isUndefined(fields.subW?.body)
             [fields._id, undefined]
@@ -42,8 +42,8 @@ class wNode extends W
           else
             [fields._id, "subW-prefix-#{ fields.body.toLowerCase() }-#{ fields.subW.body.toLowerCase() }-suffix"]
       nested: [
-        required: @ReferenceField Person, ['username', 'displayName', 'field1', 'field2'], true, 'nestedwNodes', ['body', 'subW.body', 'nested.body']
-        optional: @ReferenceField Person, ['username'], false
+        required: @ReferenceField wApp, ['username', 'displayName', 'field1', 'field2'], true, 'nestedwNodes', ['body', 'subW.body', 'nested.body']
+        optional: @ReferenceField wApp, ['username'], false
         slug: @GeneratedField 'self', ['body', 'nested.body'], (fields) ->
           for nested in fields.nested or []
             if _.isUndefined(fields.body) or _.isUndefined(nested.body)
@@ -84,7 +84,7 @@ class wNode extends wNode
     name: 'wNode'
     replaceParent: true
     fields: (fields) =>
-      fields.subW.persons = [@ReferenceField Person, ['username', 'displayName', 'field1', 'field2'], true, 'subWswNodes', ['body', 'subW.body', 'nested.body']]
+      fields.subW.wApps = [@ReferenceField wApp, ['username', 'displayName', 'field1', 'field2'], true, 'subWswNodes', ['body', 'subW.body', 'nested.body']]
       fields
 
 # Store away for testing
@@ -115,7 +115,7 @@ class wNodeLink extends wNodeLink
     name: 'wNodeLink'
     replaceParent: true
     fields: =>
-      wNode: @ReferenceField wNode, ['subW.person', 'subW.persons']
+      wNode: @ReferenceField wNode, ['subW.wApp', 'subW.wApps']
 
 class CircularFirst extends W
   # Other fields:
@@ -147,7 +147,7 @@ class CircularSecond extends W
       # But of course one should not be required so that we can insert without warnings
       first: @ReferenceField CircularFirst, ['content'], false, 'reverseSeconds', ['content']
 
-class Person extends W
+class wApp extends W
   # Other fields:
   #   username
   #   displayName
@@ -155,7 +155,7 @@ class Person extends W
   #   field2
 
   @Meta
-    name: 'Person'
+    name: 'wApp'
     fields: =>
       count: @GeneratedField 'self'
       , ['wNodes'
@@ -165,21 +165,21 @@ class Person extends W
         [fields._id, (fields.wNodes?.length or 0) + (fields.nestedwNodes?.length or 0) + (fields.subWwNodes?.length or 0) + (fields.subWswNodes?.length or 0)]
 
 # Store away for testing
-_TestPerson = Person
+_TestwApp = wApp
 
 # To test if reverse fields *are* added to the extended class which replaces the parent
-class Person extends Person
+class wApp extends wApp
   @Meta
-    name: 'Person'
+    name: 'wApp'
     replaceParent: true
 
   formatName: ->
     "#{ @username }-#{ @displayName or "none" }"
 
 # To test if reverse fields are *not* added to the extended class which replaces the parent
-class SpecialPerson extends Person
+class SpecialwApp extends wApp
   @Meta
-    name: 'SpecialPerson'
+    name: 'SpecialwApp'
     fields: =>
       # wNodes and nestedwNodes don't exist, so we remove count field as well
       count: undefined
@@ -217,7 +217,7 @@ class SpecialwNode extends wNode
   @Meta
     name: 'SpecialwNode'
     fields: =>
-      special: @ReferenceField Person
+      special: @ReferenceField wApp
 
 # To test redefinig after fields already have a reference to an old W
 class wNode extends wNode
@@ -243,7 +243,7 @@ if Meteor.isServer
   wNodeÏLink.Ws.remove {}
   CircularFirst.Ws.remove {}
   CircularSecond.Ws.remove {}
-  Person.Ws.remove {}
+  wApp.Ws.remove {}
   Recursive.Ws.remove {}
   IdentityGenerator.Ws.remove {}
   SpecialwNodeÏ.Ws.remove {}
@@ -260,7 +260,7 @@ if Meteor.isServer
   Meteor.publish null, ->
     CircularSecond.Ws.find()
   Meteor.publish null, ->
-    Person.Ws.find()
+    wApp.Ws.find()
   Meteor.publish null, ->
     Recursive.Ws.find()
   Meteor.publish null, ->
@@ -301,7 +301,7 @@ waitForDatabase = (test, expect) ->
   Meteor.call 'wait-for-database', expect (error) ->
     test.isFalse error, error?.toString?() or error
 
-ALL = @ALL = [User, UserLink, CircularFirst, CircularSecond, SpecialPerson, Recursive, IdentityGenerator, SpecialwNodeÏ, wNodeÏ, Person, wNodeÏLink]
+ALL = @ALL = [User, UserLink, CircularFirst, CircularSecond, SpecialwApp, Recursive, IdentityGenerator, SpecialwNodeÏ, wNodeÏ, wApp, wNodeÏLink]
 
 testWList = (test, list) ->
   test.equal W.list, list, "expected: #{ (d.Meta._name for d in list) } vs. actual: #{ (d.Meta._name for d in W.list) }"
@@ -340,11 +340,11 @@ testDefinition = (test) ->
   test.isTrue wNodeÏ.Meta.fields.author.required
   test.equal wNodeÏ.Meta.fields.author.sourcePath, 'author'
   test.equal wNodeÏ.Meta.fields.author.sourceW, wNodeÏ
-  test.equal wNodeÏ.Meta.fields.author.targetW, Person
+  test.equal wNodeÏ.Meta.fields.author.targetW, wApp
   test.equal wNodeÏ.Meta.fields.author.sourceCollection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.author.targetCollection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.author.targetCollection._name, 'wApps'
   test.equal wNodeÏ.Meta.fields.author.sourceW.Meta.collection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.author.targetW.Meta.collection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.author.targetW.Meta.collection._name, 'wApps'
   test.equal wNodeÏ.Meta.fields.author.fields, ['username', 'displayName', 'field1', 'field2']
   test.equal wNodeÏ.Meta.fields.author.reverseName, 'wNodeÏs'
   test.equal wNodeÏ.Meta.fields.author.reverseFields, ['body', 'subW.body', 'nested.body']
@@ -353,11 +353,11 @@ testDefinition = (test) ->
   test.isTrue wNodeÏ.Meta.fields.outgoing.required
   test.equal wNodeÏ.Meta.fields.outgoing.sourcePath, 'outgoing'
   test.equal wNodeÏ.Meta.fields.outgoing.sourceW, wNodeÏ
-  test.equal wNodeÏ.Meta.fields.outgoing.targetW, Person
+  test.equal wNodeÏ.Meta.fields.outgoing.targetW, wApp
   test.equal wNodeÏ.Meta.fields.outgoing.sourceCollection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.outgoing.targetCollection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.outgoing.targetCollection._name, 'wApps'
   test.equal wNodeÏ.Meta.fields.outgoing.sourceW.Meta.collection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.outgoing.targetW.Meta.collection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.outgoing.targetW.Meta.collection._name, 'wApps'
   test.equal wNodeÏ.Meta.fields.outgoing.fields, []
   test.isNull wNodeÏ.Meta.fields.outgoing.reverseName
   test.equal wNodeÏ.Meta.fields.outgoing.reverseFields, []
@@ -366,41 +366,41 @@ testDefinition = (test) ->
   test.isTrue wNodeÏ.Meta.fields.incoming.required
   test.equal wNodeÏ.Meta.fields.incoming.sourcePath, 'incoming'
   test.equal wNodeÏ.Meta.fields.incoming.sourceW, wNodeÏ
-  test.equal wNodeÏ.Meta.fields.incoming.targetW, Person
+  test.equal wNodeÏ.Meta.fields.incoming.targetW, wApp
   test.equal wNodeÏ.Meta.fields.incoming.sourceCollection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.incoming.targetCollection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.incoming.targetCollection._name, 'wApps'
   test.equal wNodeÏ.Meta.fields.incoming.sourceW.Meta.collection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.incoming.targetW.Meta.collection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.incoming.targetW.Meta.collection._name, 'wApps'
   test.equal wNodeÏ.Meta.fields.incoming.fields, [username: 1]
   test.isNull wNodeÏ.Meta.fields.incoming.reverseName
   test.equal wNodeÏ.Meta.fields.incoming.reverseFields, []
   test.equal _.size(wNodeÏ.Meta.fields.subW), 3
-  test.instanceOf wNodeÏ.Meta.fields.subW.person, wNodeÏ._ReferenceField
-  test.isNull wNodeÏ.Meta.fields.subW.person.ancestorArray, wNodeÏ.Meta.fields.subW.person.ancestorArray
-  test.isFalse wNodeÏ.Meta.fields.subW.person.required
-  test.equal wNodeÏ.Meta.fields.subW.person.sourcePath, 'subW.person'
-  test.equal wNodeÏ.Meta.fields.subW.person.sourceW, wNodeÏ
-  test.equal wNodeÏ.Meta.fields.subW.person.targetW, Person
-  test.equal wNodeÏ.Meta.fields.subW.person.sourceCollection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.subW.person.targetCollection._name, 'Persons'
-  test.equal wNodeÏ.Meta.fields.subW.person.sourceW.Meta.collection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.subW.person.targetW.Meta.collection._name, 'Persons'
-  test.equal wNodeÏ.Meta.fields.subW.person.fields, ['username', 'displayName', 'field1', 'field2']
-  test.equal wNodeÏ.Meta.fields.subW.person.reverseName, 'subWwNodeÏs'
-  test.equal wNodeÏ.Meta.fields.subW.person.reverseFields, ['body', 'subW.body', 'nested.body']
-  test.instanceOf wNodeÏ.Meta.fields.subW.persons, wNodeÏ._ReferenceField
-  test.equal wNodeÏ.Meta.fields.subW.persons.ancestorArray, 'subW.persons'
-  test.isTrue wNodeÏ.Meta.fields.subW.persons.required
-  test.equal wNodeÏ.Meta.fields.subW.persons.sourcePath, 'subW.persons'
-  test.equal wNodeÏ.Meta.fields.subW.persons.sourceW, wNodeÏ
-  test.equal wNodeÏ.Meta.fields.subW.persons.targetW, Person
-  test.equal wNodeÏ.Meta.fields.subW.persons.sourceCollection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.subW.persons.targetCollection._name, 'Persons'
-  test.equal wNodeÏ.Meta.fields.subW.persons.sourceW.Meta.collection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.subW.persons.targetW.Meta.collection._name, 'Persons'
-  test.equal wNodeÏ.Meta.fields.subW.persons.fields, ['username', 'displayName', 'field1', 'field2']
-  test.equal wNodeÏ.Meta.fields.subW.persons.reverseName, 'subWswNodeÏs'
-  test.equal wNodeÏ.Meta.fields.subW.persons.reverseFields, ['body', 'subW.body', 'nested.body']
+  test.instanceOf wNodeÏ.Meta.fields.subW.wApp, wNodeÏ._ReferenceField
+  test.isNull wNodeÏ.Meta.fields.subW.wApp.ancestorArray, wNodeÏ.Meta.fields.subW.wApp.ancestorArray
+  test.isFalse wNodeÏ.Meta.fields.subW.wApp.required
+  test.equal wNodeÏ.Meta.fields.subW.wApp.sourcePath, 'subW.wApp'
+  test.equal wNodeÏ.Meta.fields.subW.wApp.sourceW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.subW.wApp.targetW, wApp
+  test.equal wNodeÏ.Meta.fields.subW.wApp.sourceCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subW.wApp.targetCollection._name, 'wApps'
+  test.equal wNodeÏ.Meta.fields.subW.wApp.sourceW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subW.wApp.targetW.Meta.collection._name, 'wApps'
+  test.equal wNodeÏ.Meta.fields.subW.wApp.fields, ['username', 'displayName', 'field1', 'field2']
+  test.equal wNodeÏ.Meta.fields.subW.wApp.reverseName, 'subWwNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subW.wApp.reverseFields, ['body', 'subW.body', 'nested.body']
+  test.instanceOf wNodeÏ.Meta.fields.subW.wApps, wNodeÏ._ReferenceField
+  test.equal wNodeÏ.Meta.fields.subW.wApps.ancestorArray, 'subW.wApps'
+  test.isTrue wNodeÏ.Meta.fields.subW.wApps.required
+  test.equal wNodeÏ.Meta.fields.subW.wApps.sourcePath, 'subW.wApps'
+  test.equal wNodeÏ.Meta.fields.subW.wApps.sourceW, wNodeÏ
+  test.equal wNodeÏ.Meta.fields.subW.wApps.targetW, wApp
+  test.equal wNodeÏ.Meta.fields.subW.wApps.sourceCollection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subW.wApps.targetCollection._name, 'wApps'
+  test.equal wNodeÏ.Meta.fields.subW.wApps.sourceW.Meta.collection._name, 'wNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subW.wApps.targetW.Meta.collection._name, 'wApps'
+  test.equal wNodeÏ.Meta.fields.subW.wApps.fields, ['username', 'displayName', 'field1', 'field2']
+  test.equal wNodeÏ.Meta.fields.subW.wApps.reverseName, 'subWswNodeÏs'
+  test.equal wNodeÏ.Meta.fields.subW.wApps.reverseFields, ['body', 'subW.body', 'nested.body']
   test.instanceOf wNodeÏ.Meta.fields.subW.slug, wNodeÏ._GeneratedField
   test.isNull wNodeÏ.Meta.fields.subW.slug.ancestorArray, wNodeÏ.Meta.fields.subW.slug.ancestorArray
   test.isTrue _.isFunction wNodeÏ.Meta.fields.subW.slug.generator
@@ -420,11 +420,11 @@ testDefinition = (test) ->
   test.isTrue wNodeÏ.Meta.fields.nested.required.required
   test.equal wNodeÏ.Meta.fields.nested.required.sourcePath, 'nested.required'
   test.equal wNodeÏ.Meta.fields.nested.required.sourceW, wNodeÏ
-  test.equal wNodeÏ.Meta.fields.nested.required.targetW, Person
+  test.equal wNodeÏ.Meta.fields.nested.required.targetW, wApp
   test.equal wNodeÏ.Meta.fields.nested.required.sourceCollection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.nested.required.targetCollection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.nested.required.targetCollection._name, 'wApps'
   test.equal wNodeÏ.Meta.fields.nested.required.sourceW.Meta.collection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.nested.required.targetW.Meta.collection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.nested.required.targetW.Meta.collection._name, 'wApps'
   test.equal wNodeÏ.Meta.fields.nested.required.fields, ['username', 'displayName', 'field1', 'field2']
   test.equal wNodeÏ.Meta.fields.nested.required.reverseName, 'nestedwNodeÏs'
   test.equal wNodeÏ.Meta.fields.nested.required.reverseFields, ['body', 'subW.body', 'nested.body']
@@ -433,11 +433,11 @@ testDefinition = (test) ->
   test.isFalse wNodeÏ.Meta.fields.nested.optional.required
   test.equal wNodeÏ.Meta.fields.nested.optional.sourcePath, 'nested.optional'
   test.equal wNodeÏ.Meta.fields.nested.optional.sourceW, wNodeÏ
-  test.equal wNodeÏ.Meta.fields.nested.optional.targetW, Person
+  test.equal wNodeÏ.Meta.fields.nested.optional.targetW, wApp
   test.equal wNodeÏ.Meta.fields.nested.optional.sourceCollection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.nested.optional.targetCollection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.nested.optional.targetCollection._name, 'wApps'
   test.equal wNodeÏ.Meta.fields.nested.optional.sourceW.Meta.collection._name, 'wNodeÏs'
-  test.equal wNodeÏ.Meta.fields.nested.optional.targetW.Meta.collection._name, 'Persons'
+  test.equal wNodeÏ.Meta.fields.nested.optional.targetW.Meta.collection._name, 'wApps'
   test.equal wNodeÏ.Meta.fields.nested.optional.fields, ['username']
   test.isNull wNodeÏ.Meta.fields.nested.optional.reverseName
   test.equal wNodeÏ.Meta.fields.nested.optional.reverseFields, []
@@ -522,7 +522,7 @@ testDefinition = (test) ->
   test.equal wNodeÏLink.Meta.fields.wNodeÏ.sourceCollection._name, 'wNodeÏLinks'
   test.equal wNodeÏLink.Meta.fields.wNodeÏ.targetCollection._name, 'wNodeÏs'
   test.equal wNodeÏLink.Meta.fields.wNodeÏ.sourceW.Meta.collection._name, 'wNodeÏLinks'
-  test.equal wNodeÏLink.Meta.fields.wNodeÏ.fields, ['subW.person', 'subW.persons']
+  test.equal wNodeÏLink.Meta.fields.wNodeÏ.fields, ['subW.wApp', 'subW.wApps']
   test.isNull wNodeÏLink.Meta.fields.wNodeÏ.reverseName
   test.equal wNodeÏLink.Meta.fields.wNodeÏ.reverseFields, []
 
@@ -592,86 +592,86 @@ testDefinition = (test) ->
   test.isNull CircularSecond.Meta.fields.reverseFirsts.reverseName
   test.equal CircularSecond.Meta.fields.reverseFirsts.reverseFields, []
 
-  test.equal Person.Meta._name, 'Person'
-  test.equal Person.Meta.parent, _TestPerson.Meta
-  test.equal Person.Meta.W, Person
-  test.equal Person.Meta._name, 'Person'
-  test.equal Person.Meta.collection._name, 'Persons'
-  test.equal _.size(Person.Meta.triggers), 0
-  test.equal _.size(Person.Meta.fields), 5
-  test.instanceOf Person.Meta.fields.wNodeÏs, Person._ReferenceField
-  test.equal Person.Meta.fields.wNodeÏs.ancestorArray, 'wNodeÏs'
-  test.isTrue Person.Meta.fields.wNodeÏs.required
-  test.equal Person.Meta.fields.wNodeÏs.sourcePath, 'wNodeÏs'
-  test.equal Person.Meta.fields.wNodeÏs.sourceW, Person
-  test.equal Person.Meta.fields.wNodeÏs.targetW, wNodeÏ
-  test.equal Person.Meta.fields.wNodeÏs.sourceCollection._name, 'Persons'
-  test.equal Person.Meta.fields.wNodeÏs.targetCollection._name, 'wNodeÏs'
-  test.equal Person.Meta.fields.wNodeÏs.sourceW.Meta.collection._name, 'Persons'
-  test.equal Person.Meta.fields.wNodeÏs.targetW.Meta.collection._name, 'wNodeÏs'
-  test.equal Person.Meta.fields.wNodeÏs.fields, ['body', 'subW.body', 'nested.body']
-  test.isNull Person.Meta.fields.wNodeÏs.reverseName
-  test.equal Person.Meta.fields.wNodeÏs.reverseFields, []
-  test.instanceOf Person.Meta.fields.nestedwNodeÏs, Person._ReferenceField
-  test.equal Person.Meta.fields.nestedwNodeÏs.ancestorArray, 'nestedwNodeÏs'
-  test.isTrue Person.Meta.fields.nestedwNodeÏs.required
-  test.equal Person.Meta.fields.nestedwNodeÏs.sourcePath, 'nestedwNodeÏs'
-  test.equal Person.Meta.fields.nestedwNodeÏs.sourceW, Person
-  test.equal Person.Meta.fields.nestedwNodeÏs.targetW, wNodeÏ
-  test.equal Person.Meta.fields.nestedwNodeÏs.sourceCollection._name, 'Persons'
-  test.equal Person.Meta.fields.nestedwNodeÏs.targetCollection._name, 'wNodeÏs'
-  test.equal Person.Meta.fields.nestedwNodeÏs.sourceW.Meta.collection._name, 'Persons'
-  test.equal Person.Meta.fields.nestedwNodeÏs.targetW.Meta.collection._name, 'wNodeÏs'
-  test.equal Person.Meta.fields.nestedwNodeÏs.fields, ['body', 'subW.body', 'nested.body']
-  test.isNull Person.Meta.fields.nestedwNodeÏs.reverseName
-  test.equal Person.Meta.fields.nestedwNodeÏs.reverseFields, []
-  test.instanceOf Person.Meta.fields.count, Person._GeneratedField
-  test.isNull Person.Meta.fields.count.ancestorArray, Person.Meta.fields.count.ancestorArray
-  test.isTrue _.isFunction Person.Meta.fields.count.generator
-  test.equal Person.Meta.fields.count.sourcePath, 'count'
-  test.equal Person.Meta.fields.count.sourceW, Person
-  test.equal Person.Meta.fields.count.targetW, Person
-  test.equal Person.Meta.fields.count.sourceCollection._name, 'Persons'
-  test.equal Person.Meta.fields.count.targetCollection._name, 'Persons'
-  test.equal Person.Meta.fields.count.sourceW.Meta.collection._name, 'Persons'
-  test.equal Person.Meta.fields.count.targetW.Meta.collection._name, 'Persons'
-  test.equal Person.Meta.fields.count.fields, ['wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs']
-  test.isUndefined Person.Meta.fields.count.reverseName
-  test.isUndefined Person.Meta.fields.count.reverseFields
-  test.instanceOf Person.Meta.fields.subWwNodeÏs, Person._ReferenceField
-  test.equal Person.Meta.fields.subWwNodeÏs.ancestorArray, 'subWwNodeÏs'
-  test.isTrue Person.Meta.fields.subWwNodeÏs.required
-  test.equal Person.Meta.fields.subWwNodeÏs.sourcePath, 'subWwNodeÏs'
-  test.equal Person.Meta.fields.subWwNodeÏs.sourceW, Person
-  test.equal Person.Meta.fields.subWwNodeÏs.targetW, wNodeÏ
-  test.equal Person.Meta.fields.subWwNodeÏs.sourceCollection._name, 'Persons'
-  test.equal Person.Meta.fields.subWwNodeÏs.targetCollection._name, 'wNodeÏs'
-  test.equal Person.Meta.fields.subWwNodeÏs.sourceW.Meta.collection._name, 'Persons'
-  test.equal Person.Meta.fields.subWwNodeÏs.targetW.Meta.collection._name, 'wNodeÏs'
-  test.equal Person.Meta.fields.subWwNodeÏs.fields, ['body', 'subW.body', 'nested.body']
-  test.isNull Person.Meta.fields.subWwNodeÏs.reverseName
-  test.equal Person.Meta.fields.subWwNodeÏs.reverseFields, []
-  test.instanceOf Person.Meta.fields.subWswNodeÏs, Person._ReferenceField
-  test.equal Person.Meta.fields.subWswNodeÏs.ancestorArray, 'subWswNodeÏs'
-  test.isTrue Person.Meta.fields.subWswNodeÏs.required
-  test.equal Person.Meta.fields.subWswNodeÏs.sourcePath, 'subWswNodeÏs'
-  test.equal Person.Meta.fields.subWswNodeÏs.sourceW, Person
-  test.equal Person.Meta.fields.subWswNodeÏs.targetW, wNodeÏ
-  test.equal Person.Meta.fields.subWswNodeÏs.sourceCollection._name, 'Persons'
-  test.equal Person.Meta.fields.subWswNodeÏs.targetCollection._name, 'wNodeÏs'
-  test.equal Person.Meta.fields.subWswNodeÏs.sourceW.Meta.collection._name, 'Persons'
-  test.equal Person.Meta.fields.subWswNodeÏs.targetW.Meta.collection._name, 'wNodeÏs'
-  test.equal Person.Meta.fields.subWswNodeÏs.fields, ['body', 'subW.body', 'nested.body']
-  test.isNull Person.Meta.fields.subWswNodeÏs.reverseName
-  test.equal Person.Meta.fields.subWswNodeÏs.reverseFields, []
+  test.equal wApp.Meta._name, 'wApp'
+  test.equal wApp.Meta.parent, _TestwApp.Meta
+  test.equal wApp.Meta.W, wApp
+  test.equal wApp.Meta._name, 'wApp'
+  test.equal wApp.Meta.collection._name, 'wApps'
+  test.equal _.size(wApp.Meta.triggers), 0
+  test.equal _.size(wApp.Meta.fields), 5
+  test.instanceOf wApp.Meta.fields.wNodeÏs, wApp._ReferenceField
+  test.equal wApp.Meta.fields.wNodeÏs.ancestorArray, 'wNodeÏs'
+  test.isTrue wApp.Meta.fields.wNodeÏs.required
+  test.equal wApp.Meta.fields.wNodeÏs.sourcePath, 'wNodeÏs'
+  test.equal wApp.Meta.fields.wNodeÏs.sourceW, wApp
+  test.equal wApp.Meta.fields.wNodeÏs.targetW, wNodeÏ
+  test.equal wApp.Meta.fields.wNodeÏs.sourceCollection._name, 'wApps'
+  test.equal wApp.Meta.fields.wNodeÏs.targetCollection._name, 'wNodeÏs'
+  test.equal wApp.Meta.fields.wNodeÏs.sourceW.Meta.collection._name, 'wApps'
+  test.equal wApp.Meta.fields.wNodeÏs.targetW.Meta.collection._name, 'wNodeÏs'
+  test.equal wApp.Meta.fields.wNodeÏs.fields, ['body', 'subW.body', 'nested.body']
+  test.isNull wApp.Meta.fields.wNodeÏs.reverseName
+  test.equal wApp.Meta.fields.wNodeÏs.reverseFields, []
+  test.instanceOf wApp.Meta.fields.nestedwNodeÏs, wApp._ReferenceField
+  test.equal wApp.Meta.fields.nestedwNodeÏs.ancestorArray, 'nestedwNodeÏs'
+  test.isTrue wApp.Meta.fields.nestedwNodeÏs.required
+  test.equal wApp.Meta.fields.nestedwNodeÏs.sourcePath, 'nestedwNodeÏs'
+  test.equal wApp.Meta.fields.nestedwNodeÏs.sourceW, wApp
+  test.equal wApp.Meta.fields.nestedwNodeÏs.targetW, wNodeÏ
+  test.equal wApp.Meta.fields.nestedwNodeÏs.sourceCollection._name, 'wApps'
+  test.equal wApp.Meta.fields.nestedwNodeÏs.targetCollection._name, 'wNodeÏs'
+  test.equal wApp.Meta.fields.nestedwNodeÏs.sourceW.Meta.collection._name, 'wApps'
+  test.equal wApp.Meta.fields.nestedwNodeÏs.targetW.Meta.collection._name, 'wNodeÏs'
+  test.equal wApp.Meta.fields.nestedwNodeÏs.fields, ['body', 'subW.body', 'nested.body']
+  test.isNull wApp.Meta.fields.nestedwNodeÏs.reverseName
+  test.equal wApp.Meta.fields.nestedwNodeÏs.reverseFields, []
+  test.instanceOf wApp.Meta.fields.count, wApp._GeneratedField
+  test.isNull wApp.Meta.fields.count.ancestorArray, wApp.Meta.fields.count.ancestorArray
+  test.isTrue _.isFunction wApp.Meta.fields.count.generator
+  test.equal wApp.Meta.fields.count.sourcePath, 'count'
+  test.equal wApp.Meta.fields.count.sourceW, wApp
+  test.equal wApp.Meta.fields.count.targetW, wApp
+  test.equal wApp.Meta.fields.count.sourceCollection._name, 'wApps'
+  test.equal wApp.Meta.fields.count.targetCollection._name, 'wApps'
+  test.equal wApp.Meta.fields.count.sourceW.Meta.collection._name, 'wApps'
+  test.equal wApp.Meta.fields.count.targetW.Meta.collection._name, 'wApps'
+  test.equal wApp.Meta.fields.count.fields, ['wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs']
+  test.isUndefined wApp.Meta.fields.count.reverseName
+  test.isUndefined wApp.Meta.fields.count.reverseFields
+  test.instanceOf wApp.Meta.fields.subWwNodeÏs, wApp._ReferenceField
+  test.equal wApp.Meta.fields.subWwNodeÏs.ancestorArray, 'subWwNodeÏs'
+  test.isTrue wApp.Meta.fields.subWwNodeÏs.required
+  test.equal wApp.Meta.fields.subWwNodeÏs.sourcePath, 'subWwNodeÏs'
+  test.equal wApp.Meta.fields.subWwNodeÏs.sourceW, wApp
+  test.equal wApp.Meta.fields.subWwNodeÏs.targetW, wNodeÏ
+  test.equal wApp.Meta.fields.subWwNodeÏs.sourceCollection._name, 'wApps'
+  test.equal wApp.Meta.fields.subWwNodeÏs.targetCollection._name, 'wNodeÏs'
+  test.equal wApp.Meta.fields.subWwNodeÏs.sourceW.Meta.collection._name, 'wApps'
+  test.equal wApp.Meta.fields.subWwNodeÏs.targetW.Meta.collection._name, 'wNodeÏs'
+  test.equal wApp.Meta.fields.subWwNodeÏs.fields, ['body', 'subW.body', 'nested.body']
+  test.isNull wApp.Meta.fields.subWwNodeÏs.reverseName
+  test.equal wApp.Meta.fields.subWwNodeÏs.reverseFields, []
+  test.instanceOf wApp.Meta.fields.subWswNodeÏs, wApp._ReferenceField
+  test.equal wApp.Meta.fields.subWswNodeÏs.ancestorArray, 'subWswNodeÏs'
+  test.isTrue wApp.Meta.fields.subWswNodeÏs.required
+  test.equal wApp.Meta.fields.subWswNodeÏs.sourcePath, 'subWswNodeÏs'
+  test.equal wApp.Meta.fields.subWswNodeÏs.sourceW, wApp
+  test.equal wApp.Meta.fields.subWswNodeÏs.targetW, wNodeÏ
+  test.equal wApp.Meta.fields.subWswNodeÏs.sourceCollection._name, 'wApps'
+  test.equal wApp.Meta.fields.subWswNodeÏs.targetCollection._name, 'wNodeÏs'
+  test.equal wApp.Meta.fields.subWswNodeÏs.sourceW.Meta.collection._name, 'wApps'
+  test.equal wApp.Meta.fields.subWswNodeÏs.targetW.Meta.collection._name, 'wNodeÏs'
+  test.equal wApp.Meta.fields.subWswNodeÏs.fields, ['body', 'subW.body', 'nested.body']
+  test.isNull wApp.Meta.fields.subWswNodeÏs.reverseName
+  test.equal wApp.Meta.fields.subWswNodeÏs.reverseFields, []
 
-  test.equal SpecialPerson.Meta._name, 'SpecialPerson'
-  test.equal SpecialPerson.Meta.parent, Person.Meta
-  test.equal SpecialPerson.Meta.W, SpecialPerson
-  test.equal SpecialPerson.Meta._name, 'SpecialPerson'
-  test.equal SpecialPerson.Meta.collection._name, 'SpecialPersons'
-  test.equal _.size(SpecialPerson.Meta.triggers), 0
-  test.equal _.size(SpecialPerson.Meta.fields), 0
+  test.equal SpecialwApp.Meta._name, 'SpecialwApp'
+  test.equal SpecialwApp.Meta.parent, wApp.Meta
+  test.equal SpecialwApp.Meta.W, SpecialwApp
+  test.equal SpecialwApp.Meta._name, 'SpecialwApp'
+  test.equal SpecialwApp.Meta.collection._name, 'SpecialwApps'
+  test.equal _.size(SpecialwApp.Meta.triggers), 0
+  test.equal _.size(SpecialwApp.Meta.fields), 0
 
   test.equal Recursive.Meta._name, 'Recursive'
   test.isFalse Recursive.Meta.parent
@@ -755,11 +755,11 @@ testDefinition = (test) ->
   test.isTrue SpecialwNodeÏ.Meta.fields.author.required
   test.equal SpecialwNodeÏ.Meta.fields.author.sourcePath, 'author'
   test.equal SpecialwNodeÏ.Meta.fields.author.sourceW, SpecialwNodeÏ
-  test.equal SpecialwNodeÏ.Meta.fields.author.targetW, Person
+  test.equal SpecialwNodeÏ.Meta.fields.author.targetW, wApp
   test.equal SpecialwNodeÏ.Meta.fields.author.sourceCollection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.author.targetCollection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.author.targetCollection._name, 'wApps'
   test.equal SpecialwNodeÏ.Meta.fields.author.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.author.targetW.Meta.collection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.author.targetW.Meta.collection._name, 'wApps'
   test.equal SpecialwNodeÏ.Meta.fields.author.fields, ['username', 'displayName', 'field1', 'field2']
   test.equal SpecialwNodeÏ.Meta.fields.author.reverseName, 'wNodeÏs'
   test.equal SpecialwNodeÏ.Meta.fields.author.reverseFields, ['body', 'subW.body', 'nested.body']
@@ -768,11 +768,11 @@ testDefinition = (test) ->
   test.isTrue SpecialwNodeÏ.Meta.fields.outgoing.required
   test.equal SpecialwNodeÏ.Meta.fields.outgoing.sourcePath, 'outgoing'
   test.equal SpecialwNodeÏ.Meta.fields.outgoing.sourceW, SpecialwNodeÏ
-  test.equal SpecialwNodeÏ.Meta.fields.outgoing.targetW, Person
+  test.equal SpecialwNodeÏ.Meta.fields.outgoing.targetW, wApp
   test.equal SpecialwNodeÏ.Meta.fields.outgoing.sourceCollection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.outgoing.targetCollection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.outgoing.targetCollection._name, 'wApps'
   test.equal SpecialwNodeÏ.Meta.fields.outgoing.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.outgoing.targetW.Meta.collection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.outgoing.targetW.Meta.collection._name, 'wApps'
   test.equal SpecialwNodeÏ.Meta.fields.outgoing.fields, []
   test.isNull SpecialwNodeÏ.Meta.fields.outgoing.reverseName
   test.equal SpecialwNodeÏ.Meta.fields.outgoing.reverseFields, []
@@ -781,41 +781,41 @@ testDefinition = (test) ->
   test.isTrue SpecialwNodeÏ.Meta.fields.incoming.required
   test.equal SpecialwNodeÏ.Meta.fields.incoming.sourcePath, 'incoming'
   test.equal SpecialwNodeÏ.Meta.fields.incoming.sourceW, SpecialwNodeÏ
-  test.equal SpecialwNodeÏ.Meta.fields.incoming.targetW, Person
+  test.equal SpecialwNodeÏ.Meta.fields.incoming.targetW, wApp
   test.equal SpecialwNodeÏ.Meta.fields.incoming.sourceCollection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.incoming.targetCollection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.incoming.targetCollection._name, 'wApps'
   test.equal SpecialwNodeÏ.Meta.fields.incoming.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.incoming.targetW.Meta.collection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.incoming.targetW.Meta.collection._name, 'wApps'
   test.equal SpecialwNodeÏ.Meta.fields.incoming.fields, [username: 1]
   test.isNull SpecialwNodeÏ.Meta.fields.incoming.reverseName
   test.equal SpecialwNodeÏ.Meta.fields.incoming.reverseFields, []
   test.equal _.size(SpecialwNodeÏ.Meta.fields.subW), 3
-  test.instanceOf SpecialwNodeÏ.Meta.fields.subW.person, SpecialwNodeÏ._ReferenceField
-  test.isNull SpecialwNodeÏ.Meta.fields.subW.person.ancestorArray, SpecialwNodeÏ.Meta.fields.subW.person.ancestorArray
-  test.isFalse SpecialwNodeÏ.Meta.fields.subW.person.required
-  test.equal SpecialwNodeÏ.Meta.fields.subW.person.sourcePath, 'subW.person'
-  test.equal SpecialwNodeÏ.Meta.fields.subW.person.sourceW, SpecialwNodeÏ
-  test.equal SpecialwNodeÏ.Meta.fields.subW.person.targetW, Person
-  test.equal SpecialwNodeÏ.Meta.fields.subW.person.sourceCollection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.subW.person.targetCollection._name, 'Persons'
-  test.equal SpecialwNodeÏ.Meta.fields.subW.person.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.subW.person.targetW.Meta.collection._name, 'Persons'
-  test.equal SpecialwNodeÏ.Meta.fields.subW.person.fields, ['username', 'displayName', 'field1', 'field2']
-  test.equal SpecialwNodeÏ.Meta.fields.subW.person.reverseName, 'subWwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.subW.person.reverseFields, ['body', 'subW.body', 'nested.body']
-  test.instanceOf SpecialwNodeÏ.Meta.fields.subW.persons, SpecialwNodeÏ._ReferenceField
-  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.ancestorArray, 'subW.persons'
-  test.isTrue SpecialwNodeÏ.Meta.fields.subW.persons.required
-  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.sourcePath, 'subW.persons'
-  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.sourceW, SpecialwNodeÏ
-  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.targetW, Person
-  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.sourceCollection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.targetCollection._name, 'Persons'
-  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.targetW.Meta.collection._name, 'Persons'
-  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.fields, ['username', 'displayName', 'field1', 'field2']
-  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.reverseName, 'subWswNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.subW.persons.reverseFields, ['body', 'subW.body', 'nested.body']
+  test.instanceOf SpecialwNodeÏ.Meta.fields.subW.wApp, SpecialwNodeÏ._ReferenceField
+  test.isNull SpecialwNodeÏ.Meta.fields.subW.wApp.ancestorArray, SpecialwNodeÏ.Meta.fields.subW.wApp.ancestorArray
+  test.isFalse SpecialwNodeÏ.Meta.fields.subW.wApp.required
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApp.sourcePath, 'subW.wApp'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApp.sourceW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApp.targetW, wApp
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApp.sourceCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApp.targetCollection._name, 'wApps'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApp.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApp.targetW.Meta.collection._name, 'wApps'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApp.fields, ['username', 'displayName', 'field1', 'field2']
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApp.reverseName, 'subWwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApp.reverseFields, ['body', 'subW.body', 'nested.body']
+  test.instanceOf SpecialwNodeÏ.Meta.fields.subW.wApps, SpecialwNodeÏ._ReferenceField
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApps.ancestorArray, 'subW.wApps'
+  test.isTrue SpecialwNodeÏ.Meta.fields.subW.wApps.required
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApps.sourcePath, 'subW.wApps'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApps.sourceW, SpecialwNodeÏ
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApps.targetW, wApp
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApps.sourceCollection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApps.targetCollection._name, 'wApps'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApps.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApps.targetW.Meta.collection._name, 'wApps'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApps.fields, ['username', 'displayName', 'field1', 'field2']
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApps.reverseName, 'subWswNodeÏs'
+  test.equal SpecialwNodeÏ.Meta.fields.subW.wApps.reverseFields, ['body', 'subW.body', 'nested.body']
   test.instanceOf SpecialwNodeÏ.Meta.fields.subW.slug, SpecialwNodeÏ._GeneratedField
   test.isNull SpecialwNodeÏ.Meta.fields.subW.slug.ancestorArray, SpecialwNodeÏ.Meta.fields.subW.slug.ancestorArray
   test.isTrue _.isFunction SpecialwNodeÏ.Meta.fields.subW.slug.generator
@@ -835,11 +835,11 @@ testDefinition = (test) ->
   test.isTrue SpecialwNodeÏ.Meta.fields.nested.required.required
   test.equal SpecialwNodeÏ.Meta.fields.nested.required.sourcePath, 'nested.required'
   test.equal SpecialwNodeÏ.Meta.fields.nested.required.sourceW, SpecialwNodeÏ
-  test.equal SpecialwNodeÏ.Meta.fields.nested.required.targetW, Person
+  test.equal SpecialwNodeÏ.Meta.fields.nested.required.targetW, wApp
   test.equal SpecialwNodeÏ.Meta.fields.nested.required.sourceCollection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.nested.required.targetCollection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.required.targetCollection._name, 'wApps'
   test.equal SpecialwNodeÏ.Meta.fields.nested.required.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.nested.required.targetW.Meta.collection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.required.targetW.Meta.collection._name, 'wApps'
   test.equal SpecialwNodeÏ.Meta.fields.nested.required.fields, ['username', 'displayName', 'field1', 'field2']
   test.equal SpecialwNodeÏ.Meta.fields.nested.required.reverseName, 'nestedwNodeÏs'
   test.equal SpecialwNodeÏ.Meta.fields.nested.required.reverseFields, ['body', 'subW.body', 'nested.body']
@@ -848,11 +848,11 @@ testDefinition = (test) ->
   test.isFalse SpecialwNodeÏ.Meta.fields.nested.optional.required
   test.equal SpecialwNodeÏ.Meta.fields.nested.optional.sourcePath, 'nested.optional'
   test.equal SpecialwNodeÏ.Meta.fields.nested.optional.sourceW, SpecialwNodeÏ
-  test.equal SpecialwNodeÏ.Meta.fields.nested.optional.targetW, Person
+  test.equal SpecialwNodeÏ.Meta.fields.nested.optional.targetW, wApp
   test.equal SpecialwNodeÏ.Meta.fields.nested.optional.sourceCollection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.nested.optional.targetCollection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.optional.targetCollection._name, 'wApps'
   test.equal SpecialwNodeÏ.Meta.fields.nested.optional.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.nested.optional.targetW.Meta.collection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.nested.optional.targetW.Meta.collection._name, 'wApps'
   test.equal SpecialwNodeÏ.Meta.fields.nested.optional.fields, ['username']
   test.isNull SpecialwNodeÏ.Meta.fields.nested.optional.reverseName
   test.equal SpecialwNodeÏ.Meta.fields.nested.optional.reverseFields, []
@@ -900,11 +900,11 @@ testDefinition = (test) ->
   test.isTrue SpecialwNodeÏ.Meta.fields.special.required
   test.equal SpecialwNodeÏ.Meta.fields.special.sourcePath, 'special'
   test.equal SpecialwNodeÏ.Meta.fields.special.sourceW, SpecialwNodeÏ
-  test.equal SpecialwNodeÏ.Meta.fields.special.targetW, Person
+  test.equal SpecialwNodeÏ.Meta.fields.special.targetW, wApp
   test.equal SpecialwNodeÏ.Meta.fields.special.sourceCollection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.special.targetCollection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.special.targetCollection._name, 'wApps'
   test.equal SpecialwNodeÏ.Meta.fields.special.sourceW.Meta.collection._name, 'SpecialwNodeÏs'
-  test.equal SpecialwNodeÏ.Meta.fields.special.targetW.Meta.collection._name, 'Persons'
+  test.equal SpecialwNodeÏ.Meta.fields.special.targetW.Meta.collection._name, 'wApps'
   test.equal SpecialwNodeÏ.Meta.fields.special.fields, []
   test.isNull SpecialwNodeÏ.Meta.fields.special.reverseName
   test.equal SpecialwNodeÏ.Meta.fields.special.reverseFields, []
@@ -930,149 +930,149 @@ testAsyncMulti 'peerdb - references', [
 
     testDefinition test
 
-    Person.Ws.insert
-      username: 'person1'
-      displayName: 'Person 1'
+    wApp.Ws.insert
+      username: 'wApp1'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1'
       field2: 'Field 1 - 2'
     ,
-      expect (error, person1Id) =>
+      expect (error, wApp1Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person1Id
-        @person1Id = person1Id
+        test.isTrue wApp1Id
+        @wApp1Id = wApp1Id
 
-    Person.Ws.insert
-      username: 'person2'
-      displayName: 'Person 2'
+    wApp.Ws.insert
+      username: 'wApp2'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1'
       field2: 'Field 2 - 2'
     ,
-      expect (error, person2Id) =>
+      expect (error, wApp2Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person2Id
-        @person2Id = person2Id
+        test.isTrue wApp2Id
+        @wApp2Id = wApp2Id
 
-    Person.Ws.insert
-      username: 'person3'
-      displayName: 'Person 3'
+    wApp.Ws.insert
+      username: 'wApp3'
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
     ,
-      expect (error, person3Id) =>
+      expect (error, wApp3Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person3Id
-        @person3Id = person3Id
+        test.isTrue wApp3Id
+        @wApp3Id = wApp3Id
 
     # Wait so that observers have time to run (but no wNodeÏ is yet made, so nothing really happens).
     # We want to wait here so that we catch possible errors in source observers, otherwise target
     # observers can patch things up. For example, if we create a wNodeÏ first and target observers
-    # (triggered by person inserts, but pending) run afterwards, then they can patch things which
+    # (triggered by wApp inserts, but pending) run afterwards, then they can patch things which
     # should in fact be done by source observers (on wNodeÏ), like setting usernames in wNodeÏ's
-    # references to persons.
+    # references to wApps.
     waitForDatabase test, expect
 ,
   (test, expect) ->
     # Should work also with no argument (defaults to {}).
-    test.isTrue Person.Ws.exists()
-    test.isTrue Person.Ws.find().exists()
+    test.isTrue wApp.Ws.exists()
+    test.isTrue wApp.Ws.find().exists()
 
-    test.isTrue Person.Ws.exists @person1Id
-    test.isTrue Person.Ws.exists @person2Id
-    test.isTrue Person.Ws.exists @person3Id
+    test.isTrue wApp.Ws.exists @wApp1Id
+    test.isTrue wApp.Ws.exists @wApp2Id
+    test.isTrue wApp.Ws.exists @wApp3Id
 
-    test.isTrue Person.Ws.find(@person1Id).exists()
-    test.isTrue Person.Ws.find(@person2Id).exists()
-    test.isTrue Person.Ws.find(@person3Id).exists()
+    test.isTrue wApp.Ws.find(@wApp1Id).exists()
+    test.isTrue wApp.Ws.find(@wApp2Id).exists()
+    test.isTrue wApp.Ws.find(@wApp3Id).exists()
 
-    test.equal Person.Ws.find({_id: $in: [@person1Id, @person2Id, @person3Id]}).count(), 3
+    test.equal wApp.Ws.find({_id: $in: [@wApp1Id, @wApp2Id, @wApp3Id]}).count(), 3
 
     # Test without skip and limit.
-    test.isTrue Person.Ws.exists({_id: $in: [@person1Id, @person2Id, @person3Id]})
-    test.isTrue Person.Ws.find({_id: $in: [@person1Id, @person2Id, @person3Id]}).exists()
+    test.isTrue wApp.Ws.exists({_id: $in: [@wApp1Id, @wApp2Id, @wApp3Id]})
+    test.isTrue wApp.Ws.find({_id: $in: [@wApp1Id, @wApp2Id, @wApp3Id]}).exists()
 
     # With sorting. We are testing all this combinations because there are various code paths.
-    test.isTrue Person.Ws.exists({_id: $in: [@person1Id, @person2Id, @person3Id]}, {sort: [['username', 'asc']]})
-    test.isTrue Person.Ws.find({_id: $in: [@person1Id, @person2Id, @person3Id]}, {sort: [['username', 'asc']]}).exists()
+    test.isTrue wApp.Ws.exists({_id: $in: [@wApp1Id, @wApp2Id, @wApp3Id]}, {sort: [['username', 'asc']]})
+    test.isTrue wApp.Ws.find({_id: $in: [@wApp1Id, @wApp2Id, @wApp3Id]}, {sort: [['username', 'asc']]}).exists()
 
     # Test with skip and limit.
     # This behaves differently than .count() on the server because on the server
     # applySkipLimit is not set. But exists do respect skip and limit.
-    test.isTrue Person.Ws.exists({_id: $in: [@person1Id, @person2Id, @person3Id]}, {skip: 2, limit: 1})
-    test.isTrue Person.Ws.find({_id: $in: [@person1Id, @person2Id, @person3Id]}, {skip: 2, limit: 1}).exists()
-    test.isFalse Person.Ws.exists({_id: $in: [@person1Id, @person2Id, @person3Id]}, {skip: 3, limit: 1})
-    test.isFalse Person.Ws.find({_id: $in: [@person1Id, @person2Id, @person3Id]}, {skip: 3, limit: 1}).exists()
+    test.isTrue wApp.Ws.exists({_id: $in: [@wApp1Id, @wApp2Id, @wApp3Id]}, {skip: 2, limit: 1})
+    test.isTrue wApp.Ws.find({_id: $in: [@wApp1Id, @wApp2Id, @wApp3Id]}, {skip: 2, limit: 1}).exists()
+    test.isFalse wApp.Ws.exists({_id: $in: [@wApp1Id, @wApp2Id, @wApp3Id]}, {skip: 3, limit: 1})
+    test.isFalse wApp.Ws.find({_id: $in: [@wApp1Id, @wApp2Id, @wApp3Id]}, {skip: 3, limit: 1}).exists()
 
-    test.isTrue Person.Ws.exists({_id: $in: [@person1Id, @person2Id, @person3Id]}, {skip: 2, limit: 1, sort: [['username', 'asc']]})
-    test.isTrue Person.Ws.find({_id: $in: [@person1Id, @person2Id, @person3Id]}, {skip: 2, limit: 1, sort: [['username', 'asc']]}).exists()
-    test.isFalse Person.Ws.exists({_id: $in: [@person1Id, @person2Id, @person3Id]}, {skip: 3, limit: 1, sort: [['username', 'asc']]})
-    test.isFalse Person.Ws.find({_id: $in: [@person1Id, @person2Id, @person3Id]}, {skip: 3, limit: 1, sort: [['username', 'asc']]}).exists()
+    test.isTrue wApp.Ws.exists({_id: $in: [@wApp1Id, @wApp2Id, @wApp3Id]}, {skip: 2, limit: 1, sort: [['username', 'asc']]})
+    test.isTrue wApp.Ws.find({_id: $in: [@wApp1Id, @wApp2Id, @wApp3Id]}, {skip: 2, limit: 1, sort: [['username', 'asc']]}).exists()
+    test.isFalse wApp.Ws.exists({_id: $in: [@wApp1Id, @wApp2Id, @wApp3Id]}, {skip: 3, limit: 1, sort: [['username', 'asc']]})
+    test.isFalse wApp.Ws.find({_id: $in: [@wApp1Id, @wApp2Id, @wApp3Id]}, {skip: 3, limit: 1, sort: [['username', 'asc']]}).exists()
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1'
       field2: 'Field 1 - 2'
       count: 0
-    test.equal @person2,
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1'
       field2: 'Field 2 - 2'
       count: 0
-    test.equal @person3,
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal @wApp3,
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
       count: 0
 
     wNodeÏ.Ws.insert
       author:
-        _id: @person1._id
+        _id: @wApp1._id
         # To test what happens if all fields are not up to date
         username: 'wrong'
         displayName: 'wrong'
         field1: 'wrong'
         field2: 'wrong'
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
+        _id: @wApp2._id
         username: 'wrong'
       ,
-        _id: @person3._id
+        _id: @wApp3._id
         username: 'wrong'
       ]
       subW:
-        person:
-          _id: @person2._id
+        wApp:
+          _id: @wApp2._id
           username: 'wrong'
-        persons: [
-          _id: @person2._id
+        wApps: [
+          _id: @wApp2._id
         ,
-          _id: @person3._id
+          _id: @wApp3._id
         ]
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
+          _id: @wApp2._id
           username: 'wrong'
           displayName: 'wrong'
         optional:
-          _id: @person3._id
+          _id: @wApp3._id
           username: 'wrong'
         body: 'NestedFooBar'
       ]
@@ -1095,57 +1095,57 @@ testAsyncMulti 'peerdb - references', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       # outgoing have only ids
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       # But incoming have usernames as well
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -1156,48 +1156,48 @@ testAsyncMulti 'peerdb - references', [
         'tag-1-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    Person.Ws.update @person1Id,
+    wApp.Ws.update @wApp1Id,
       $set:
-        username: 'person1a'
+        username: 'wApp1a'
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
         test.isTrue res
 
-    Person.Ws.update @person2Id,
+    wApp.Ws.update @wApp2Id,
       $set:
-        username: 'person2a'
+        username: 'wApp2a'
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
         test.isTrue res
 
     # Wait so that observers have time to update Ws
-    # so that persons updates are not merged together to better
+    # so that wApps updates are not merged together to better
     # test the code for multiple updates
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    Person.Ws.update @person3Id,
+    wApp.Ws.update @wApp3Id,
       $set:
-        username: 'person3a'
+        username: 'wApp3a'
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
         test.isTrue res
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      username: 'person1a'
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      username: 'wApp1a'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1'
       field2: 'Field 1 - 2'
       wNodeÏs: [
@@ -1210,10 +1210,10 @@ testAsyncMulti 'peerdb - references', [
           body: 'SubWFooBar'
       ]
       count: 1
-    test.equal @person2,
-      _id: @person2Id
-      username: 'person2a'
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      username: 'wApp2a'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1'
       field2: 'Field 2 - 2'
       subWwNodeÏs: [
@@ -1244,10 +1244,10 @@ testAsyncMulti 'peerdb - references', [
           body: 'SubWFooBar'
       ]
       count: 3
-    test.equal @person3,
-      _id: @person3Id
-      username: 'person3a'
-      displayName: 'Person 3'
+    test.equal @wApp3,
+      _id: @wApp3Id
+      username: 'wApp3a'
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
       subWswNodeÏs: [
@@ -1268,60 +1268,60 @@ testAsyncMulti 'peerdb - references', [
     @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    # All persons had usernames changed, they should
+    # All wApps had usernames changed, they should
     # be updated in the wNodeÏ as well, automatically
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -1332,7 +1332,7 @@ testAsyncMulti 'peerdb - references', [
         'tag-1-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    Person.Ws.remove @person3Id,
+    wApp.Ws.remove @wApp3Id,
       expect (error) =>
         test.isFalse error, error?.toString?() or error
 
@@ -1343,45 +1343,45 @@ testAsyncMulti 'peerdb - references', [
     @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    # person3 was removed, references should be removed as well, automatically
+    # wApp3 was removed, references should be removed as well, automatically
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional: null
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
@@ -1393,7 +1393,7 @@ testAsyncMulti 'peerdb - references', [
         'tag-1-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    Person.Ws.remove @person2Id,
+    wApp.Ws.remove @wApp2Id,
       expect (error) =>
         test.isFalse error, error?.toString?() or error
 
@@ -1404,21 +1404,21 @@ testAsyncMulti 'peerdb - references', [
     @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    # person2 was removed, references should be removed as well, automatically,
+    # wApp2 was removed, references should be removed as well, automatically,
     # but lists should be kept as empty lists
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: []
       incoming: []
       subW:
-        person: null
-        persons: []
+        wApp: null
+        wApps: []
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: []
@@ -1428,7 +1428,7 @@ testAsyncMulti 'peerdb - references', [
         'tag-0-prefix-foobar-subWfoobar-suffix'
       ]
 
-    Person.Ws.remove @person1Id,
+    wApp.Ws.remove @wApp1Id,
       expect (error) =>
         test.isFalse error, error?.toString?() or error
 
@@ -1449,7 +1449,7 @@ Tinytest.add 'peerdb - invalid optional', (test) ->
       @Meta
         name: 'BadwNodeÏ1'
         fields: =>
-          incoming: [@ReferenceField Person, ['username'], false]
+          incoming: [@ReferenceField wApp, ['username'], false]
   , /Reference field directly in an array cannot be optional/
 
   # Invalid W should not be added to the list
@@ -1465,7 +1465,7 @@ Tinytest.add 'peerdb - invalid nested arrays', (test) ->
         name: 'BadwNodeÏ2'
         fields: =>
           nested: [
-            many: [@ReferenceField Person, ['username']]
+            many: [@ReferenceField wApp, ['username']]
           ]
   , /Field cannot be in a nested array/
 
@@ -2242,99 +2242,99 @@ testAsyncMulti 'peerdb - delayed defintion', [
 
 testAsyncMulti 'peerdb - subW fields', [
   (test, expect) ->
-    Person.Ws.insert
-      username: 'person1'
-      displayName: 'Person 1'
+    wApp.Ws.insert
+      username: 'wApp1'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1'
       field2: 'Field 1 - 2'
     ,
-      expect (error, person1Id) =>
+      expect (error, wApp1Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person1Id
-        @person1Id = person1Id
+        test.isTrue wApp1Id
+        @wApp1Id = wApp1Id
 
-    Person.Ws.insert
-      username: 'person2'
-      displayName: 'Person 2'
+    wApp.Ws.insert
+      username: 'wApp2'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1'
       field2: 'Field 2 - 2'
     ,
-      expect (error, person2Id) =>
+      expect (error, wApp2Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person2Id
-        @person2Id = person2Id
+        test.isTrue wApp2Id
+        @wApp2Id = wApp2Id
 
-    Person.Ws.insert
-      username: 'person3'
-      displayName: 'Person 3'
+    wApp.Ws.insert
+      username: 'wApp3'
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
     ,
-      expect (error, person3Id) =>
+      expect (error, wApp3Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person3Id
-        @person3Id = person3Id
+        test.isTrue wApp3Id
+        @wApp3Id = wApp3Id
 
     # Wait so that observers have time to update Ws
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1'
       field2: 'Field 1 - 2'
       count: 0
-    test.equal @person2,
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1'
       field2: 'Field 2 - 2'
       count: 0
-    test.equal @person3,
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal @wApp3,
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
       count: 0
 
     wNodeÏ.Ws.insert
       author:
-        _id: @person1._id
+        _id: @wApp1._id
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       subW:
-        person:
-          _id: @person2._id
-        persons: [
-          _id: @person2._id
+        wApp:
+          _id: @wApp2._id
+        wApps: [
+          _id: @wApp2._id
         ,
-          _id: @person3._id
+          _id: @wApp3._id
         ]
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
+          _id: @wApp2._id
         optional:
-          _id: @person3._id
+          _id: @wApp3._id
         body: 'NestedFooBar'
       ]
       body: 'FooBar'
@@ -2354,55 +2354,55 @@ testAsyncMulti 'peerdb - subW fields', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -2434,29 +2434,29 @@ testAsyncMulti 'peerdb - subW fields', [
       wNodeÏ:
         _id: @wNodeÏ._id
         subW:
-          person:
-            _id: @person2._id
-            username: @person2.username
-            displayName: @person2.displayName
-            field1: @person2.field1
-            field2: @person2.field2
-          persons: [
-            _id: @person2._id
-            username: @person2.username
-            displayName: @person2.displayName
-            field1: @person2.field1
-            field2: @person2.field2
+          wApp:
+            _id: @wApp2._id
+            username: @wApp2.username
+            displayName: @wApp2.displayName
+            field1: @wApp2.field1
+            field2: @wApp2.field2
+          wApps: [
+            _id: @wApp2._id
+            username: @wApp2.username
+            displayName: @wApp2.displayName
+            field1: @wApp2.field1
+            field2: @wApp2.field2
           ,
-            _id: @person3._id
-            username: @person3.username
-            displayName: @person3.displayName
-            field1: @person3.field1
-            field2: @person3.field2
+            _id: @wApp3._id
+            username: @wApp3.username
+            displayName: @wApp3.displayName
+            field1: @wApp3.field1
+            field2: @wApp3.field2
           ]
 
-    Person.Ws.update @person2Id,
+    wApp.Ws.update @wApp2Id,
       $set:
-        username: 'person2a'
+        username: 'wApp2a'
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
@@ -2466,13 +2466,13 @@ testAsyncMulti 'peerdb - subW fields', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person2,
-      _id: @person2Id
-      username: 'person2a'
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      username: 'wApp2a'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1'
       field2: 'Field 2 - 2'
       subWwNodeÏs: [
@@ -2512,27 +2512,27 @@ testAsyncMulti 'peerdb - subW fields', [
       wNodeÏ:
         _id: @wNodeÏ._id
         subW:
-          person:
-            _id: @person2._id
-            username: @person2.username
-            displayName: @person2.displayName
-            field1: @person2.field1
-            field2: @person2.field2
-          persons: [
-            _id: @person2._id
-            username: @person2.username
-            displayName: @person2.displayName
-            field1: @person2.field1
-            field2: @person2.field2
+          wApp:
+            _id: @wApp2._id
+            username: @wApp2.username
+            displayName: @wApp2.displayName
+            field1: @wApp2.field1
+            field2: @wApp2.field2
+          wApps: [
+            _id: @wApp2._id
+            username: @wApp2.username
+            displayName: @wApp2.displayName
+            field1: @wApp2.field1
+            field2: @wApp2.field2
           ,
-            _id: @person3._id
-            username: @person3.username
-            displayName: @person3.displayName
-            field1: @person3.field1
-            field2: @person3.field2
+            _id: @wApp3._id
+            username: @wApp3.username
+            displayName: @wApp3.displayName
+            field1: @wApp3.field1
+            field2: @wApp3.field2
           ]
 
-    Person.Ws.remove @person2Id,
+    wApp.Ws.remove @wApp2Id,
       expect (error) =>
         test.isFalse error, error?.toString?() or error
 
@@ -2548,13 +2548,13 @@ testAsyncMulti 'peerdb - subW fields', [
       wNodeÏ:
         _id: @wNodeÏ._id
         subW:
-          person: null
-          persons: [
-            _id: @person3._id
-            username: @person3.username
-            displayName: @person3.displayName
-            field1: @person3.field1
-            field2: @person3.field2
+          wApp: null
+          wApps: [
+            _id: @wApp3._id
+            username: @wApp3.username
+            displayName: @wApp3.displayName
+            field1: @wApp3.field1
+            field2: @wApp3.field2
           ]
 
     wNodeÏ.Ws.remove @wNodeÏ._id,
@@ -2573,87 +2573,87 @@ testAsyncMulti 'peerdb - subW fields', [
 
 testAsyncMulti 'peerdb - generated fields', [
   (test, expect) ->
-    Person.Ws.insert
-      username: 'person1'
-      displayName: 'Person 1'
+    wApp.Ws.insert
+      username: 'wApp1'
+      displayName: 'wApp 1'
     ,
-      expect (error, person1Id) =>
+      expect (error, wApp1Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person1Id
-        @person1Id = person1Id
+        test.isTrue wApp1Id
+        @wApp1Id = wApp1Id
 
-    Person.Ws.insert
-      username: 'person2'
-      displayName: 'Person 2'
+    wApp.Ws.insert
+      username: 'wApp2'
+      displayName: 'wApp 2'
     ,
-      expect (error, person2Id) =>
+      expect (error, wApp2Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person2Id
-        @person2Id = person2Id
+        test.isTrue wApp2Id
+        @wApp2Id = wApp2Id
 
-    Person.Ws.insert
-      username: 'person3'
-      displayName: 'Person 3'
+    wApp.Ws.insert
+      username: 'wApp3'
+      displayName: 'wApp 3'
     ,
-      expect (error, person3Id) =>
+      expect (error, wApp3Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person3Id
-        @person3Id = person3Id
+        test.isTrue wApp3Id
+        @wApp3Id = wApp3Id
 
     # Wait so that observers have time to update Ws
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 0
-    test.equal @person2,
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 0
-    test.equal @person3,
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal @wApp3,
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 0
 
     wNodeÏ.Ws.insert
       author:
-        _id: @person1._id
+        _id: @wApp1._id
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       subW:
-        person:
-          _id: @person2._id
-        persons: [
-          _id: @person2._id
+        wApp:
+          _id: @wApp2._id
+        wApps: [
+          _id: @wApp2._id
         ,
-          _id: @person3._id
+          _id: @wApp3._id
         ]
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
+          _id: @wApp2._id
         optional:
-          _id: @person3._id
+          _id: @wApp3._id
         body: 'NestedFooBar'
       ]
       body: 'FooBar'
@@ -2673,45 +2673,45 @@ testAsyncMulti 'peerdb - generated fields', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -2731,7 +2731,7 @@ testAsyncMulti 'peerdb - generated fields', [
         test.isTrue res
 
     # Wait so that observers have time to update Ws
-    # so that persons updates are not merged together to better
+    # so that wApps updates are not merged together to better
     # test the code for multiple updates
     waitForDatabase test, expect
 ,
@@ -2739,50 +2739,50 @@ testAsyncMulti 'peerdb - generated fields', [
     @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    # All persons had usernames changed, they should
+    # All wApps had usernames changed, they should
     # be updated in the wNodeÏ as well, automatically
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
         ]
         slug: 'subW-prefix-foobarz-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobarz-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -2802,7 +2802,7 @@ testAsyncMulti 'peerdb - generated fields', [
         test.isTrue res
 
     # Wait so that observers have time to update Ws
-    # so that persons updates are not merged together to better
+    # so that wApps updates are not merged together to better
     # test the code for multiple updates
     waitForDatabase test, expect
 ,
@@ -2810,50 +2810,50 @@ testAsyncMulti 'peerdb - generated fields', [
     @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    # All persons had usernames changed, they should
+    # All wApps had usernames changed, they should
     # be updated in the wNodeÏ as well, automatically
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
         ]
         slug: 'subW-prefix-foobarz-subWfoobarz-suffix'
         body: 'SubWFooBarZ'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobarz-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -2873,7 +2873,7 @@ testAsyncMulti 'peerdb - generated fields', [
         test.isTrue res
 
     # Wait so that observers have time to update Ws
-    # so that persons updates are not merged together to better
+    # so that wApps updates are not merged together to better
     # test the code for multiple updates
     waitForDatabase test, expect
 ,
@@ -2881,50 +2881,50 @@ testAsyncMulti 'peerdb - generated fields', [
     @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId,
       transform: null # So that we can use test.equal
 
-    # All persons had usernames changed, they should
+    # All wApps had usernames changed, they should
     # be updated in the wNodeÏ as well, automatically
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
         ]
         slug: 'subW-prefix-foobarz-subWfoobarz-suffix'
         body: 'SubWFooBarZ'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobarz-nestedfoobarz-suffix'
         body: 'NestedFooBarZ'
       ]
@@ -2953,45 +2953,45 @@ testAsyncMulti 'peerdb - generated fields', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
         ]
         slug: null
         body: 'SubWFooBarZ'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: null
         body: 'NestedFooBarZ'
       ]
@@ -3017,44 +3017,44 @@ testAsyncMulti 'peerdb - generated fields', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
         ]
         body: 'SubWFooBarZ'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         body: 'NestedFooBarZ'
       ]
       tags: []
@@ -3111,7 +3111,7 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
       name: 'Second'
       replaceParent: true
       fields: (fields) =>
-        fields.second = @ReferenceField Person # Not undefined, but overall meta will still be delayed
+        fields.second = @ReferenceField wApp # Not undefined, but overall meta will still be delayed
         fields
 
   _TestThird = Third
@@ -3140,7 +3140,7 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
       name: 'Third'
       replaceParent: true
       fields: (fields) =>
-        fields.third = @ReferenceField Person
+        fields.third = @ReferenceField wApp
         fields
 
   testWList test, ALL
@@ -3160,7 +3160,7 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
       name: 'First'
       replaceParent: true
       fields: (fields) =>
-        fields.first = @ReferenceField Person
+        fields.first = @ReferenceField wApp
         fields
 
   testWList test, ALL
@@ -3208,11 +3208,11 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
   test.isTrue Second.Meta.fields.second.required
   test.equal Second.Meta.fields.second.sourcePath, 'second'
   test.equal Second.Meta.fields.second.sourceW, Second
-  test.equal Second.Meta.fields.second.targetW, Person
+  test.equal Second.Meta.fields.second.targetW, wApp
   test.equal Second.Meta.fields.second.sourceCollection._name, 'Seconds'
-  test.equal Second.Meta.fields.second.targetCollection._name, 'Persons'
+  test.equal Second.Meta.fields.second.targetCollection._name, 'wApps'
   test.equal Second.Meta.fields.second.sourceW.Meta.collection._name, 'Seconds'
-  test.equal Second.Meta.fields.second.targetW.Meta.collection._name, 'Persons'
+  test.equal Second.Meta.fields.second.targetW.Meta.collection._name, 'wApps'
   test.equal Second.Meta.fields.second.fields, []
   test.isNull Second.Meta.fields.second.reverseName
   test.equal Second.Meta.fields.second.reverseFields, []
@@ -3249,11 +3249,11 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
   test.isTrue Second.Meta.fields.second.required
   test.equal Second.Meta.fields.second.sourcePath, 'second'
   test.equal Second.Meta.fields.second.sourceW, Second
-  test.equal Second.Meta.fields.second.targetW, Person
+  test.equal Second.Meta.fields.second.targetW, wApp
   test.equal Second.Meta.fields.second.sourceCollection._name, 'Seconds'
-  test.equal Second.Meta.fields.second.targetCollection._name, 'Persons'
+  test.equal Second.Meta.fields.second.targetCollection._name, 'wApps'
   test.equal Second.Meta.fields.second.sourceW.Meta.collection._name, 'Seconds'
-  test.equal Second.Meta.fields.second.targetW.Meta.collection._name, 'Persons'
+  test.equal Second.Meta.fields.second.targetW.Meta.collection._name, 'wApps'
   test.equal Second.Meta.fields.second.fields, []
   test.isNull Second.Meta.fields.second.reverseName
   test.equal Second.Meta.fields.second.reverseFields, []
@@ -3268,11 +3268,11 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
   test.isTrue First.Meta.fields.first.required
   test.equal First.Meta.fields.first.sourcePath, 'first'
   test.equal First.Meta.fields.first.sourceW, First
-  test.equal First.Meta.fields.first.targetW, Person
+  test.equal First.Meta.fields.first.targetW, wApp
   test.equal First.Meta.fields.first.sourceCollection._name, 'Firsts'
-  test.equal First.Meta.fields.first.targetCollection._name, 'Persons'
+  test.equal First.Meta.fields.first.targetCollection._name, 'wApps'
   test.equal First.Meta.fields.first.sourceW.Meta.collection._name, 'Firsts'
-  test.equal First.Meta.fields.first.targetW.Meta.collection._name, 'Persons'
+  test.equal First.Meta.fields.first.targetW.Meta.collection._name, 'wApps'
   test.equal First.Meta.fields.first.fields, []
   test.isNull First.Meta.fields.first.reverseName
   test.equal First.Meta.fields.first.reverseFields, []
@@ -3308,11 +3308,11 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
   test.isTrue Second.Meta.fields.second.required
   test.equal Second.Meta.fields.second.sourcePath, 'second'
   test.equal Second.Meta.fields.second.sourceW, Second
-  test.equal Second.Meta.fields.second.targetW, Person
+  test.equal Second.Meta.fields.second.targetW, wApp
   test.equal Second.Meta.fields.second.sourceCollection._name, 'Seconds'
-  test.equal Second.Meta.fields.second.targetCollection._name, 'Persons'
+  test.equal Second.Meta.fields.second.targetCollection._name, 'wApps'
   test.equal Second.Meta.fields.second.sourceW.Meta.collection._name, 'Seconds'
-  test.equal Second.Meta.fields.second.targetW.Meta.collection._name, 'Persons'
+  test.equal Second.Meta.fields.second.targetW.Meta.collection._name, 'wApps'
   test.equal Second.Meta.fields.second.fields, []
   test.isNull Second.Meta.fields.second.reverseName
   test.equal Second.Meta.fields.second.reverseFields, []
@@ -3327,11 +3327,11 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
   test.isTrue First.Meta.fields.first.required
   test.equal First.Meta.fields.first.sourcePath, 'first'
   test.equal First.Meta.fields.first.sourceW, First
-  test.equal First.Meta.fields.first.targetW, Person
+  test.equal First.Meta.fields.first.targetW, wApp
   test.equal First.Meta.fields.first.sourceCollection._name, 'Firsts'
-  test.equal First.Meta.fields.first.targetCollection._name, 'Persons'
+  test.equal First.Meta.fields.first.targetCollection._name, 'wApps'
   test.equal First.Meta.fields.first.sourceW.Meta.collection._name, 'Firsts'
-  test.equal First.Meta.fields.first.targetW.Meta.collection._name, 'Persons'
+  test.equal First.Meta.fields.first.targetW.Meta.collection._name, 'wApps'
   test.equal First.Meta.fields.first.fields, []
   test.isNull First.Meta.fields.first.reverseName
   test.equal First.Meta.fields.first.reverseFields, []
@@ -3365,11 +3365,11 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
   test.isTrue Second.Meta.fields.second.required
   test.equal Second.Meta.fields.second.sourcePath, 'second'
   test.equal Second.Meta.fields.second.sourceW, Second
-  test.equal Second.Meta.fields.second.targetW, Person
+  test.equal Second.Meta.fields.second.targetW, wApp
   test.equal Second.Meta.fields.second.sourceCollection._name, 'Seconds'
-  test.equal Second.Meta.fields.second.targetCollection._name, 'Persons'
+  test.equal Second.Meta.fields.second.targetCollection._name, 'wApps'
   test.equal Second.Meta.fields.second.sourceW.Meta.collection._name, 'Seconds'
-  test.equal Second.Meta.fields.second.targetW.Meta.collection._name, 'Persons'
+  test.equal Second.Meta.fields.second.targetW.Meta.collection._name, 'wApps'
   test.equal Second.Meta.fields.second.fields, []
   test.isNull Second.Meta.fields.second.reverseName
   test.equal Second.Meta.fields.second.reverseFields, []
@@ -3384,11 +3384,11 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
   test.isTrue First.Meta.fields.first.required
   test.equal First.Meta.fields.first.sourcePath, 'first'
   test.equal First.Meta.fields.first.sourceW, First
-  test.equal First.Meta.fields.first.targetW, Person
+  test.equal First.Meta.fields.first.targetW, wApp
   test.equal First.Meta.fields.first.sourceCollection._name, 'Firsts'
-  test.equal First.Meta.fields.first.targetCollection._name, 'Persons'
+  test.equal First.Meta.fields.first.targetCollection._name, 'wApps'
   test.equal First.Meta.fields.first.sourceW.Meta.collection._name, 'Firsts'
-  test.equal First.Meta.fields.first.targetW.Meta.collection._name, 'Persons'
+  test.equal First.Meta.fields.first.targetW.Meta.collection._name, 'wApps'
   test.equal First.Meta.fields.first.fields, []
   test.isNull First.Meta.fields.first.reverseName
   test.equal First.Meta.fields.first.reverseFields, []
@@ -3429,11 +3429,11 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
   test.isTrue Third.Meta.fields.third.required
   test.equal Third.Meta.fields.third.sourcePath, 'third'
   test.equal Third.Meta.fields.third.sourceW, Third
-  test.equal Third.Meta.fields.third.targetW, Person
+  test.equal Third.Meta.fields.third.targetW, wApp
   test.equal Third.Meta.fields.third.sourceCollection._name, 'Thirds'
-  test.equal Third.Meta.fields.third.targetCollection._name, 'Persons'
+  test.equal Third.Meta.fields.third.targetCollection._name, 'wApps'
   test.equal Third.Meta.fields.third.sourceW.Meta.collection._name, 'Thirds'
-  test.equal Third.Meta.fields.third.targetW.Meta.collection._name, 'Persons'
+  test.equal Third.Meta.fields.third.targetW.Meta.collection._name, 'wApps'
   test.equal Third.Meta.fields.third.fields, []
   test.isNull Third.Meta.fields.third.reverseName
   test.equal Third.Meta.fields.third.reverseFields, []
@@ -3463,11 +3463,11 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
   test.isTrue Second.Meta.fields.second.required
   test.equal Second.Meta.fields.second.sourcePath, 'second'
   test.equal Second.Meta.fields.second.sourceW, Second
-  test.equal Second.Meta.fields.second.targetW, Person
+  test.equal Second.Meta.fields.second.targetW, wApp
   test.equal Second.Meta.fields.second.sourceCollection._name, 'Seconds'
-  test.equal Second.Meta.fields.second.targetCollection._name, 'Persons'
+  test.equal Second.Meta.fields.second.targetCollection._name, 'wApps'
   test.equal Second.Meta.fields.second.sourceW.Meta.collection._name, 'Seconds'
-  test.equal Second.Meta.fields.second.targetW.Meta.collection._name, 'Persons'
+  test.equal Second.Meta.fields.second.targetW.Meta.collection._name, 'wApps'
   test.equal Second.Meta.fields.second.fields, []
   test.isNull Second.Meta.fields.second.reverseName
   test.equal Second.Meta.fields.second.reverseFields, []
@@ -3482,11 +3482,11 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
   test.isTrue First.Meta.fields.first.required
   test.equal First.Meta.fields.first.sourcePath, 'first'
   test.equal First.Meta.fields.first.sourceW, First
-  test.equal First.Meta.fields.first.targetW, Person
+  test.equal First.Meta.fields.first.targetW, wApp
   test.equal First.Meta.fields.first.sourceCollection._name, 'Firsts'
-  test.equal First.Meta.fields.first.targetCollection._name, 'Persons'
+  test.equal First.Meta.fields.first.targetCollection._name, 'wApps'
   test.equal First.Meta.fields.first.sourceW.Meta.collection._name, 'Firsts'
-  test.equal First.Meta.fields.first.targetW.Meta.collection._name, 'Persons'
+  test.equal First.Meta.fields.first.targetW.Meta.collection._name, 'wApps'
   test.equal First.Meta.fields.first.fields, []
   test.isNull First.Meta.fields.first.reverseName
   test.equal First.Meta.fields.first.reverseFields, []
@@ -3527,11 +3527,11 @@ Tinytest.add 'peerdb - chain of extended classes', (test) ->
   test.isTrue Third.Meta.fields.third.required
   test.equal Third.Meta.fields.third.sourcePath, 'third'
   test.equal Third.Meta.fields.third.sourceW, Third
-  test.equal Third.Meta.fields.third.targetW, Person
+  test.equal Third.Meta.fields.third.targetW, wApp
   test.equal Third.Meta.fields.third.sourceCollection._name, 'Thirds'
-  test.equal Third.Meta.fields.third.targetCollection._name, 'Persons'
+  test.equal Third.Meta.fields.third.targetCollection._name, 'wApps'
   test.equal Third.Meta.fields.third.sourceW.Meta.collection._name, 'Thirds'
-  test.equal Third.Meta.fields.third.targetW.Meta.collection._name, 'Persons'
+  test.equal Third.Meta.fields.third.targetW.Meta.collection._name, 'wApps'
   test.equal Third.Meta.fields.third.fields, []
   test.isNull Third.Meta.fields.third.reverseName
   test.equal Third.Meta.fields.third.reverseFields, []
@@ -3712,157 +3712,157 @@ Tinytest.add 'peerdb - tricky references', (test) ->
 
 testAsyncMulti 'peerdb - duplicate values in lists', [
   (test, expect) ->
-    Person.Ws.insert
-      username: 'person1'
-      displayName: 'Person 1'
+    wApp.Ws.insert
+      username: 'wApp1'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1'
       field2: 'Field 1 - 2'
     ,
-      expect (error, person1Id) =>
+      expect (error, wApp1Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person1Id
-        @person1Id = person1Id
+        test.isTrue wApp1Id
+        @wApp1Id = wApp1Id
 
-    Person.Ws.insert
-      username: 'person2'
-      displayName: 'Person 2'
+    wApp.Ws.insert
+      username: 'wApp2'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1'
       field2: 'Field 2 - 2'
     ,
-      expect (error, person2Id) =>
+      expect (error, wApp2Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person2Id
-        @person2Id = person2Id
+        test.isTrue wApp2Id
+        @wApp2Id = wApp2Id
 
-    Person.Ws.insert
-      username: 'person3'
-      displayName: 'Person 3'
+    wApp.Ws.insert
+      username: 'wApp3'
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
     ,
-      expect (error, person3Id) =>
+      expect (error, wApp3Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person3Id
-        @person3Id = person3Id
+        test.isTrue wApp3Id
+        @wApp3Id = wApp3Id
 
     # Wait so that observers have time to update Ws
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1'
       field2: 'Field 1 - 2'
       count: 0
-    test.equal @person2,
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1'
       field2: 'Field 2 - 2'
       count: 0
-    test.equal @person3,
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal @wApp3,
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
       count: 0
 
     wNodeÏ.Ws.insert
       author:
-        _id: @person1._id
+        _id: @wApp1._id
         # To test what happens if fields are partially not up to date
         username: 'wrong'
         displayName: 'wrong'
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       subW:
-        person:
-          _id: @person2._id
-        persons: [
-          _id: @person2._id
+        wApp:
+          _id: @wApp2._id
+        wApps: [
+          _id: @wApp2._id
           username: 'wrong'
           displayName: 'wrong'
         ,
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
           field1: 'wrong'
         ,
-          _id: @person3._id
-          # To test if the second person3 value will be updated
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          # To test if the second wApp3 value will be updated
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
+          _id: @wApp3._id
         ]
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
+          _id: @wApp2._id
           username: 'wrong'
           displayName: 'wrong'
         optional:
-          _id: @person3._id
+          _id: @wApp3._id
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         optional:
-          _id: @person3._id
+          _id: @wApp3._id
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
+          _id: @wApp3._id
         optional:
-          _id: @person2._id
+          _id: @wApp2._id
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
+          _id: @wApp3._id
         optional:
-          _id: @person2._id
+          _id: @wApp2._id
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
           field1: 'wrong'
         optional:
-          _id: @person2._id
+          _id: @wApp2._id
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
+          _id: @wApp3._id
         optional:
-          _id: @person3._id
+          _id: @wApp3._id
         body: 'NestedFooBar'
       ]
       body: 'FooBar'
@@ -3882,132 +3882,132 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -4023,31 +4023,31 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         'tag-6-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    Person.Ws.update @person1Id,
+    wApp.Ws.update @wApp1Id,
       $set:
-        username: 'person1a'
+        username: 'wApp1a'
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
         test.isTrue res
 
-    Person.Ws.update @person2Id,
+    wApp.Ws.update @wApp2Id,
       $set:
-        username: 'person2a'
+        username: 'wApp2a'
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
         test.isTrue res
 
     # Wait so that observers have time to update Ws
-    # so that persons updates are not merged together to better
+    # so that wApps updates are not merged together to better
     # test the code for multiple updates
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    Person.Ws.update @person3Id,
+    wApp.Ws.update @wApp3Id,
       $set:
-        username: 'person3a'
+        username: 'wApp3a'
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
@@ -4057,17 +4057,17 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      username: 'person1a'
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      username: 'wApp1a'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1'
       field2: 'Field 1 - 2'
       wNodeÏs: [
@@ -4090,10 +4090,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         body: 'FooBar'
       ]
       count: 1
-    test.equal @person2,
-      _id: @person2Id
-      username: 'person2a'
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      username: 'wApp2a'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1'
       field2: 'Field 2 - 2'
       subWwNodeÏs: [
@@ -4154,10 +4154,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         body: 'FooBar'
       ]
       count: 3
-    test.equal @person3,
-      _id: @person3Id
-      username: 'person3a'
-      displayName: 'Person 3'
+    test.equal @wApp3,
+      _id: @wApp3Id
+      username: 'wApp3a'
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
       subWswNodeÏs: [
@@ -4210,132 +4210,132 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -4352,7 +4352,7 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
 
   (test, expect) ->
-    Person.Ws.update @person1Id,
+    wApp.Ws.update @wApp1Id,
       $set:
         # Updating two fields at the same time
         field1: 'Field 1 - 1a'
@@ -4366,13 +4366,13 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      username: 'person1a'
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      username: 'wApp1a'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
       wNodeÏs: [
@@ -4402,132 +4402,132 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -4543,7 +4543,7 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         'tag-6-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    Person.Ws.update @person1Id,
+    wApp.Ws.update @wApp1Id,
       $unset:
         username: ''
     ,
@@ -4555,12 +4555,12 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
       wNodeÏs: [
@@ -4590,131 +4590,131 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -4730,7 +4730,7 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         'tag-6-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    Person.Ws.update @person2Id,
+    wApp.Ws.update @wApp2Id,
       $unset:
         username: ''
     ,
@@ -4742,12 +4742,12 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person2,
-      _id: @person2Id
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1'
       field2: 'Field 2 - 2'
       subWwNodeÏs: [
@@ -4815,121 +4815,121 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
+          _id: @wApp2._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
+          _id: @wApp2._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person2._id
+          _id: @wApp2._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -4945,7 +4945,7 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         'tag-6-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    Person.Ws.update @person3Id,
+    wApp.Ws.update @wApp3Id,
       $unset:
         username: ''
     ,
@@ -4957,12 +4957,12 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person3,
-      _id: @person3Id
-      displayName: 'Person 3'
+    test.equal @wApp3,
+      _id: @wApp3Id
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
       subWswNodeÏs: [
@@ -5011,111 +5011,111 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       subW:
-        person:
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
+          _id: @wApp3._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
+          _id: @wApp3._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
+          _id: @wApp2._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
+          _id: @wApp2._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person2._id
+          _id: @wApp2._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
+          _id: @wApp3._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -5131,9 +5131,9 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         'tag-6-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    Person.Ws.update @person1Id,
+    wApp.Ws.update @wApp1Id,
       $set:
-        username: 'person1b'
+        username: 'wApp1b'
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
@@ -5143,13 +5143,13 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      username: 'person1b'
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      username: 'wApp1b'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
       wNodeÏs: [
@@ -5179,112 +5179,112 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       subW:
-        person:
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
+          _id: @wApp3._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
+          _id: @wApp3._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
+          _id: @wApp2._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
+          _id: @wApp2._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person2._id
+          _id: @wApp2._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
+          _id: @wApp3._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -5300,9 +5300,9 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         'tag-6-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    Person.Ws.update @person2Id,
+    wApp.Ws.update @wApp2Id,
       $set:
-        username: 'person2b'
+        username: 'wApp2b'
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
@@ -5312,13 +5312,13 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person2,
-      _id: @person2Id
-      username: 'person2b'
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      username: 'wApp2b'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1'
       field2: 'Field 2 - 2'
       subWwNodeÏs: [
@@ -5386,122 +5386,122 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
+          _id: @wApp3._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
+          _id: @wApp3._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
+          _id: @wApp3._id
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -5517,9 +5517,9 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         'tag-6-prefix-foobar-nestedfoobar-suffix'
       ]
 
-    Person.Ws.update @person3Id,
+    wApp.Ws.update @wApp3Id,
       $set:
-        username: 'person3b'
+        username: 'wApp3b'
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
@@ -5529,13 +5529,13 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person3,
-      _id: @person3Id
-      username: 'person3b'
-      displayName: 'Person 3'
+    test.equal @wApp3,
+      _id: @wApp3Id
+      username: 'wApp3b'
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
       subWswNodeÏs: [
@@ -5584,132 +5584,132 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -5726,7 +5726,7 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
 
   (test, expect) ->
-    Person.Ws.update @person2Id,
+    wApp.Ws.update @wApp2Id,
       $unset:
         # Removing two fields at the same time
         field1: ''
@@ -5740,13 +5740,13 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person2,
-      _id: @person2Id
-      username: 'person2b'
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      username: 'wApp2b'
+      displayName: 'wApp 2'
       subWwNodeÏs: [
         _id: @wNodeÏId
         subW:
@@ -5812,120 +5812,120 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         ,
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -5942,7 +5942,7 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       ]
 
   (test, expect) ->
-    Person.Ws.update @person2Id,
+    wApp.Ws.update @wApp2Id,
       $set:
         # Restoring two fields at the same time
         field1: 'Field 2 - 1b'
@@ -5956,13 +5956,13 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person2,
-      _id: @person2Id
-      username: 'person2b'
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      username: 'wApp2b'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1b'
       field2: 'Field 2 - 2b'
       subWwNodeÏs: [
@@ -6030,132 +6030,132 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -6183,17 +6183,17 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      username: 'person1b'
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      username: 'wApp1b'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
       wNodeÏs: [
@@ -6216,10 +6216,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         body: 'FooBar'
       ]
       count: 1
-    test.equal @person2,
-      _id: @person2Id
-      username: 'person2b'
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      username: 'wApp2b'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1b'
       field2: 'Field 2 - 2b'
       subWwNodeÏs: [
@@ -6280,10 +6280,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         body: 'FooBar'
       ]
       count: 3
-    test.equal @person3,
-      _id: @person3Id
-      username: 'person3b'
-      displayName: 'Person 3'
+    test.equal @wApp3,
+      _id: @wApp3Id
+      username: 'wApp3b'
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
       subWswNodeÏs: [
@@ -6332,132 +6332,132 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobarz-suffix'
         body: 'SubWFooBarZ'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -6485,17 +6485,17 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      username: 'person1b'
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      username: 'wApp1b'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
       wNodeÏs: [
@@ -6518,10 +6518,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         body: 'FooBar'
       ]
       count: 1
-    test.equal @person2,
-      _id: @person2Id
-      username: 'person2b'
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      username: 'wApp2b'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1b'
       field2: 'Field 2 - 2b'
       subWswNodeÏs: [
@@ -6582,10 +6582,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         body: 'FooBar'
       ]
       count: 3
-    test.equal @person3,
-      _id: @person3Id
-      username: 'person3b'
-      displayName: 'Person 3'
+    test.equal @wApp3,
+      _id: @wApp3Id
+      username: 'wApp3b'
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
       subWswNodeÏs: [
@@ -6634,132 +6634,132 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobarz-suffix'
         body: 'SubWFooBarZ'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobarz-suffix'
         body: 'NestedFooBarZ'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -6787,17 +6787,17 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      username: 'person1b'
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      username: 'wApp1b'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
       wNodeÏs: [
@@ -6820,10 +6820,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         body: 'FooBar'
       ]
       count: 1
-    test.equal @person2,
-      _id: @person2Id
-      username: 'person2b'
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      username: 'wApp2b'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1b'
       field2: 'Field 2 - 2b'
       subWwNodeÏs: [
@@ -6884,10 +6884,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         body: 'FooBar'
       ]
       count: 3
-    test.equal @person3,
-      _id: @person3Id
-      username: 'person3b'
-      displayName: 'Person 3'
+    test.equal @wApp3,
+      _id: @wApp3Id
+      username: 'wApp3b'
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
       subWswNodeÏs: [
@@ -6936,132 +6936,132 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobarz-suffix'
         body: 'SubWFooBarZ'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobarz-suffix'
         body: 'NestedFooBarZ'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobara-suffix'
         body: 'NestedFooBarA'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -7089,17 +7089,17 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      username: 'person1b'
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      username: 'wApp1b'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
       wNodeÏs: [
@@ -7122,10 +7122,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         body: 'FooBar'
       ]
       count: 1
-    test.equal @person2,
-      _id: @person2Id
-      username: 'person2b'
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      username: 'wApp2b'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1b'
       field2: 'Field 2 - 2b'
       subWwNodeÏs: [
@@ -7186,10 +7186,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         body: 'FooBar'
       ]
       count: 3
-    test.equal @person3,
-      _id: @person3Id
-      username: 'person3b'
-      displayName: 'Person 3'
+    test.equal @wApp3,
+      _id: @wApp3Id
+      username: 'wApp3b'
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
       subWswNodeÏs: [
@@ -7238,132 +7238,132 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobarz-suffix'
         body: 'SubWFooBarZ'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobarz-suffix'
         body: 'NestedFooBarZ'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: null
         body: null
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobara-suffix'
         body: 'NestedFooBarA'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -7390,17 +7390,17 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      username: 'person1b'
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      username: 'wApp1b'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
       wNodeÏs: [
@@ -7423,10 +7423,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         body: 'FooBar'
       ]
       count: 1
-    test.equal @person2,
-      _id: @person2Id
-      username: 'person2b'
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      username: 'wApp2b'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1b'
       field2: 'Field 2 - 2b'
       subWswNodeÏs: [
@@ -7487,10 +7487,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         body: 'FooBar'
       ]
       count: 3
-    test.equal @person3,
-      _id: @person3Id
-      username: 'person3b'
-      displayName: 'Person 3'
+    test.equal @wApp3,
+      _id: @wApp3Id
+      username: 'wApp3b'
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
       subWswNodeÏs: [
@@ -7539,130 +7539,130 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobar-subWfoobarz-suffix'
         body: 'SubWFooBarZ'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobarz-suffix'
         body: 'NestedFooBarZ'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: null
         body: null
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobar-nestedfoobara-suffix'
         body: 'NestedFooBarA'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -7688,17 +7688,17 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      username: 'person1b'
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      username: 'wApp1b'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
       wNodeÏs: [
@@ -7721,10 +7721,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         body: 'FooBarZ'
       ]
       count: 1
-    test.equal @person2,
-      _id: @person2Id
-      username: 'person2b'
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      username: 'wApp2b'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1b'
       field2: 'Field 2 - 2b'
       subWwNodeÏs: [
@@ -7785,10 +7785,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         body: 'FooBarZ'
       ]
       count: 3
-    test.equal @person3,
-      _id: @person3Id
-      username: 'person3b'
-      displayName: 'Person 3'
+    test.equal @wApp3,
+      _id: @wApp3Id
+      username: 'wApp3b'
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
       subWswNodeÏs: [
@@ -7837,130 +7837,130 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobarz-subWfoobarz-suffix'
         body: 'SubWFooBarZ'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobarz-nestedfoobarz-suffix'
         body: 'NestedFooBarZ'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobarz-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: null
         body: null
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobarz-nestedfoobara-suffix'
         body: 'NestedFooBarA'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobarz-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -7978,9 +7978,9 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
       $push:
         nested:
           required:
-            _id: @person2._id
+            _id: @wApp2._id
           optional:
-            _id: @person3._id
+            _id: @wApp3._id
           body: 'NewFooBar'
     ,
       expect (error, res) =>
@@ -7991,17 +7991,17 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      username: 'person1b'
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      username: 'wApp1b'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
       wNodeÏs: [
@@ -8026,10 +8026,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         body: 'FooBarZ'
       ]
       count: 1
-    test.equal @person2,
-      _id: @person2Id
-      username: 'person2b'
-      displayName: 'Person 2'
+    test.equal @wApp2,
+      _id: @wApp2Id
+      username: 'wApp2b'
+      displayName: 'wApp 2'
       field1: 'Field 2 - 1b'
       field2: 'Field 2 - 2b'
       subWwNodeÏs: [
@@ -8096,10 +8096,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         body: 'FooBarZ'
       ]
       count: 3
-    test.equal @person3,
-      _id: @person3Id
-      username: 'person3b'
-      displayName: 'Person 3'
+    test.equal @wApp3,
+      _id: @wApp3Id
+      username: 'wApp3b'
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
       subWswNodeÏs: [
@@ -8152,142 +8152,142 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobarz-subWfoobarz-suffix'
         body: 'SubWFooBarZ'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobarz-nestedfoobarz-suffix'
         body: 'NestedFooBarZ'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobarz-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: null
         body: null
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         slug: 'nested-prefix-foobarz-nestedfoobara-suffix'
         body: 'NestedFooBarA'
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobarz-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ,
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-          field1: @person2.field1
-          field2: @person2.field2
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+          field1: @wApp2.field1
+          field2: @wApp2.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobarz-newfoobar-suffix'
         body: 'NewFooBar'
       ]
@@ -8302,7 +8302,7 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         'tag-5-prefix-foobarz-newfoobar-suffix'
       ]
 
-    Person.Ws.remove @person2Id,
+    wApp.Ws.remove @wApp2Id,
       expect (error) =>
         test.isFalse error, error?.toString?() or error
 
@@ -8310,15 +8310,15 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      username: 'person1b'
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      username: 'wApp1b'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
       wNodeÏs: [
@@ -8335,10 +8335,10 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         body: 'FooBarZ'
       ]
       count: 1
-    test.equal @person3,
-      _id: @person3Id
-      username: 'person3b'
-      displayName: 'Person 3'
+    test.equal @wApp3,
+      _id: @wApp3Id
+      username: 'wApp3b'
+      displayName: 'wApp 3'
       field1: 'Field 3 - 1'
       field2: 'Field 3 - 2'
       subWswNodeÏs: [
@@ -8375,66 +8375,66 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: [
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person: null
-        persons: [
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+        wApp: null
+        wApps: [
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         ]
         slug: 'subW-prefix-foobarz-subWfoobarz-suffix'
         body: 'SubWFooBarZ'
       nested: [
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional: null
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional: null
         slug: null
         body: null
       ,
         required:
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
-          field1: @person3.field1
-          field2: @person3.field2
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
+          field1: @wApp3.field1
+          field2: @wApp3.field2
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobarz-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -8445,7 +8445,7 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         'tag-1-prefix-foobarz-nestedfoobar-suffix'
       ]
 
-    Person.Ws.remove @person3Id,
+    wApp.Ws.remove @wApp3Id,
       expect (error) =>
         test.isFalse error, error?.toString?() or error
 
@@ -8453,13 +8453,13 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
 
-    test.equal @person1,
-      _id: @person1Id
-      username: 'person1b'
-      displayName: 'Person 1'
+    test.equal @wApp1,
+      _id: @wApp1Id
+      username: 'wApp1b'
+      displayName: 'wApp 1'
       field1: 'Field 1 - 1a'
       field2: 'Field 1 - 2a'
       wNodeÏs: [
@@ -8477,16 +8477,16 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
     test.equal @wNodeÏ,
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
-        field1: @person1.field1
-        field2: @person1.field2
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
+        field1: @wApp1.field1
+        field2: @wApp1.field2
       outgoing: []
       incoming: []
       subW:
-        person: null
-        persons: []
+        wApp: null
+        wApps: []
         slug: 'subW-prefix-foobarz-subWfoobarz-suffix'
         body: 'SubWFooBarZ'
       nested: []
@@ -8496,7 +8496,7 @@ testAsyncMulti 'peerdb - duplicate values in lists', [
         'tag-0-prefix-foobarz-subWfoobarz-suffix'
       ]
 
-    Person.Ws.remove @person1Id,
+    wApp.Ws.remove @wApp1Id,
       expect (error) =>
         test.isFalse error, error?.toString?() or error
 
@@ -8558,92 +8558,92 @@ testAsyncMulti 'peerdb - instances', [
   (test, expect) ->
     testDefinition test
 
-    Person.Ws.insert
-      username: 'person1'
-      displayName: 'Person 1'
+    wApp.Ws.insert
+      username: 'wApp1'
+      displayName: 'wApp 1'
     ,
-      expect (error, person1Id) =>
+      expect (error, wApp1Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person1Id
-        @person1Id = person1Id
+        test.isTrue wApp1Id
+        @wApp1Id = wApp1Id
 
-    Person.Ws.insert
-      username: 'person2'
-      displayName: 'Person 2'
+    wApp.Ws.insert
+      username: 'wApp2'
+      displayName: 'wApp 2'
     ,
-      expect (error, person2Id) =>
+      expect (error, wApp2Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person2Id
-        @person2Id = person2Id
+        test.isTrue wApp2Id
+        @wApp2Id = wApp2Id
 
-    Person.Ws.insert
-      username: 'person3'
-      displayName: 'Person 3'
+    wApp.Ws.insert
+      username: 'wApp3'
+      displayName: 'wApp 3'
     ,
-      expect (error, person3Id) =>
+      expect (error, wApp3Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person3Id
-        @person3Id = person3Id
+        test.isTrue wApp3Id
+        @wApp3Id = wApp3Id
 
     # Wait so that observers have time to update Ws
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id
-    @person2 = Person.Ws.findOne @person2Id
-    @person3 = Person.Ws.findOne @person3Id
+    @wApp1 = wApp.Ws.findOne @wApp1Id
+    @wApp2 = wApp.Ws.findOne @wApp2Id
+    @wApp3 = wApp.Ws.findOne @wApp3Id
 
-    test.instanceOf @person1, Person
-    test.instanceOf @person2, Person
-    test.instanceOf @person3, Person
+    test.instanceOf @wApp1, wApp
+    test.instanceOf @wApp2, wApp
+    test.instanceOf @wApp3, wApp
 
-    test.equal plainObject(@person1),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal plainObject(@wApp1),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 0
-    test.equal plainObject(@person2),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal plainObject(@wApp2),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 0
-    test.equal plainObject(@person3),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal plainObject(@wApp3),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 0
 
-    test.equal @person1.formatName(), 'person1-Person 1'
-    test.equal @person2.formatName(), 'person2-Person 2'
-    test.equal @person3.formatName(), 'person3-Person 3'
+    test.equal @wApp1.formatName(), 'wApp1-wApp 1'
+    test.equal @wApp2.formatName(), 'wApp2-wApp 2'
+    test.equal @wApp3.formatName(), 'wApp3-wApp 3'
 
     wNodeÏ.Ws.insert
       author:
-        _id: @person1._id
+        _id: @wApp1._id
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       subW:
-        person:
-          _id: @person2._id
-        persons: [
-          _id: @person2._id
+        wApp:
+          _id: @wApp2._id
+        wApps: [
+          _id: @wApp2._id
         ,
-          _id: @person3._id
+          _id: @wApp3._id
         ]
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
+          _id: @wApp2._id
         optional:
-          _id: @person3._id
+          _id: @wApp3._id
         body: 'NestedFooBar'
       ]
       body: 'FooBar'
@@ -8660,63 +8660,63 @@ testAsyncMulti 'peerdb - instances', [
     @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId
 
     test.instanceOf @wNodeÏ, wNodeÏ
-    test.instanceOf @wNodeÏ.author, Person
-    test.instanceOf @wNodeÏ.outgoing[0], Person
-    test.instanceOf @wNodeÏ.outgoing[1], Person
-    test.instanceOf @wNodeÏ.incoming[0], Person
-    test.instanceOf @wNodeÏ.incoming[1], Person
-    test.instanceOf @wNodeÏ.subW.person, Person
-    test.instanceOf @wNodeÏ.subW.persons[0], Person
-    test.instanceOf @wNodeÏ.subW.persons[1], Person
-    test.instanceOf @wNodeÏ.nested[0].required, Person
-    test.instanceOf @wNodeÏ.nested[0].optional, Person
+    test.instanceOf @wNodeÏ.author, wApp
+    test.instanceOf @wNodeÏ.outgoing[0], wApp
+    test.instanceOf @wNodeÏ.outgoing[1], wApp
+    test.instanceOf @wNodeÏ.incoming[0], wApp
+    test.instanceOf @wNodeÏ.incoming[1], wApp
+    test.instanceOf @wNodeÏ.subW.wApp, wApp
+    test.instanceOf @wNodeÏ.subW.wApps[0], wApp
+    test.instanceOf @wNodeÏ.subW.wApps[1], wApp
+    test.instanceOf @wNodeÏ.nested[0].required, wApp
+    test.instanceOf @wNodeÏ.nested[0].optional, wApp
 
-    test.equal @wNodeÏ.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
+    test.equal @wNodeÏ.author.formatName(), "#{ @wApp1.username }-#{ @wApp1.displayName }"
 
     test.equal plainObject(@wNodeÏ),
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
       # outgoing have only ids
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       # But incoming have usernames as well
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -8729,36 +8729,36 @@ testAsyncMulti 'peerdb - instances', [
 
     SpecialwNodeÏ.Ws.insert
       author:
-        _id: @person1._id
+        _id: @wApp1._id
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       incoming: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       subW:
-        person:
-          _id: @person2._id
-        persons: [
-          _id: @person2._id
+        wApp:
+          _id: @wApp2._id
+        wApps: [
+          _id: @wApp2._id
         ,
-          _id: @person3._id
+          _id: @wApp3._id
         ]
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
+          _id: @wApp2._id
         optional:
-          _id: @person3._id
+          _id: @wApp3._id
         body: 'NestedFooBar'
       ]
       body: 'FooBar'
       special:
-        _id: @person1._id
+        _id: @wApp1._id
     ,
       expect (error, wNodeÏId) =>
         test.isFalse error, error?.toString?() or error
@@ -8772,64 +8772,64 @@ testAsyncMulti 'peerdb - instances', [
     @wNodeÏ = SpecialwNodeÏ.Ws.findOne @wNodeÏId
 
     test.instanceOf @wNodeÏ, SpecialwNodeÏ
-    test.instanceOf @wNodeÏ.author, Person
-    test.instanceOf @wNodeÏ.outgoing[0], Person
-    test.instanceOf @wNodeÏ.outgoing[1], Person
-    test.instanceOf @wNodeÏ.incoming[0], Person
-    test.instanceOf @wNodeÏ.incoming[1], Person
-    test.instanceOf @wNodeÏ.subW.person, Person
-    test.instanceOf @wNodeÏ.subW.persons[0], Person
-    test.instanceOf @wNodeÏ.subW.persons[1], Person
-    test.instanceOf @wNodeÏ.nested[0].required, Person
-    test.instanceOf @wNodeÏ.nested[0].optional, Person
-    test.instanceOf @wNodeÏ.special, Person
+    test.instanceOf @wNodeÏ.author, wApp
+    test.instanceOf @wNodeÏ.outgoing[0], wApp
+    test.instanceOf @wNodeÏ.outgoing[1], wApp
+    test.instanceOf @wNodeÏ.incoming[0], wApp
+    test.instanceOf @wNodeÏ.incoming[1], wApp
+    test.instanceOf @wNodeÏ.subW.wApp, wApp
+    test.instanceOf @wNodeÏ.subW.wApps[0], wApp
+    test.instanceOf @wNodeÏ.subW.wApps[1], wApp
+    test.instanceOf @wNodeÏ.nested[0].required, wApp
+    test.instanceOf @wNodeÏ.nested[0].optional, wApp
+    test.instanceOf @wNodeÏ.special, wApp
 
-    test.equal @wNodeÏ.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
+    test.equal @wNodeÏ.author.formatName(), "#{ @wApp1.username }-#{ @wApp1.displayName }"
 
     test.equal plainObject(@wNodeÏ),
       _id: @wNodeÏId
       author:
-        _id: @person1._id
-        username: @person1.username
-        displayName: @person1.displayName
+        _id: @wApp1._id
+        username: @wApp1.username
+        displayName: @wApp1.displayName
       # outgoing have only ids
       outgoing: [
-        _id: @person2._id
+        _id: @wApp2._id
       ,
-        _id: @person3._id
+        _id: @wApp3._id
       ]
       # But incoming have usernames as well
       incoming: [
-        _id: @person2._id
-        username: @person2.username
+        _id: @wApp2._id
+        username: @wApp2.username
       ,
-        _id: @person3._id
-        username: @person3.username
+        _id: @wApp3._id
+        username: @wApp3.username
       ]
       subW:
-        person:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
-        persons: [
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+        wApp:
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
+        wApps: [
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         ,
-          _id: @person3._id
-          username: @person3.username
-          displayName: @person3.displayName
+          _id: @wApp3._id
+          username: @wApp3.username
+          displayName: @wApp3.displayName
         ]
         slug: 'subW-prefix-foobar-subWfoobar-suffix'
         body: 'SubWFooBar'
       nested: [
         required:
-          _id: @person2._id
-          username: @person2.username
-          displayName: @person2.displayName
+          _id: @wApp2._id
+          username: @wApp2.username
+          displayName: @wApp2.displayName
         optional:
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         slug: 'nested-prefix-foobar-nestedfoobar-suffix'
         body: 'NestedFooBar'
       ]
@@ -8840,7 +8840,7 @@ testAsyncMulti 'peerdb - instances', [
         'tag-1-prefix-foobar-nestedfoobar-suffix'
       ]
       special:
-        _id: @person1._id
+        _id: @wApp1._id
 
     @username = Random.id()
 
@@ -8898,21 +8898,21 @@ Tinytest.add 'peerdb - bad instances', (test) ->
   test.throws ->
     new wNodeÏ
       subW: [
-        persons: []
+        wApps: []
       ]
   , /W does not match schema, an unexpected array/
 
   test.throws ->
     new wNodeÏ
       subW: [[
-        persons: []
+        wApps: []
       ]]
   , /W does not match schema, an unexpected array/
 
   test.throws ->
     new wNodeÏ
       subW:
-        persons: [
+        wApps: [
           Random.id()
         ]
   , /W does not match schema, not a plain object/
@@ -8959,71 +8959,71 @@ if Meteor.isServer and not W.instanceDisabled
     (test, expect) ->
       testDefinition test
 
-      Person.Ws.insert
-        username: 'person1'
-        displayName: 'Person 1'
+      wApp.Ws.insert
+        username: 'wApp1'
+        displayName: 'wApp 1'
       ,
-        expect (error, person1Id) =>
+        expect (error, wApp1Id) =>
           test.isFalse error, error?.toString?() or error
-          test.isTrue person1Id
-          @person1Id = person1Id
+          test.isTrue wApp1Id
+          @wApp1Id = wApp1Id
 
-      Person.Ws.insert
-        username: 'person2'
-        displayName: 'Person 2'
+      wApp.Ws.insert
+        username: 'wApp2'
+        displayName: 'wApp 2'
       ,
-        expect (error, person2Id) =>
+        expect (error, wApp2Id) =>
           test.isFalse error, error?.toString?() or error
-          test.isTrue person2Id
-          @person2Id = person2Id
+          test.isTrue wApp2Id
+          @wApp2Id = wApp2Id
 
-      Person.Ws.insert
-        username: 'person3'
-        displayName: 'Person 3'
+      wApp.Ws.insert
+        username: 'wApp3'
+        displayName: 'wApp 3'
       ,
-        expect (error, person3Id) =>
+        expect (error, wApp3Id) =>
           test.isFalse error, error?.toString?() or error
-          test.isTrue person3Id
-          @person3Id = person3Id
+          test.isTrue wApp3Id
+          @wApp3Id = wApp3Id
 
       # Wait so that observers have time to update Ws
       waitForDatabase test, expect
   ,
     (test, expect) ->
-      @person1 = Person.Ws.findOne @person1Id
-      @person2 = Person.Ws.findOne @person2Id
-      @person3 = Person.Ws.findOne @person3Id
+      @wApp1 = wApp.Ws.findOne @wApp1Id
+      @wApp2 = wApp.Ws.findOne @wApp2Id
+      @wApp3 = wApp.Ws.findOne @wApp3Id
 
       wNodeÏ.Ws.insert
         author:
-          _id: @person1._id
+          _id: @wApp1._id
           # To test what happens if one field is already up to date, but the other is not
-          username: @person1.username
+          username: @wApp1.username
           displayName: 'wrong'
         outgoing: [
-          _id: @person2._id
+          _id: @wApp2._id
         ,
-          _id: @person3._id
+          _id: @wApp3._id
         ]
         incoming: [
-          _id: @person2._id
+          _id: @wApp2._id
         ,
-          _id: @person3._id
+          _id: @wApp3._id
         ]
         subW:
-          person:
-            _id: @person2._id
-          persons: [
-            _id: @person2._id
+          wApp:
+            _id: @wApp2._id
+          wApps: [
+            _id: @wApp2._id
           ,
-            _id: @person3._id
+            _id: @wApp3._id
           ]
           body: 'SubWFooBar'
         nested: [
           required:
-            _id: @person2._id
+            _id: @wApp2._id
           optional:
-            _id: @person3._id
+            _id: @wApp3._id
           body: 'NestedFooBar'
         ]
         body: 'FooBar'
@@ -9043,47 +9043,47 @@ if Meteor.isServer and not W.instanceDisabled
       test.equal @wNodeÏ,
         _id: @wNodeÏId
         author:
-          _id: @person1._id
-          username: @person1.username
-          displayName: @person1.displayName
+          _id: @wApp1._id
+          username: @wApp1.username
+          displayName: @wApp1.displayName
         # outgoing have only ids
         outgoing: [
-          _id: @person2._id
+          _id: @wApp2._id
         ,
-          _id: @person3._id
+          _id: @wApp3._id
         ]
         # But incoming have usernames as well
         incoming: [
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         ,
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         ]
         subW:
-          person:
-            _id: @person2._id
-            username: @person2.username
-            displayName: @person2.displayName
-          persons: [
-            _id: @person2._id
-            username: @person2.username
-            displayName: @person2.displayName
+          wApp:
+            _id: @wApp2._id
+            username: @wApp2.username
+            displayName: @wApp2.displayName
+          wApps: [
+            _id: @wApp2._id
+            username: @wApp2.username
+            displayName: @wApp2.displayName
           ,
-            _id: @person3._id
-            username: @person3.username
-            displayName: @person3.displayName
+            _id: @wApp3._id
+            username: @wApp3.username
+            displayName: @wApp3.displayName
           ]
           slug: 'subW-prefix-foobar-subWfoobar-suffix'
           body: 'SubWFooBar'
         nested: [
           required:
-            _id: @person2._id
-            username: @person2.username
-            displayName: @person2.displayName
+            _id: @wApp2._id
+            username: @wApp2.username
+            displayName: @wApp2.displayName
           optional:
-            _id: @person3._id
-            username: @person3.username
+            _id: @wApp3._id
+            username: @wApp3.username
           slug: 'nested-prefix-foobar-nestedfoobar-suffix'
           body: 'NestedFooBar'
         ]
@@ -9099,9 +9099,9 @@ if Meteor.isServer and not W.instanceDisabled
           'author.username': 'wrong'
           'incoming.0.username': 'wrong'
           'incoming.1.username': 'wrong'
-          'subW.person.username': 'wrong'
-          'subW.persons.0.username': 'wrong'
-          'subW.persons.1.username': 'wrong'
+          'subW.wApp.username': 'wrong'
+          'subW.wApps.0.username': 'wrong'
+          'subW.wApps.1.username': 'wrong'
           'nested.0.required.username': 'wrong'
           'nested.0.optional.username': 'wrong'
           slug: 'wrong'
@@ -9122,47 +9122,47 @@ if Meteor.isServer and not W.instanceDisabled
       test.equal @wNodeÏ,
         _id: @wNodeÏId
         author:
-          _id: @person1._id
-          username: @person1.username
-          displayName: @person1.displayName
+          _id: @wApp1._id
+          username: @wApp1.username
+          displayName: @wApp1.displayName
         # outgoing have only ids
         outgoing: [
-          _id: @person2._id
+          _id: @wApp2._id
         ,
-          _id: @person3._id
+          _id: @wApp3._id
         ]
         # But incoming have usernames as well
         incoming: [
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         ,
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         ]
         subW:
-          person:
-            _id: @person2._id
-            username: @person2.username
-            displayName: @person2.displayName
-          persons: [
-            _id: @person2._id
-            username: @person2.username
-            displayName: @person2.displayName
+          wApp:
+            _id: @wApp2._id
+            username: @wApp2.username
+            displayName: @wApp2.displayName
+          wApps: [
+            _id: @wApp2._id
+            username: @wApp2.username
+            displayName: @wApp2.displayName
           ,
-            _id: @person3._id
-            username: @person3.username
-            displayName: @person3.displayName
+            _id: @wApp3._id
+            username: @wApp3.username
+            displayName: @wApp3.displayName
           ]
           slug: 'subW-prefix-foobar-subWfoobar-suffix'
           body: 'SubWFooBar'
         nested: [
           required:
-            _id: @person2._id
-            username: @person2.username
-            displayName: @person2.displayName
+            _id: @wApp2._id
+            username: @wApp2.username
+            displayName: @wApp2.displayName
           optional:
-            _id: @person3._id
-            username: @person3.username
+            _id: @wApp3._id
+            username: @wApp3.username
           slug: 'nested-prefix-foobar-nestedfoobar-suffix'
           body: 'NestedFooBar'
         ]
@@ -9183,47 +9183,47 @@ if Meteor.isServer and not W.instanceDisabled
       test.equal @wNodeÏ,
         _id: @wNodeÏId
         author:
-          _id: @person1._id
-          username: @person1.username
-          displayName: @person1.displayName
+          _id: @wApp1._id
+          username: @wApp1.username
+          displayName: @wApp1.displayName
         # outgoing have only ids
         outgoing: [
-          _id: @person2._id
+          _id: @wApp2._id
         ,
-          _id: @person3._id
+          _id: @wApp3._id
         ]
         # But incoming have usernames as well
         incoming: [
-          _id: @person2._id
-          username: @person2.username
+          _id: @wApp2._id
+          username: @wApp2.username
         ,
-          _id: @person3._id
-          username: @person3.username
+          _id: @wApp3._id
+          username: @wApp3.username
         ]
         subW:
-          person:
-            _id: @person2._id
-            username: @person2.username
-            displayName: @person2.displayName
-          persons: [
-            _id: @person2._id
-            username: @person2.username
-            displayName: @person2.displayName
+          wApp:
+            _id: @wApp2._id
+            username: @wApp2.username
+            displayName: @wApp2.displayName
+          wApps: [
+            _id: @wApp2._id
+            username: @wApp2.username
+            displayName: @wApp2.displayName
           ,
-            _id: @person3._id
-            username: @person3.username
-            displayName: @person3.displayName
+            _id: @wApp3._id
+            username: @wApp3.username
+            displayName: @wApp3.displayName
           ]
           slug: 'subW-prefix-foobar-subWfoobar-suffix'
           body: 'SubWFooBar'
         nested: [
           required:
-            _id: @person2._id
-            username: @person2.username
-            displayName: @person2.displayName
+            _id: @wApp2._id
+            username: @wApp2.username
+            displayName: @wApp2.displayName
           optional:
-            _id: @person3._id
-            username: @person3.username
+            _id: @wApp3._id
+            username: @wApp3.username
           slug: 'nested-prefix-foobar-nestedfoobar-suffix'
           body: 'NestedFooBar'
         ]
@@ -9237,32 +9237,32 @@ if Meteor.isServer and not W.instanceDisabled
 
 testAsyncMulti 'peerdb - reverse wNodeÏs', [
   (test, expect) ->
-    Person.Ws.insert
-      username: 'person1'
-      displayName: 'Person 1'
+    wApp.Ws.insert
+      username: 'wApp1'
+      displayName: 'wApp 1'
     ,
-      expect (error, person1Id) =>
+      expect (error, wApp1Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person1Id
-        @person1Id = person1Id
+        test.isTrue wApp1Id
+        @wApp1Id = wApp1Id
 
-    Person.Ws.insert
-      username: 'person2'
-      displayName: 'Person 2'
+    wApp.Ws.insert
+      username: 'wApp2'
+      displayName: 'wApp 2'
     ,
-      expect (error, person2Id) =>
+      expect (error, wApp2Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person2Id
-        @person2Id = person2Id
+        test.isTrue wApp2Id
+        @wApp2Id = wApp2Id
 
-    Person.Ws.insert
-      username: 'person3'
-      displayName: 'Person 3'
+    wApp.Ws.insert
+      username: 'wApp3'
+      displayName: 'wApp 3'
     ,
-      expect (error, person3Id) =>
+      expect (error, wApp3Id) =>
         test.isFalse error, error?.toString?() or error
-        test.isTrue person3Id
-        @person3Id = person3Id
+        test.isTrue wApp3Id
+        @wApp3Id = wApp3Id
 
     # Wait so that observers have time to update Ws
     waitForDatabase test, expect
@@ -9270,27 +9270,27 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
   (test, expect) ->
     wNodeÏ.Ws.insert
       author:
-        _id: @person1Id
+        _id: @wApp1Id
       nested: [
         required:
-          _id: @person2Id
+          _id: @wApp2Id
         body: 'NestedFooBar1'
       ]
       subW:
-        person:
-          _id: @person1Id
-        persons: [
-          _id: @person1Id
+        wApp:
+          _id: @wApp1Id
+        wApps: [
+          _id: @wApp1Id
         ,
-          _id: @person2Id
+          _id: @wApp2Id
         ,
-          _id: @person3Id
+          _id: @wApp3Id
         ,
-          _id: @person1Id
+          _id: @wApp1Id
         ,
-          _id: @person2Id
+          _id: @wApp2Id
         ,
-          _id: @person3Id
+          _id: @wApp3Id
         ]
         body: 'SubWFooBar1'
       body: 'FooBar1'
@@ -9302,27 +9302,27 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
 
     wNodeÏ.Ws.insert
       author:
-        _id: @person1Id
+        _id: @wApp1Id
       nested: [
         required:
-          _id: @person3Id
+          _id: @wApp3Id
         body: 'NestedFooBar2'
       ]
       subW:
-        person:
-          _id: @person2Id
-        persons: [
-          _id: @person2Id
+        wApp:
+          _id: @wApp2Id
+        wApps: [
+          _id: @wApp2Id
         ,
-          _id: @person2Id
+          _id: @wApp2Id
         ,
-          _id: @person2Id
+          _id: @wApp2Id
         ,
-          _id: @person1Id
+          _id: @wApp1Id
         ,
-          _id: @person2Id
+          _id: @wApp2Id
         ,
-          _id: @person3Id
+          _id: @wApp3Id
         ]
         body: 'SubWFooBar2'
       body: 'FooBar2'
@@ -9334,27 +9334,27 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
 
     wNodeÏ.Ws.insert
       author:
-        _id: @person1Id
+        _id: @wApp1Id
       nested: [
         required:
-          _id: @person3Id
+          _id: @wApp3Id
         body: 'NestedFooBar3'
       ]
       subW:
-        person:
-          _id: @person1Id
-        persons: [
-          _id: @person1Id
+        wApp:
+          _id: @wApp1Id
+        wApps: [
+          _id: @wApp1Id
         ,
-          _id: @person1Id
+          _id: @wApp1Id
         ,
-          _id: @person1Id
+          _id: @wApp1Id
         ,
-          _id: @person1Id
+          _id: @wApp1Id
         ,
-          _id: @person2Id
+          _id: @wApp2Id
         ,
-          _id: @person3Id
+          _id: @wApp3Id
         ]
         body: 'SubWFooBar3'
       body: 'FooBar3'
@@ -9378,46 +9378,46 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ1,
       _id: @wNodeÏId1
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        person:
-          _id: @person1Id
-          displayName: 'Person 1'
-          username: 'person1'
-        persons: [
-          _id: @person1Id
-          displayName: 'Person 1'
-          username: 'person1'
+        wApp:
+          _id: @wApp1Id
+          displayName: 'wApp 1'
+          username: 'wApp1'
+        wApps: [
+          _id: @wApp1Id
+          displayName: 'wApp 1'
+          username: 'wApp1'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person1Id
-          displayName: 'Person 1'
-          username: 'person1'
+          _id: @wApp1Id
+          displayName: 'wApp 1'
+          username: 'wApp1'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar1-subWfoobar1-suffix'
         body: 'SubWFooBar1'
       nested: [
         required:
-          _id: @person2Id
-          username: 'person2'
-          displayName: 'Person 2'
+          _id: @wApp2Id
+          username: 'wApp2'
+          displayName: 'wApp 2'
         slug: 'nested-prefix-foobar1-nestedfoobar1-suffix'
         body: 'NestedFooBar1'
       ]
@@ -9431,46 +9431,46 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ2,
       _id: @wNodeÏId2
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        person:
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
-        persons: [
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+        wApp:
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
+        wApps: [
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person1Id
-          displayName: 'Person 1'
-          username: 'person1'
+          _id: @wApp1Id
+          displayName: 'wApp 1'
+          username: 'wApp1'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar2-subWfoobar2-suffix'
         body: 'SubWFooBar2'
       nested: [
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar2-nestedfoobar2-suffix'
         body: 'NestedFooBar2'
       ]
@@ -9484,46 +9484,46 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ3,
       _id: @wNodeÏId3
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        person:
-          _id: @person1Id
-          displayName: 'Person 1'
-          username: 'person1'
-        persons: [
-          _id: @person1Id
-          displayName: 'Person 1'
-          username: 'person1'
+        wApp:
+          _id: @wApp1Id
+          displayName: 'wApp 1'
+          username: 'wApp1'
+        wApps: [
+          _id: @wApp1Id
+          displayName: 'wApp 1'
+          username: 'wApp1'
         ,
-          _id: @person1Id
-          displayName: 'Person 1'
-          username: 'person1'
+          _id: @wApp1Id
+          displayName: 'wApp 1'
+          username: 'wApp1'
         ,
-          _id: @person1Id
-          displayName: 'Person 1'
-          username: 'person1'
+          _id: @wApp1Id
+          displayName: 'wApp 1'
+          username: 'wApp1'
         ,
-          _id: @person1Id
-          displayName: 'Person 1'
-          username: 'person1'
+          _id: @wApp1Id
+          displayName: 'wApp 1'
+          username: 'wApp1'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar3-subWfoobar3-suffix'
         body: 'SubWFooBar3'
       nested: [
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar3-nestedfoobar3-suffix'
         body: 'NestedFooBar3'
       ]
@@ -9534,20 +9534,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         'tag-1-prefix-foobar3-nestedfoobar3-suffix'
       ]
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 8
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -9573,7 +9573,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar3'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -9591,7 +9591,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar3'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -9617,16 +9617,16 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar3'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs, []
+    testSetEqual test, @wApp1.nestedwNodeÏs, []
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 5
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -9636,7 +9636,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -9662,7 +9662,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar3'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -9673,15 +9673,15 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar1'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 5
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs, []
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs, []
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -9707,7 +9707,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar3'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -9728,55 +9728,55 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
 
     wNodeÏ.Ws.insert
       author:
-        _id: @person1Id
+        _id: @wApp1Id
       nested: [
         required:
-          _id: @person3Id
+          _id: @wApp3Id
         body: 'NestedFooBar4'
       ,
         required:
-          _id: @person3Id
+          _id: @wApp3Id
         body: 'NestedFooBar4'
       ,
         required:
-          _id: @person1Id
+          _id: @wApp1Id
         body: 'NestedFooBar4'
       ,
         required:
-          _id: @person2Id
+          _id: @wApp2Id
         body: 'NestedFooBar4'
       ,
         required:
-          _id: @person3Id
+          _id: @wApp3Id
         body: 'NestedFooBar4'
       ,
         required:
-          _id: @person1Id
+          _id: @wApp1Id
         body: 'NestedFooBar4'
       ,
         required:
-          _id: @person2Id
+          _id: @wApp2Id
         body: 'NestedFooBar4'
       ,
         required:
-          _id: @person3Id
+          _id: @wApp3Id
         body: 'NestedFooBar4'
       ]
       subW:
-        person:
-          _id: @person1Id
-        persons: [
-          _id: @person1Id
+        wApp:
+          _id: @wApp1Id
+        wApps: [
+          _id: @wApp1Id
         ,
-          _id: @person1Id
+          _id: @wApp1Id
         ,
-          _id: @person1Id
+          _id: @wApp1Id
         ,
-          _id: @person1Id
+          _id: @wApp1Id
         ,
-          _id: @person2Id
+          _id: @wApp2Id
         ,
-          _id: @person2Id
+          _id: @wApp2Id
         ]
         body: 'SubWFooBar4'
       body: 'FooBar4'
@@ -9788,35 +9788,35 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
 
     wNodeÏ.Ws.insert
       author:
-        _id: @person1Id
+        _id: @wApp1Id
       nested: [
         required:
-          _id: @person3Id
+          _id: @wApp3Id
         body: 'NestedFooBar5'
       ,
         required:
-          _id: @person3Id
+          _id: @wApp3Id
         body: 'NestedFooBar5'
       ,
         required:
-          _id: @person3Id
+          _id: @wApp3Id
         body: 'NestedFooBar5'
       ]
       subW:
-        person:
-          _id: @person3Id
-        persons: [
-          _id: @person3Id
+        wApp:
+          _id: @wApp3Id
+        wApps: [
+          _id: @wApp3Id
         ,
-          _id: @person3Id
+          _id: @wApp3Id
         ,
-          _id: @person3Id
+          _id: @wApp3Id
         ,
-          _id: @person3Id
+          _id: @wApp3Id
         ,
-          _id: @person2Id
+          _id: @wApp2Id
         ,
-          _id: @person3Id
+          _id: @wApp3Id
         ]
         body: 'SubWFooBar5'
       body: 'FooBar5'
@@ -9830,20 +9830,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 13
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -9903,7 +9903,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -9943,7 +9943,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -9991,7 +9991,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -10016,14 +10016,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 8
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -10033,7 +10033,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -10093,7 +10093,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -10126,14 +10126,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 9
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs,
       [
         _id: @wNodeÏId5
         subW:
@@ -10147,7 +10147,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5'
       ]
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -10185,7 +10185,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -10293,20 +10293,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 13
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -10366,7 +10366,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -10406,7 +10406,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -10454,7 +10454,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -10479,14 +10479,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 8
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -10496,7 +10496,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -10556,7 +10556,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -10589,14 +10589,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 9
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs,
       [
         _id: @wNodeÏId5
         subW:
@@ -10610,7 +10610,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -10648,7 +10648,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -10705,7 +10705,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
       $push:
         nested:
           required:
-            _id: @person2Id
+            _id: @wApp2Id
           body: 'NestedFooBarNew'
     ,
       expect (error, res) =>
@@ -10722,53 +10722,53 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ2,
       _id: @wNodeÏId2
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        person:
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
-        persons: [
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+        wApp:
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
+        wApps: [
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person1Id
-          displayName: 'Person 1'
-          username: 'person1'
+          _id: @wApp1Id
+          displayName: 'wApp 1'
+          username: 'wApp1'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar2a-subWfoobar2a-suffix'
         body: 'SubWFooBar2a'
       nested: [
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar2a-nestedfoobar2a-suffix'
         body: 'NestedFooBar2a'
       ,
         required:
-          _id: @person2Id
-          username: 'person2'
-          displayName: 'Person 2'
+          _id: @wApp2Id
+          username: 'wApp2'
+          displayName: 'wApp 2'
         slug: 'nested-prefix-foobar2a-nestedfoobarnew-suffix'
         body: 'NestedFooBarNew'
       ]
@@ -10780,20 +10780,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         'tag-2-prefix-foobar2a-nestedfoobarnew-suffix'
       ]
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 13
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -10855,7 +10855,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -10895,7 +10895,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -10945,7 +10945,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -10970,14 +10970,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 9
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -10989,7 +10989,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -11051,7 +11051,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -11094,14 +11094,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar2a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 9
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs,
       [
         _id: @wNodeÏId5
         subW:
@@ -11115,7 +11115,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -11155,7 +11155,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -11228,46 +11228,46 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ2,
       _id: @wNodeÏId2
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        person:
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
-        persons: [
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+        wApp:
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
+        wApps: [
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person1Id
-          displayName: 'Person 1'
-          username: 'person1'
+          _id: @wApp1Id
+          displayName: 'wApp 1'
+          username: 'wApp1'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar2a-subWfoobar2a-suffix'
         body: 'SubWFooBar2a'
       nested: [
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar2a-nestedfoobar2a-suffix'
         body: 'NestedFooBar2a'
       ]
@@ -11278,20 +11278,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         'tag-1-prefix-foobar2a-nestedfoobar2a-suffix'
       ]
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 13
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -11351,7 +11351,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -11391,7 +11391,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -11439,7 +11439,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -11464,14 +11464,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 8
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -11481,7 +11481,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -11541,7 +11541,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -11574,14 +11574,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 9
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs,
       [
         _id: @wNodeÏId5
         subW:
@@ -11595,7 +11595,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -11633,7 +11633,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -11691,7 +11691,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
       $push:
         nested:
           required:
-            _id: @person3Id
+            _id: @wApp3Id
           body: 'NestedFooBarNew'
     ,
       expect (error, res) =>
@@ -11708,53 +11708,53 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ2,
       _id: @wNodeÏId2
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        person:
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
-        persons: [
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+        wApp:
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
+        wApps: [
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person1Id
-          displayName: 'Person 1'
-          username: 'person1'
+          _id: @wApp1Id
+          displayName: 'wApp 1'
+          username: 'wApp1'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar2a-subWfoobar2a-suffix'
         body: 'SubWFooBar2a'
       nested: [
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar2a-nestedfoobar2a-suffix'
         body: 'NestedFooBar2a'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar2a-nestedfoobarnew-suffix'
         body: 'NestedFooBarNew'
       ]
@@ -11766,20 +11766,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         'tag-2-prefix-foobar2a-nestedfoobarnew-suffix'
       ]
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 13
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -11841,7 +11841,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -11881,7 +11881,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -11931,7 +11931,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -11956,14 +11956,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 8
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -11975,7 +11975,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -12037,7 +12037,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -12070,14 +12070,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 9
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs,
       [
         _id: @wNodeÏId5
         subW:
@@ -12091,7 +12091,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -12131,7 +12131,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -12204,46 +12204,46 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ2,
       _id: @wNodeÏId2
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        person:
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
-        persons: [
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+        wApp:
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
+        wApps: [
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person1Id
-          displayName: 'Person 1'
-          username: 'person1'
+          _id: @wApp1Id
+          displayName: 'wApp 1'
+          username: 'wApp1'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar2a-subWfoobar2a-suffix'
         body: 'SubWFooBar2a'
       nested: [
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar2a-nestedfoobar2a-suffix'
         body: 'NestedFooBar2a'
       ]
@@ -12254,20 +12254,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         'tag-1-prefix-foobar2a-nestedfoobar2a-suffix'
       ]
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 13
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -12327,7 +12327,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -12367,7 +12367,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -12415,7 +12415,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -12440,14 +12440,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 8
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -12457,7 +12457,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -12517,7 +12517,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -12550,14 +12550,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 9
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs,
       [
         _id: @wNodeÏId5
         subW:
@@ -12571,7 +12571,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -12609,7 +12609,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -12664,7 +12664,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
 
     wNodeÏ.Ws.update @wNodeÏId5,
       $set:
-        'nested.0.required._id': @person2Id
+        'nested.0.required._id': @wApp2Id
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
@@ -12680,60 +12680,60 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ5,
       _id: @wNodeÏId5
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        person:
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
-        persons: [
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+        wApp:
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
+        wApps: [
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar5a-subWfoobar5a-suffix'
         body: 'SubWFooBar5a'
       nested: [
         required:
-          _id: @person2Id
-          username: 'person2'
-          displayName: 'Person 2'
+          _id: @wApp2Id
+          username: 'wApp2'
+          displayName: 'wApp 2'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5a-suffix'
         body: 'NestedFooBar5a'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ]
@@ -12746,20 +12746,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         'tag-3-prefix-foobar5a-nestedfoobar5-suffix'
       ]
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 13
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -12819,7 +12819,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -12859,7 +12859,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -12907,7 +12907,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -12932,14 +12932,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 9
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -12949,7 +12949,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -13009,7 +13009,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -13054,14 +13054,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar5a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 9
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs,
       [
         _id: @wNodeÏId5
         subW:
@@ -13075,7 +13075,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -13113,7 +13113,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -13168,7 +13168,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
 
     wNodeÏ.Ws.update @wNodeÏId5,
       $set:
-        'nested.0.required._id': @person3Id
+        'nested.0.required._id': @wApp3Id
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
@@ -13184,60 +13184,60 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ5,
       _id: @wNodeÏId5
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        person:
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
-        persons: [
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+        wApp:
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
+        wApps: [
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar5a-subWfoobar5a-suffix'
         body: 'SubWFooBar5a'
       nested: [
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5a-suffix'
         body: 'NestedFooBar5a'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ]
@@ -13250,20 +13250,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         'tag-3-prefix-foobar5a-nestedfoobar5-suffix'
       ]
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 13
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -13323,7 +13323,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -13363,7 +13363,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -13411,7 +13411,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -13436,14 +13436,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 8
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -13453,7 +13453,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -13513,7 +13513,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -13546,14 +13546,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 9
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs,
       [
         _id: @wNodeÏId5
         subW:
@@ -13567,7 +13567,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -13605,7 +13605,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -13660,8 +13660,8 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
 
     wNodeÏ.Ws.update @wNodeÏId5,
       $push:
-        'subW.persons':
-          _id: @person1Id
+        'subW.wApps':
+          _id: @wApp1Id
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
@@ -13677,64 +13677,64 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ5,
       _id: @wNodeÏId5
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        person:
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
-        persons: [
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+        wApp:
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
+        wApps: [
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person1Id
-          displayName: 'Person 1'
-          username: 'person1'
+          _id: @wApp1Id
+          displayName: 'wApp 1'
+          username: 'wApp1'
         ]
         slug: 'subW-prefix-foobar5a-subWfoobar5a-suffix'
         body: 'SubWFooBar5a'
       nested: [
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5a-suffix'
         body: 'NestedFooBar5a'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ]
@@ -13747,20 +13747,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         'tag-3-prefix-foobar5a-nestedfoobar5-suffix'
       ]
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 14
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -13820,7 +13820,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -13860,7 +13860,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -13920,7 +13920,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -13945,14 +13945,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 8
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -13962,7 +13962,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -14022,7 +14022,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -14055,14 +14055,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 9
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs,
       [
         _id: @wNodeÏId5
         subW:
@@ -14076,7 +14076,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -14114,7 +14114,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -14169,7 +14169,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
 
     wNodeÏ.Ws.update @wNodeÏId5,
       $pop:
-        'subW.persons': 1
+        'subW.wApps': 1
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
@@ -14185,60 +14185,60 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ5,
       _id: @wNodeÏId5
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        person:
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
-        persons: [
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+        wApp:
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
+        wApps: [
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar5a-subWfoobar5a-suffix'
         body: 'SubWFooBar5a'
       nested: [
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5a-suffix'
         body: 'NestedFooBar5a'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ]
@@ -14251,20 +14251,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         'tag-3-prefix-foobar5a-nestedfoobar5-suffix'
       ]
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 13
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -14324,7 +14324,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -14364,7 +14364,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -14412,7 +14412,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -14437,14 +14437,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 8
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -14454,7 +14454,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -14514,7 +14514,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -14547,14 +14547,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 9
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs,
       [
         _id: @wNodeÏId5
         subW:
@@ -14568,7 +14568,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -14606,7 +14606,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -14662,8 +14662,8 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     # Add one which already exist
     wNodeÏ.Ws.update @wNodeÏId5,
       $push:
-        'subW.persons':
-          _id: @person3Id
+        'subW.wApps':
+          _id: @wApp3Id
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
@@ -14679,64 +14679,64 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ5,
       _id: @wNodeÏId5
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        person:
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
-        persons: [
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+        wApp:
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
+        wApps: [
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar5a-subWfoobar5a-suffix'
         body: 'SubWFooBar5a'
       nested: [
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5a-suffix'
         body: 'NestedFooBar5a'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ]
@@ -14749,20 +14749,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         'tag-3-prefix-foobar5a-nestedfoobar5-suffix'
       ]
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 13
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -14822,7 +14822,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -14862,7 +14862,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -14910,7 +14910,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -14935,14 +14935,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 8
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -14952,7 +14952,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -15012,7 +15012,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -15045,14 +15045,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 9
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs,
       [
         _id: @wNodeÏId5
         subW:
@@ -15066,7 +15066,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -15104,7 +15104,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -15159,7 +15159,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
 
     wNodeÏ.Ws.update @wNodeÏId5,
       $pop:
-        'subW.persons': 1
+        'subW.wApps': 1
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
@@ -15175,60 +15175,60 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ5,
       _id: @wNodeÏId5
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        person:
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
-        persons: [
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+        wApp:
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
+        wApps: [
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar5a-subWfoobar5a-suffix'
         body: 'SubWFooBar5a'
       nested: [
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5a-suffix'
         body: 'NestedFooBar5a'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ]
@@ -15241,20 +15241,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         'tag-3-prefix-foobar5a-nestedfoobar5-suffix'
       ]
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 13
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -15314,7 +15314,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -15354,7 +15354,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -15402,7 +15402,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -15427,14 +15427,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 8
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -15444,7 +15444,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -15504,7 +15504,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -15537,14 +15537,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 9
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs,
       [
         _id: @wNodeÏId5
         subW:
@@ -15558,7 +15558,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -15596,7 +15596,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -15651,7 +15651,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
 
     wNodeÏ.Ws.update @wNodeÏId5,
       $set:
-        'subW.persons.2._id': @person1Id
+        'subW.wApps.2._id': @wApp1Id
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
@@ -15667,60 +15667,60 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ5,
       _id: @wNodeÏId5
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        person:
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
-        persons: [
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+        wApp:
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
+        wApps: [
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person1Id
-          displayName: 'Person 1'
-          username: 'person1'
+          _id: @wApp1Id
+          displayName: 'wApp 1'
+          username: 'wApp1'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar5a-subWfoobar5a-suffix'
         body: 'SubWFooBar5a'
       nested: [
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5a-suffix'
         body: 'NestedFooBar5a'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ]
@@ -15733,20 +15733,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         'tag-3-prefix-foobar5a-nestedfoobar5-suffix'
       ]
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 14
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -15806,7 +15806,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -15846,7 +15846,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -15906,7 +15906,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -15931,14 +15931,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 8
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -15948,7 +15948,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -16008,7 +16008,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -16041,14 +16041,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 9
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs,
       [
         _id: @wNodeÏId5
         subW:
@@ -16062,7 +16062,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -16100,7 +16100,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -16156,7 +16156,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     # Add one which already exist
     wNodeÏ.Ws.update @wNodeÏId5,
       $set:
-        'subW.persons.2._id': @person3Id
+        'subW.wApps.2._id': @wApp3Id
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
@@ -16172,60 +16172,60 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ5,
       _id: @wNodeÏId5
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        person:
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
-        persons: [
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+        wApp:
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
+        wApps: [
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar5a-subWfoobar5a-suffix'
         body: 'SubWFooBar5a'
       nested: [
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5a-suffix'
         body: 'NestedFooBar5a'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ]
@@ -16238,20 +16238,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         'tag-3-prefix-foobar5a-nestedfoobar5-suffix'
       ]
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 13
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -16311,7 +16311,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -16351,7 +16351,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -16399,7 +16399,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -16424,14 +16424,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 8
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -16441,7 +16441,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -16501,7 +16501,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -16534,14 +16534,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 9
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs,
       [
         _id: @wNodeÏId5
         subW:
@@ -16555,483 +16555,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodeÏs,
-      [
-        _id: @wNodeÏId1
-        subW:
-          body: 'SubWFooBar1a'
-        nested: [
-          body: 'NestedFooBar1a'
-        ]
-        body: 'FooBar1a'
-      ,
-        _id: @wNodeÏId2
-        subW:
-          body: 'SubWFooBar2a'
-        nested: [
-          body: 'NestedFooBar2a'
-        ]
-        body: 'FooBar2a'
-      ,
-        _id: @wNodeÏId3
-        subW:
-          body: 'SubWFooBar3a'
-        nested: [
-          body: 'NestedFooBar3a'
-        ]
-        body: 'FooBar3a'
-      ,
-        _id: @wNodeÏId5
-        subW:
-          body: 'SubWFooBar5a'
-        nested: [
-          body: 'NestedFooBar5'
-        ,
-          body: 'NestedFooBar5a'
-        ,
-          body: 'NestedFooBar5'
-        ]
-        body: 'FooBar5a'
-      ]
-    testSetEqual test, @person3.nestedwNodeÏs,
-      [
-        _id: @wNodeÏId2
-        subW:
-          body: 'SubWFooBar2a'
-        nested: [
-          body: 'NestedFooBar2a'
-        ]
-        body: 'FooBar2a'
-      ,
-        _id: @wNodeÏId3
-        subW:
-          body: 'SubWFooBar3a'
-        nested: [
-          body: 'NestedFooBar3a'
-        ]
-        body: 'FooBar3a'
-      ,
-        _id: @wNodeÏId4
-        subW:
-          body: 'SubWFooBar4a'
-        nested: [
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4a'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4a'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ]
-        body: 'FooBar4a'
-      ,
-        _id: @wNodeÏId5
-        subW:
-          body: 'SubWFooBar5a'
-        nested: [
-          body: 'NestedFooBar5'
-        ,
-          body: 'NestedFooBar5a'
-        ,
-          body: 'NestedFooBar5'
-        ]
-        body: 'FooBar5a'
-      ]
-
-    wNodeÏ.Ws.update @wNodeÏId5,
-      $set:
-        'subW.person': null
-    ,
-      expect (error, res) =>
-        test.isFalse error, error?.toString?() or error
-        test.isTrue res
-
-    # Wait so that observers have time to update Ws
-    waitForDatabase test, expect
-,
-  (test, expect) ->
-    @wNodeÏ5 = wNodeÏ.Ws.findOne @wNodeÏId5,
-      transform: null # So that we can use test.equal
-
-    test.equal @wNodeÏ5,
-      _id: @wNodeÏId5
-      author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
-      subW:
-        person: null
-        persons: [
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
-        ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
-        ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
-        ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
-        ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
-        ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
-        ]
-        slug: 'subW-prefix-foobar5a-subWfoobar5a-suffix'
-        body: 'SubWFooBar5a'
-      nested: [
-        required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
-        slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
-        body: 'NestedFooBar5'
-      ,
-        required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
-        slug: 'nested-prefix-foobar5a-nestedfoobar5a-suffix'
-        body: 'NestedFooBar5a'
-      ,
-        required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
-        slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
-        body: 'NestedFooBar5'
-      ]
-      body: 'FooBar5a'
-      slug: 'prefix-foobar5a-subWfoobar5a-suffix'
-      tags: [
-        'tag-0-prefix-foobar5a-subWfoobar5a-suffix'
-        'tag-1-prefix-foobar5a-nestedfoobar5-suffix'
-        'tag-2-prefix-foobar5a-nestedfoobar5a-suffix'
-        'tag-3-prefix-foobar5a-nestedfoobar5-suffix'
-      ]
-
-    @person1 = Person.Ws.findOne @person1Id,
-      transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
-      transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
-      transform: null # So that we can use test.equal
-
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
-      count: 13
-
-    testSetEqual test, @person1.wNodeÏs,
-      [
-        _id: @wNodeÏId1
-        subW:
-          body: 'SubWFooBar1a'
-        nested: [
-          body: 'NestedFooBar1a'
-        ]
-        body: 'FooBar1a'
-      ,
-        _id: @wNodeÏId2
-        subW:
-          body: 'SubWFooBar2a'
-        nested: [
-          body: 'NestedFooBar2a'
-        ]
-        body: 'FooBar2a'
-      ,
-        _id: @wNodeÏId3
-        subW:
-          body: 'SubWFooBar3a'
-        nested: [
-          body: 'NestedFooBar3a'
-        ]
-        body: 'FooBar3a'
-      ,
-        _id: @wNodeÏId4
-        subW:
-          body: 'SubWFooBar4a'
-        nested: [
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4a'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4a'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ]
-        body: 'FooBar4a'
-      ,
-        _id: @wNodeÏId5
-        subW:
-          body: 'SubWFooBar5a'
-        nested: [
-          body: 'NestedFooBar5'
-        ,
-          body: 'NestedFooBar5a'
-        ,
-          body: 'NestedFooBar5'
-        ]
-        body: 'FooBar5a'
-      ]
-    testSetEqual test, @person1.subWwNodeÏs,
-      [
-        _id: @wNodeÏId1
-        subW:
-          body: 'SubWFooBar1a'
-        nested: [
-          body: 'NestedFooBar1a'
-        ]
-        body: 'FooBar1a'
-      ,
-        _id: @wNodeÏId3
-        subW:
-          body: 'SubWFooBar3a'
-        nested: [
-          body: 'NestedFooBar3a'
-        ]
-        body: 'FooBar3a'
-      ,
-        _id: @wNodeÏId4
-        subW:
-          body: 'SubWFooBar4a'
-        nested: [
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4a'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4a'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ]
-        body: 'FooBar4a'
-      ]
-    testSetEqual test, @person1.subWswNodeÏs,
-      [
-        _id: @wNodeÏId1
-        subW:
-          body: 'SubWFooBar1a'
-        nested: [
-          body: 'NestedFooBar1a'
-        ]
-        body: 'FooBar1a'
-      ,
-        _id: @wNodeÏId2
-        subW:
-          body: 'SubWFooBar2a'
-        nested: [
-          body: 'NestedFooBar2a'
-        ]
-        body: 'FooBar2a'
-      ,
-        _id: @wNodeÏId3
-        subW:
-          body: 'SubWFooBar3a'
-        nested: [
-          body: 'NestedFooBar3a'
-        ]
-        body: 'FooBar3a'
-      ,
-        _id: @wNodeÏId4
-        subW:
-          body: 'SubWFooBar4a'
-        nested: [
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4a'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4a'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ]
-        body: 'FooBar4a'
-      ]
-    testSetEqual test, @person1.nestedwNodeÏs,
-      [
-        _id: @wNodeÏId4
-        subW:
-          body: 'SubWFooBar4a'
-        nested: [
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4a'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4a'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ]
-        body: 'FooBar4a'
-      ]
-
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
-      count: 8
-
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
-      [
-        _id: @wNodeÏId2
-        subW:
-          body: 'SubWFooBar2a'
-        nested: [
-          body: 'NestedFooBar2a'
-        ]
-        body: 'FooBar2a'
-      ]
-    testSetEqual test, @person2.subWswNodeÏs,
-      [
-        _id: @wNodeÏId1
-        subW:
-          body: 'SubWFooBar1a'
-        nested: [
-          body: 'NestedFooBar1a'
-        ]
-        body: 'FooBar1a'
-      ,
-        _id: @wNodeÏId2
-        subW:
-          body: 'SubWFooBar2a'
-        nested: [
-          body: 'NestedFooBar2a'
-        ]
-        body: 'FooBar2a'
-      ,
-        _id: @wNodeÏId3
-        subW:
-          body: 'SubWFooBar3a'
-        nested: [
-          body: 'NestedFooBar3a'
-        ]
-        body: 'FooBar3a'
-      ,
-        _id: @wNodeÏId4
-        subW:
-          body: 'SubWFooBar4a'
-        nested: [
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4a'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4a'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ]
-        body: 'FooBar4a'
-      ,
-        _id: @wNodeÏId5
-        subW:
-          body: 'SubWFooBar5a'
-        nested: [
-          body: 'NestedFooBar5'
-        ,
-          body: 'NestedFooBar5a'
-        ,
-          body: 'NestedFooBar5'
-        ]
-        body: 'FooBar5a'
-      ]
-    testSetEqual test, @person2.nestedwNodeÏs,
-      [
-        _id: @wNodeÏId1
-        subW:
-          body: 'SubWFooBar1a'
-        nested: [
-          body: 'NestedFooBar1a'
-        ]
-        body: 'FooBar1a'
-      ,
-        _id: @wNodeÏId4
-        subW:
-          body: 'SubWFooBar4a'
-        nested: [
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4a'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4a'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ,
-          body: 'NestedFooBar4'
-        ]
-        body: 'FooBar4a'
-      ]
-
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
-      count: 8
-
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs, []
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -17069,7 +16593,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -17124,8 +16648,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
 
     wNodeÏ.Ws.update @wNodeÏId5,
       $set:
-        'subW.person':
-          _id: @person3Id
+        'subW.wApp': null
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
@@ -17141,60 +16664,57 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ5,
       _id: @wNodeÏId5
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        person:
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
-        persons: [
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+        wApp: null
+        wApps: [
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar5a-subWfoobar5a-suffix'
         body: 'SubWFooBar5a'
       nested: [
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5a-suffix'
         body: 'NestedFooBar5a'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ]
@@ -17207,20 +16727,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         'tag-3-prefix-foobar5a-nestedfoobar5-suffix'
       ]
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 13
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -17280,7 +16800,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -17320,7 +16840,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -17368,7 +16888,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -17393,14 +16913,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 8
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -17410,7 +16930,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -17470,7 +16990,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -17503,14 +17023,494 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
+      count: 8
+
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs, []
+    testSetEqual test, @wApp3.subWswNodeÏs,
+      [
+        _id: @wNodeÏId1
+        subW:
+          body: 'SubWFooBar1a'
+        nested: [
+          body: 'NestedFooBar1a'
+        ]
+        body: 'FooBar1a'
+      ,
+        _id: @wNodeÏId2
+        subW:
+          body: 'SubWFooBar2a'
+        nested: [
+          body: 'NestedFooBar2a'
+        ]
+        body: 'FooBar2a'
+      ,
+        _id: @wNodeÏId3
+        subW:
+          body: 'SubWFooBar3a'
+        nested: [
+          body: 'NestedFooBar3a'
+        ]
+        body: 'FooBar3a'
+      ,
+        _id: @wNodeÏId5
+        subW:
+          body: 'SubWFooBar5a'
+        nested: [
+          body: 'NestedFooBar5'
+        ,
+          body: 'NestedFooBar5a'
+        ,
+          body: 'NestedFooBar5'
+        ]
+        body: 'FooBar5a'
+      ]
+    testSetEqual test, @wApp3.nestedwNodeÏs,
+      [
+        _id: @wNodeÏId2
+        subW:
+          body: 'SubWFooBar2a'
+        nested: [
+          body: 'NestedFooBar2a'
+        ]
+        body: 'FooBar2a'
+      ,
+        _id: @wNodeÏId3
+        subW:
+          body: 'SubWFooBar3a'
+        nested: [
+          body: 'NestedFooBar3a'
+        ]
+        body: 'FooBar3a'
+      ,
+        _id: @wNodeÏId4
+        subW:
+          body: 'SubWFooBar4a'
+        nested: [
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4a'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4a'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ]
+        body: 'FooBar4a'
+      ,
+        _id: @wNodeÏId5
+        subW:
+          body: 'SubWFooBar5a'
+        nested: [
+          body: 'NestedFooBar5'
+        ,
+          body: 'NestedFooBar5a'
+        ,
+          body: 'NestedFooBar5'
+        ]
+        body: 'FooBar5a'
+      ]
+
+    wNodeÏ.Ws.update @wNodeÏId5,
+      $set:
+        'subW.wApp':
+          _id: @wApp3Id
+    ,
+      expect (error, res) =>
+        test.isFalse error, error?.toString?() or error
+        test.isTrue res
+
+    # Wait so that observers have time to update Ws
+    waitForDatabase test, expect
+,
+  (test, expect) ->
+    @wNodeÏ5 = wNodeÏ.Ws.findOne @wNodeÏId5,
+      transform: null # So that we can use test.equal
+
+    test.equal @wNodeÏ5,
+      _id: @wNodeÏId5
+      author:
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
+      subW:
+        wApp:
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
+        wApps: [
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
+        ,
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
+        ,
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
+        ,
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
+        ,
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
+        ,
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
+        ]
+        slug: 'subW-prefix-foobar5a-subWfoobar5a-suffix'
+        body: 'SubWFooBar5a'
+      nested: [
+        required:
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
+        slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
+        body: 'NestedFooBar5'
+      ,
+        required:
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
+        slug: 'nested-prefix-foobar5a-nestedfoobar5a-suffix'
+        body: 'NestedFooBar5a'
+      ,
+        required:
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
+        slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
+        body: 'NestedFooBar5'
+      ]
+      body: 'FooBar5a'
+      slug: 'prefix-foobar5a-subWfoobar5a-suffix'
+      tags: [
+        'tag-0-prefix-foobar5a-subWfoobar5a-suffix'
+        'tag-1-prefix-foobar5a-nestedfoobar5-suffix'
+        'tag-2-prefix-foobar5a-nestedfoobar5a-suffix'
+        'tag-3-prefix-foobar5a-nestedfoobar5-suffix'
+      ]
+
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
+      transform: null # So that we can use test.equal
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
+      transform: null # So that we can use test.equal
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
+      transform: null # So that we can use test.equal
+
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
+      count: 13
+
+    testSetEqual test, @wApp1.wNodeÏs,
+      [
+        _id: @wNodeÏId1
+        subW:
+          body: 'SubWFooBar1a'
+        nested: [
+          body: 'NestedFooBar1a'
+        ]
+        body: 'FooBar1a'
+      ,
+        _id: @wNodeÏId2
+        subW:
+          body: 'SubWFooBar2a'
+        nested: [
+          body: 'NestedFooBar2a'
+        ]
+        body: 'FooBar2a'
+      ,
+        _id: @wNodeÏId3
+        subW:
+          body: 'SubWFooBar3a'
+        nested: [
+          body: 'NestedFooBar3a'
+        ]
+        body: 'FooBar3a'
+      ,
+        _id: @wNodeÏId4
+        subW:
+          body: 'SubWFooBar4a'
+        nested: [
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4a'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4a'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ]
+        body: 'FooBar4a'
+      ,
+        _id: @wNodeÏId5
+        subW:
+          body: 'SubWFooBar5a'
+        nested: [
+          body: 'NestedFooBar5'
+        ,
+          body: 'NestedFooBar5a'
+        ,
+          body: 'NestedFooBar5'
+        ]
+        body: 'FooBar5a'
+      ]
+    testSetEqual test, @wApp1.subWwNodeÏs,
+      [
+        _id: @wNodeÏId1
+        subW:
+          body: 'SubWFooBar1a'
+        nested: [
+          body: 'NestedFooBar1a'
+        ]
+        body: 'FooBar1a'
+      ,
+        _id: @wNodeÏId3
+        subW:
+          body: 'SubWFooBar3a'
+        nested: [
+          body: 'NestedFooBar3a'
+        ]
+        body: 'FooBar3a'
+      ,
+        _id: @wNodeÏId4
+        subW:
+          body: 'SubWFooBar4a'
+        nested: [
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4a'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4a'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ]
+        body: 'FooBar4a'
+      ]
+    testSetEqual test, @wApp1.subWswNodeÏs,
+      [
+        _id: @wNodeÏId1
+        subW:
+          body: 'SubWFooBar1a'
+        nested: [
+          body: 'NestedFooBar1a'
+        ]
+        body: 'FooBar1a'
+      ,
+        _id: @wNodeÏId2
+        subW:
+          body: 'SubWFooBar2a'
+        nested: [
+          body: 'NestedFooBar2a'
+        ]
+        body: 'FooBar2a'
+      ,
+        _id: @wNodeÏId3
+        subW:
+          body: 'SubWFooBar3a'
+        nested: [
+          body: 'NestedFooBar3a'
+        ]
+        body: 'FooBar3a'
+      ,
+        _id: @wNodeÏId4
+        subW:
+          body: 'SubWFooBar4a'
+        nested: [
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4a'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4a'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ]
+        body: 'FooBar4a'
+      ]
+    testSetEqual test, @wApp1.nestedwNodeÏs,
+      [
+        _id: @wNodeÏId4
+        subW:
+          body: 'SubWFooBar4a'
+        nested: [
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4a'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4a'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ]
+        body: 'FooBar4a'
+      ]
+
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
+      count: 8
+
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
+      [
+        _id: @wNodeÏId2
+        subW:
+          body: 'SubWFooBar2a'
+        nested: [
+          body: 'NestedFooBar2a'
+        ]
+        body: 'FooBar2a'
+      ]
+    testSetEqual test, @wApp2.subWswNodeÏs,
+      [
+        _id: @wNodeÏId1
+        subW:
+          body: 'SubWFooBar1a'
+        nested: [
+          body: 'NestedFooBar1a'
+        ]
+        body: 'FooBar1a'
+      ,
+        _id: @wNodeÏId2
+        subW:
+          body: 'SubWFooBar2a'
+        nested: [
+          body: 'NestedFooBar2a'
+        ]
+        body: 'FooBar2a'
+      ,
+        _id: @wNodeÏId3
+        subW:
+          body: 'SubWFooBar3a'
+        nested: [
+          body: 'NestedFooBar3a'
+        ]
+        body: 'FooBar3a'
+      ,
+        _id: @wNodeÏId4
+        subW:
+          body: 'SubWFooBar4a'
+        nested: [
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4a'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4a'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ]
+        body: 'FooBar4a'
+      ,
+        _id: @wNodeÏId5
+        subW:
+          body: 'SubWFooBar5a'
+        nested: [
+          body: 'NestedFooBar5'
+        ,
+          body: 'NestedFooBar5a'
+        ,
+          body: 'NestedFooBar5'
+        ]
+        body: 'FooBar5a'
+      ]
+    testSetEqual test, @wApp2.nestedwNodeÏs,
+      [
+        _id: @wNodeÏId1
+        subW:
+          body: 'SubWFooBar1a'
+        nested: [
+          body: 'NestedFooBar1a'
+        ]
+        body: 'FooBar1a'
+      ,
+        _id: @wNodeÏId4
+        subW:
+          body: 'SubWFooBar4a'
+        nested: [
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4a'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4a'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ,
+          body: 'NestedFooBar4'
+        ]
+        body: 'FooBar4a'
+      ]
+
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 9
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs,
       [
         _id: @wNodeÏId5
         subW:
@@ -17524,7 +17524,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -17562,7 +17562,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -17617,8 +17617,8 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
 
     wNodeÏ.Ws.update @wNodeÏId5,
       $set:
-        'subW.person':
-          _id: @person1Id
+        'subW.wApp':
+          _id: @wApp1Id
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
@@ -17634,60 +17634,60 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ5,
       _id: @wNodeÏId5
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        person:
-          _id: @person1Id
-          displayName: 'Person 1'
-          username: 'person1'
-        persons: [
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+        wApp:
+          _id: @wApp1Id
+          displayName: 'wApp 1'
+          username: 'wApp1'
+        wApps: [
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar5a-subWfoobar5a-suffix'
         body: 'SubWFooBar5a'
       nested: [
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5a-suffix'
         body: 'NestedFooBar5a'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ]
@@ -17700,20 +17700,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         'tag-3-prefix-foobar5a-nestedfoobar5-suffix'
       ]
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 14
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -17773,7 +17773,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -17825,7 +17825,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -17873,7 +17873,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -17898,14 +17898,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 8
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -17915,7 +17915,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -17975,7 +17975,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -18008,15 +18008,15 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 8
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs, []
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs, []
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -18054,7 +18054,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -18109,7 +18109,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
 
     wNodeÏ.Ws.update @wNodeÏId5,
       $unset:
-        'subW.person': ''
+        'subW.wApp': ''
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
@@ -18125,56 +18125,56 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ5,
       _id: @wNodeÏId5
       author:
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
       subW:
-        persons: [
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+        wApps: [
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar5a-subWfoobar5a-suffix'
         body: 'SubWFooBar5a'
       nested: [
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5a-suffix'
         body: 'NestedFooBar5a'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ]
@@ -18187,20 +18187,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         'tag-3-prefix-foobar5a-nestedfoobar5-suffix'
       ]
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 13
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -18260,7 +18260,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -18300,7 +18300,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -18348,7 +18348,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -18373,14 +18373,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 8
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -18390,7 +18390,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -18450,7 +18450,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -18483,15 +18483,15 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 8
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs, []
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs, []
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -18529,7 +18529,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -18585,7 +18585,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     wNodeÏ.Ws.update @wNodeÏId5,
       $set:
         author:
-          _id: @person2Id
+          _id: @wApp2Id
     ,
       expect (error, res) =>
         test.isFalse error, error?.toString?() or error
@@ -18601,56 +18601,56 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     test.equal @wNodeÏ5,
       _id: @wNodeÏId5
       author:
-        _id: @person2Id
-        username: 'person2'
-        displayName: 'Person 2'
+        _id: @wApp2Id
+        username: 'wApp2'
+        displayName: 'wApp 2'
       subW:
-        persons: [
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+        wApps: [
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ,
-          _id: @person2Id
-          displayName: 'Person 2'
-          username: 'person2'
+          _id: @wApp2Id
+          displayName: 'wApp 2'
+          username: 'wApp2'
         ,
-          _id: @person3Id
-          displayName: 'Person 3'
-          username: 'person3'
+          _id: @wApp3Id
+          displayName: 'wApp 3'
+          username: 'wApp3'
         ]
         slug: 'subW-prefix-foobar5a-subWfoobar5a-suffix'
         body: 'SubWFooBar5a'
       nested: [
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5a-suffix'
         body: 'NestedFooBar5a'
       ,
         required:
-          _id: @person3Id
-          username: 'person3'
-          displayName: 'Person 3'
+          _id: @wApp3Id
+          username: 'wApp3'
+          displayName: 'wApp 3'
         slug: 'nested-prefix-foobar5a-nestedfoobar5-suffix'
         body: 'NestedFooBar5'
       ]
@@ -18663,20 +18663,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         'tag-3-prefix-foobar5a-nestedfoobar5-suffix'
       ]
 
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 12
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -18724,7 +18724,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -18764,7 +18764,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -18812,7 +18812,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -18837,13 +18837,13 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 9
 
-    testSetEqual test, @person2.wNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs,
       [
         _id: @wNodeÏId5
         subW:
@@ -18857,7 +18857,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -18867,7 +18867,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -18927,7 +18927,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -18960,15 +18960,15 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 8
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs, []
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs, []
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19006,7 +19006,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar5a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -19067,20 +19067,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 12
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19128,7 +19128,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19168,7 +19168,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19216,7 +19216,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -19241,14 +19241,14 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 7
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -19258,7 +19258,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar2a'
       ]
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19306,7 +19306,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19339,15 +19339,15 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 6
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs, []
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs, []
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19373,7 +19373,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar3a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId2
         subW:
@@ -19422,20 +19422,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 10
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19475,7 +19475,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19515,7 +19515,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19555,7 +19555,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -19580,15 +19580,15 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 5
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs, []
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs, []
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19628,7 +19628,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19661,15 +19661,15 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 4
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs, []
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs, []
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19687,7 +19687,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar3a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId3
         subW:
@@ -19728,20 +19728,20 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
     waitForDatabase test, expect
 ,
   (test, expect) ->
-    @person1 = Person.Ws.findOne @person1Id,
+    @wApp1 = wApp.Ws.findOne @wApp1Id,
       transform: null # So that we can use test.equal
-    @person2 = Person.Ws.findOne @person2Id,
+    @wApp2 = wApp.Ws.findOne @wApp2Id,
       transform: null # So that we can use test.equal
-    @person3 = Person.Ws.findOne @person3Id,
+    @wApp3 = wApp.Ws.findOne @wApp3Id,
       transform: null # So that we can use test.equal
 
-    test.equal _.omit(@person1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person1Id
-      username: 'person1'
-      displayName: 'Person 1'
+    test.equal _.omit(@wApp1, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp1Id
+      username: 'wApp1'
+      displayName: 'wApp 1'
       count: 7
 
-    testSetEqual test, @person1.wNodeÏs,
+    testSetEqual test, @wApp1.wNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19773,7 +19773,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWwNodeÏs,
+    testSetEqual test, @wApp1.subWwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19805,7 +19805,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.subWswNodeÏs,
+    testSetEqual test, @wApp1.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19837,7 +19837,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person1.nestedwNodeÏs,
+    testSetEqual test, @wApp1.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -19862,15 +19862,15 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person2Id
-      username: 'person2'
-      displayName: 'Person 2'
+    test.equal _.omit(@wApp2, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp2Id
+      username: 'wApp2'
+      displayName: 'wApp 2'
       count: 4
 
-    testSetEqual test, @person2.wNodeÏs, []
-    testSetEqual test, @person2.subWwNodeÏs, []
-    testSetEqual test, @person2.subWswNodeÏs,
+    testSetEqual test, @wApp2.wNodeÏs, []
+    testSetEqual test, @wApp2.subWwNodeÏs, []
+    testSetEqual test, @wApp2.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19902,7 +19902,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar4a'
       ]
-    testSetEqual test, @person2.nestedwNodeÏs,
+    testSetEqual test, @wApp2.nestedwNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19935,15 +19935,15 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         body: 'FooBar4a'
       ]
 
-    test.equal _.omit(@person3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
-      _id: @person3Id
-      username: 'person3'
-      displayName: 'Person 3'
+    test.equal _.omit(@wApp3, 'wNodeÏs', 'subWwNodeÏs', 'subWswNodeÏs', 'nestedwNodeÏs'),
+      _id: @wApp3Id
+      username: 'wApp3'
+      displayName: 'wApp 3'
       count: 2
 
-    testSetEqual test, @person3.wNodeÏs, []
-    testSetEqual test, @person3.subWwNodeÏs, []
-    testSetEqual test, @person3.subWswNodeÏs,
+    testSetEqual test, @wApp3.wNodeÏs, []
+    testSetEqual test, @wApp3.subWwNodeÏs, []
+    testSetEqual test, @wApp3.subWswNodeÏs,
       [
         _id: @wNodeÏId1
         subW:
@@ -19953,7 +19953,7 @@ testAsyncMulti 'peerdb - reverse wNodeÏs', [
         ]
         body: 'FooBar1a'
       ]
-    testSetEqual test, @person3.nestedwNodeÏs,
+    testSetEqual test, @wApp3.nestedwNodeÏs,
       [
         _id: @wNodeÏId4
         subW:
@@ -19984,34 +19984,34 @@ if Meteor.isServer
     (test, expect) ->
       testDefinition test
 
-      Person.Ws.insert
-        username: 'person1'
-        displayName: 'Person 1'
+      wApp.Ws.insert
+        username: 'wApp1'
+        displayName: 'wApp 1'
       ,
-        expect (error, person1Id) =>
+        expect (error, wApp1Id) =>
           test.isFalse error, error?.toString?() or error
-          test.isTrue person1Id
-          @person1Id = person1Id
+          test.isTrue wApp1Id
+          @wApp1Id = wApp1Id
 
       # Wait so that observers have time to update Ws
       waitForDatabase test, expect
   ,
     (test, expect) ->
-      @person1 = Person.Ws.findOne @person1Id
+      @wApp1 = wApp.Ws.findOne @wApp1Id
 
-      test.instanceOf @person1, Person
+      test.instanceOf @wApp1, wApp
 
-      test.equal plainObject(@person1),
-        _id: @person1Id
-        username: 'person1'
-        displayName: 'Person 1'
+      test.equal plainObject(@wApp1),
+        _id: @wApp1Id
+        username: 'wApp1'
+        displayName: 'wApp 1'
         count: 0
 
-      test.equal @person1.formatName(), 'person1-Person 1'
+      test.equal @wApp1.formatName(), 'wApp1-wApp 1'
 
       wNodeÏ.Ws.insert
         author:
-          _id: @person1._id
+          _id: @wApp1._id
         subW: {}
         body: 'FooBar'
       ,
@@ -20027,27 +20027,27 @@ if Meteor.isServer
       @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId
 
       test.instanceOf @wNodeÏ, wNodeÏ
-      test.instanceOf @wNodeÏ.author, Person
+      test.instanceOf @wNodeÏ.author, wApp
 
-      test.equal @wNodeÏ.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
+      test.equal @wNodeÏ.author.formatName(), "#{ @wApp1.username }-#{ @wApp1.displayName }"
 
       test.equal plainObject(@wNodeÏ),
         _id: @wNodeÏId
         author:
-          _id: @person1._id
-          username: @person1.username
-          displayName: @person1.displayName
+          _id: @wApp1._id
+          username: @wApp1.username
+          displayName: @wApp1.displayName
         subW: {}
         body: 'FooBar'
         tags: []
 
       SpecialwNodeÏ.Ws.insert
         author:
-          _id: @person1._id
+          _id: @wApp1._id
         subW: {}
         body: 'FooBar'
         special:
-          _id: @person1._id
+          _id: @wApp1._id
       ,
         expect (error, wNodeÏId) =>
           test.isFalse error, error?.toString?() or error
@@ -20061,22 +20061,22 @@ if Meteor.isServer
       @specialwNodeÏ = SpecialwNodeÏ.Ws.findOne @specialwNodeÏId
 
       test.instanceOf @specialwNodeÏ, SpecialwNodeÏ
-      test.instanceOf @specialwNodeÏ.author, Person
-      test.instanceOf @specialwNodeÏ.special, Person
+      test.instanceOf @specialwNodeÏ.author, wApp
+      test.instanceOf @specialwNodeÏ.special, wApp
 
-      test.equal @specialwNodeÏ.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
+      test.equal @specialwNodeÏ.author.formatName(), "#{ @wApp1.username }-#{ @wApp1.displayName }"
 
       test.equal plainObject(@specialwNodeÏ),
         _id: @specialwNodeÏId
         author:
-          _id: @person1._id
-          username: @person1.username
-          displayName: @person1.displayName
+          _id: @wApp1._id
+          username: @wApp1.username
+          displayName: @wApp1.displayName
         subW: {}
         body: 'FooBar'
         tags: []
         special:
-          _id: @person1._id
+          _id: @wApp1._id
 
       test.equal globalTestTriggerCounters[@wNodeÏId], 1
       test.equal globalTestTriggerCounters[@specialwNodeÏId], 1
@@ -20104,16 +20104,16 @@ if Meteor.isServer
       @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId
 
       test.instanceOf @wNodeÏ, wNodeÏ
-      test.instanceOf @wNodeÏ.author, Person
+      test.instanceOf @wNodeÏ.author, wApp
 
-      test.equal @wNodeÏ.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
+      test.equal @wNodeÏ.author.formatName(), "#{ @wApp1.username }-#{ @wApp1.displayName }"
 
       test.equal plainObject(@wNodeÏ),
         _id: @wNodeÏId
         author:
-          _id: @person1._id
-          username: @person1.username
-          displayName: @person1.displayName
+          _id: @wApp1._id
+          username: @wApp1.username
+          displayName: @wApp1.displayName
         subW: {}
         body: 'FooBar 1'
         tags: []
@@ -20121,22 +20121,22 @@ if Meteor.isServer
       @specialwNodeÏ = SpecialwNodeÏ.Ws.findOne @specialwNodeÏId
 
       test.instanceOf @specialwNodeÏ, SpecialwNodeÏ
-      test.instanceOf @specialwNodeÏ.author, Person
-      test.instanceOf @specialwNodeÏ.special, Person
+      test.instanceOf @specialwNodeÏ.author, wApp
+      test.instanceOf @specialwNodeÏ.special, wApp
 
-      test.equal @specialwNodeÏ.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
+      test.equal @specialwNodeÏ.author.formatName(), "#{ @wApp1.username }-#{ @wApp1.displayName }"
 
       test.equal plainObject(@specialwNodeÏ),
         _id: @specialwNodeÏId
         author:
-          _id: @person1._id
-          username: @person1.username
-          displayName: @person1.displayName
+          _id: @wApp1._id
+          username: @wApp1.username
+          displayName: @wApp1.displayName
         subW: {}
         body: 'FooBar 1'
         tags: []
         special:
-          _id: @person1._id
+          _id: @wApp1._id
 
       test.equal globalTestTriggerCounters[@wNodeÏId], 2
       test.equal globalTestTriggerCounters[@specialwNodeÏId], 2
@@ -20164,16 +20164,16 @@ if Meteor.isServer
       @wNodeÏ = wNodeÏ.Ws.findOne @wNodeÏId
 
       test.instanceOf @wNodeÏ, wNodeÏ
-      test.instanceOf @wNodeÏ.author, Person
+      test.instanceOf @wNodeÏ.author, wApp
 
-      test.equal @wNodeÏ.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
+      test.equal @wNodeÏ.author.formatName(), "#{ @wApp1.username }-#{ @wApp1.displayName }"
 
       test.equal plainObject(@wNodeÏ),
         _id: @wNodeÏId
         author:
-          _id: @person1._id
-          username: @person1.username
-          displayName: @person1.displayName
+          _id: @wApp1._id
+          username: @wApp1.username
+          displayName: @wApp1.displayName
         subW:
           body: 'FooBar zzz'
           slug: 'subW-prefix-foobar 1-foobar zzz-suffix'
@@ -20186,17 +20186,17 @@ if Meteor.isServer
       @specialwNodeÏ = SpecialwNodeÏ.Ws.findOne @specialwNodeÏId
 
       test.instanceOf @specialwNodeÏ, SpecialwNodeÏ
-      test.instanceOf @specialwNodeÏ.author, Person
-      test.instanceOf @specialwNodeÏ.special, Person
+      test.instanceOf @specialwNodeÏ.author, wApp
+      test.instanceOf @specialwNodeÏ.special, wApp
 
-      test.equal @specialwNodeÏ.author.formatName(), "#{ @person1.username }-#{ @person1.displayName }"
+      test.equal @specialwNodeÏ.author.formatName(), "#{ @wApp1.username }-#{ @wApp1.displayName }"
 
       test.equal plainObject(@specialwNodeÏ),
         _id: @specialwNodeÏId
         author:
-          _id: @person1._id
-          username: @person1.username
-          displayName: @person1.displayName
+          _id: @wApp1._id
+          username: @wApp1.username
+          displayName: @wApp1.displayName
         subW:
           body: 'FooBar zzz'
           slug: 'subW-prefix-foobar 1-foobar zzz-suffix'
@@ -20206,7 +20206,7 @@ if Meteor.isServer
           'tag-0-prefix-foobar 1-foobar zzz-suffix'
         ]
         special:
-          _id: @person1._id
+          _id: @wApp1._id
 
       test.equal globalTestTriggerCounters[@wNodeÏId], 2
       test.equal globalTestTriggerCounters[@specialwNodeÏId], 2
