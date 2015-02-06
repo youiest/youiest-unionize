@@ -1,0 +1,1 @@
+# start with blank lib.coffee
