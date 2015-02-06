@@ -16,9 +16,6 @@ Package.on_use(function (api) {
   api.versionsFrom('1.0.3.1');
   api.use(['peerlibrary:peerdb@0.15.3','coffeescript', 'underscore', 'minimongo', 'mongo', 'peerlibrary:assert@0.2.5', 'peerlibrary:stacktrace@0.1.3'], ['client', 'server']);
   api.use(['random'], 'server');
-  api.addFiles('youiest:unionizeCommon.coffee',['client', 'server']);
-  api.addFiles('youiest:unionizeClient.coffee',['client']);
-  api.addFiles('youiest:unionizeServer.coffee',['server']);
   // like Document W will be an extended coll..
   api.export('W');
 
