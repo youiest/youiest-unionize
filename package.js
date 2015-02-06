@@ -5,9 +5,9 @@ Package.describe({
   summary: ' for reactive network triggers with a simple ui',
   // URL to the Git repository containing the source code for this package.
   git: 'https://github.com/youiest/youiest-unionize.git',
-  // By default, Meteor will default to using README.md for documentation.
-  // To avoid submitting documentation, set this field to null.
-  documentation: 'README.md'
+  // By default, Meteor will default to using README.md for Wation.
+  // To avoid submitting Wation, set this field to null.
+  Wation: 'README.md'
 });
 
 
@@ -16,7 +16,7 @@ Package.on_use(function (api) {
   api.versionsFrom('1.0.3.1');
   api.use(['peerlibrary:peerdb@0.15.3','coffeescript', 'underscore', 'minimongo', 'mongo', 'peerlibrary:assert@0.2.5', 'peerlibrary:stacktrace@0.1.3'], ['client', 'server']);
   api.use(['random'], 'server');
-  // like Document W will be an extended coll..
+  // like W W will be an extended coll..
   api.export('W');
 
   api.add_files([
