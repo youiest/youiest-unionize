@@ -1,4 +1,6 @@
-   youiest:unionize is a reactive db. 
+   youiest:unionize is a reactive connection. 
+
+meteor test-packages ./
 
 How to use a private package:
 

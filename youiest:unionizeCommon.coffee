@@ -9,6 +9,9 @@ if Meteor.absoluteUrl.defaultOptions.rootUrl.match('localhost:3000')
   app.debug = true
 
 @getUsername = ->
+  'common'
+
+@getUsername = ->
   if Meteor.isServer
     -> 'server'
   else 
@@ -35,10 +38,14 @@ class @w extends Document
       #fields.to = @ReferenceField w, ['_id'], true, 'incoming' 
       #, true, '_id', 'to'
       #fields
-class @w extends w
-  name: 'w'
-  replaceParent: true
+#class @w extends w
+#  name: 'w'
+#  replaceParent: true
   fields: (fields) =>
+      fields.to = @ReferenceField {targetDocument: 'self'}
+        , {reverseName: 'username'}
+        , true
+        , 'incoming'
       fields.to = @ReferenceField w
         , {reverseName: 'username'}
         , true
@@ -86,37 +93,8 @@ console.time 'inserts'
 # something created by me (should)
 
 # move this to server but getting problem with @
-@testReverse = ->
-  @v = w.documents.insert
-    from: 'present'
-    body: 'this should trigger an incoming to username:future'
-    to: 'future'
-    creator: 'me'
-    _idd: 'present-future-me'
 
-  # send something to that which is created by me
-  @vv = w.documents.insert
-    from: 'USER'
-    to: 'youiest'
-    creator: 'w'
-    _idd: 'USER-youiest-w'
-    username: 'future'
 
-  @vvv = w.documents.findOne
-    incoming: 'present-future-me'
-
-  @vvvv = w.documents.findOne
-    incoming: ''
-
-  console.log 'anyone got incoming?' , vvv
-
-@future = ->
-  x = w.documents.findOne
-    username: 'future'
-  console.log x
-
-Meteor.setTimeout(testReverse, 4000)
-Meteor.setTimeout(future, 5000)
 
 
 console.timeEnd('docs')

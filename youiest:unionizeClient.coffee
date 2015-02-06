@@ -2,9 +2,11 @@
 
 console.log " hi from unionize client"
 
+@getUsername = ->
+  -> 'client'
+
 @now = window.performance.now()
 console.log now
-
 
 @timers = {}
 @timer = (name) ->
@@ -33,7 +35,7 @@ console.log now
   time
 
 
-#timer('p')
+
 
 console.log " bye from unionize client"
 , w.Meta
