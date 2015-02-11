@@ -1,7 +1,9 @@
-#client.coffee
+#client.coffee has trusted code for creating connections
 
 Meteor.methods 'connect': (w) ->
-    consolt.log w #lower case, collection name is upper
+    l function.name, arguments
+    #l 'connect', w 
+    #lower case, collection name is upper
     #w is assumed to be a well formed object with
     # w.from must be from somewhere, this tells us what it is
     # w.to can be to many things, these are attributes with w.to.[id].owner etc format

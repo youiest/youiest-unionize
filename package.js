@@ -11,7 +11,7 @@ Package.describe({
 });
 
 
-
+// add grounddb here
 Package.on_use(function (api) {
   api.versionsFrom('1.0.3.1');
   api.use(['matb33:collection-hooks','coffeescript'], ['client', 'server']);
@@ -28,7 +28,7 @@ Package.on_use(function (api) {
   ], 'client');
 
   api.add_files([
-    'server.coffee'
+    'server.coffee', 'publish.coffee'
   ], 'server');
 });
 
