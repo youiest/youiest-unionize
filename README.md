@@ -19,18 +19,18 @@ on any change and how various aspects of your data should be kept in sync and co
 from.
 
 Implemented features are:
- * reactive references between documents
- * reactive reverse references between documents
+ * reactive references between Ws
+ * reactive reverse references between Ws
  * reactive auto-generated fields from other fields
  * reactive triggers
  * [migrations](https://github.com/peerlibrary/meteor-peerdb-migrations)
 
 Planned features are:
- * versioning of all changes to documents
+ * versioning of all changes to Ws
  * integration with [full-text search](http://www.elasticsearch.org/)
  * [strict-typed schema validation](https://github.com/balderdashy/anchor)
 
-Adding this package to your [Meteor](http://www.meteor.com/) application adds the `Document` object into the global scope.
+Adding this package to your [Meteor](http://www.meteor.com/) application adds the `W` object into the global scope.
 
 Both client and server side.
 
@@ -44,28 +44,28 @@ meteor add peerlibrary:peerdb
 Additional packages
 -------------------
 
-* [peerlibrary:peerdb-migrations](https://github.com/peerlibrary/meteor-peerdb-migrations) – Migrations support for PeerDB documents
+* [peerlibrary:peerdb-migrations](https://github.com/peerlibrary/meteor-peerdb-migrations) – Migrations support for PeerDB Ws
 
-Documents
+Ws
 ---------
 
-Instead of Meteor collections with PeerDB you are defining PeerDB documents by extending `Document`. Internally it
-defines a Meteor collection, but also all returned documents are then an instance of that PeerDB documents class.
+Instead of Meteor collections with PeerDB you are defining PeerDB Ws by extending `W`. Internally it
+defines a Meteor collection, but also all returned Ws are then an instance of that PeerDB Ws class.
 
 Minimal definition:
 
 ```coffee
-class Person extends Document
+class wApp extends W
   @Meta
-    name: 'Person'
+    name: 'wApp'
 ```
 
-This would create in your database a MongoDB collection called `Persons`. `name` must match the class name. `@Meta` is
-used for PeerDB and in addition you can define arbitrary class or object methods for your document which will then be
-available on documents returned from the database:
+This would create in your database a MongoDB collection called `wApps`. `name` must match the class name. `@Meta` is
+used for PeerDB and in addition you can define arbitrary class or object methods for your W which will then be
+available on Ws returned from the database:
 
 ```coffee
-class Person extends Document
+class wApp extends W
   # Other fields:
   #   username
   #   displayName
@@ -73,7 +73,7 @@ class Person extends Document
   #   homepage
 
   @Meta
-    name: 'Person'
+    name: 'wApp'
 
   # Class methods
   @verboseName: ->
@@ -90,7 +90,7 @@ class Person extends Document
 You can also wrap existing Meteor collections:
 
 ```coffee
-class User extends Document
+class User extends W
   @Meta
     name: 'User'
     collection: Meteor.users
@@ -99,76 +99,76 @@ class User extends Document
 And if you need to access the internal or wrapped collection you can do that by:
 
 ```coffee
-Person.Meta.collection._ensureIndex
+wApp.Meta.collection._ensureIndex
   username: 1
 ```
 
 Querying
 --------
 
-PeerDB provides an alternative to Meteor collections query methods. You should be using them to access documents. You
-can access them through the `documents` property of your document class. For example:
+PeerDB provides an alternative to Meteor collections query methods. You should be using them to access Ws. You
+can access them through the `Ws` property of your W class. For example:
 
 ```coffee
-Person.documents.find({}).forEach (person, i, cursor) =>
-  console.log person.constructor.verboseName(), person.getDisplayName()
+wApp.Ws.find({}).forEach (wApp, i, cursor) =>
+  console.log wApp.constructor.verboseName(), wApp.getDisplayName()
 
-Person.documents.findOne().getDisplayName()
+wApp.Ws.findOne().getDisplayName()
 
-Person.documents.findOne().email
+wApp.Ws.findOne().email
 ```
 
 The functions and arguments available are the same as those available for Meteor collections, with the addition of:
 
-* `.documents.exists(query, options)` – efficient check if any document matches given `query`
+* `.Ws.exists(query, options)` – efficient check if any W matches given `query`
 
-In a similar way we extend the cursor returned from `.documents.find(...)` with an `exists` method which operates
+In a similar way we extend the cursor returned from `.Ws.find(...)` with an `exists` method which operates
 similar to the `count` method, only that it is more efficient:
 
 ```coffee
-Person.documents.exists({})
-Person.documents.find({}).exists()
+wApp.Ws.exists({})
+wApp.Ws.find({}).exists()
 ```
 
-`Person.Meta` gives you back document metadata and `Person.documents` give you access to all documents.
+`wApp.Meta` gives you back W metadata and `wApp.Ws` give you access to all Ws.
 
-All this is just an easy way to define documents and collections in a unified fashion, but it becomes interesting
-when you start defining relations between documents.
+All this is just an easy way to define Ws and collections in a unified fashion, but it becomes interesting
+when you start defining relations between Ws.
 
 References
 ----------
 
-In the traditional SQL world of relational databases you do joins between related documents every time you read them from
+In the traditional SQL world of relational databases you do joins between related Ws every time you read them from
 the database. This makes reading slower, your database management system is redoing the same computation of joins
 for every read, and also horizontal scaling of a database to many instances is harder because every read might potentially
 have to talk to other instances.
 
-NoSQL databases like MongoDB remove relations between documents and leave it to users to resolve relations on their own.
-This often means fetching one document, observing which other documents it references, and fetching those as well.
-Because each of those documents are stand-alone and static, it is relatively easy and quick for a database management
+NoSQL databases like MongoDB remove relations between Ws and leave it to users to resolve relations on their own.
+This often means fetching one W, observing which other Ws it references, and fetching those as well.
+Because each of those Ws are stand-alone and static, it is relatively easy and quick for a database management
 system like MongoDB to find and return them. Such an approach is quick and it scales easily, but the
-downside is the multiple round trips you have to do in your code to get all documents you are interested in. Those
+downside is the multiple round trips you have to do in your code to get all Ws you are interested in. Those
 round trips become even worse when those queries are coming over the Internet from Meteor client code,
 because Internet latency is much higher.
 
-For a general case you can move this fetching of related documents to the server side into Meteor publish functions by
+For a general case you can move this fetching of related Ws to the server side into Meteor publish functions by
 using libraries like [meteor-related](https://github.com/peerlibrary/meteor-related). It provides an easy way to fetch
-related documents reactively, so when dependencies change, your published documents will be updated accordingly. While
+related Ws reactively, so when dependencies change, your published Ws will be updated accordingly. While
 latency to your database instances is hopefully better on your server, we did not really improve much from the SQL
 world: you are effectively recomputing joins and now even in a much less efficient way, especially if you are reading
-multiple documents at the same time.
+multiple Ws at the same time.
 
-Luckily, in many cases we can observe that we are mostly interested only in few fields of a related document, again
-and again. Instead of recomputing joins every time we read, we could use MongoDB's sub-documents feature to embed
-those fields along with the reference. Instead of just storing the `_id` of a related document, we could store also
-those few often used fields. For example, if you are displaying blog posts, you want to display the author's name together
-with the blog post. You won't really need only the blog post without the author name. An example blog post document
+Luckily, in many cases we can observe that we are mostly interested only in few fields of a related W, again
+and again. Instead of recomputing joins every time we read, we could use MongoDB's sub-Ws feature to embed
+those fields along with the reference. Instead of just storing the `_id` of a related W, we could store also
+those few often used fields. For example, if you are displaying blog wNodes, you want to display the author's name together
+with the blog wNode. You won't really need only the blog wNode without the author name. An example blog wNode W
 could then look like:
 
 ```json
 {
   "_id": "frqejWeGWjDTPMj7P",
-  "body": "A simple blog post",
+  "body": "A simple blog wNode",
   "author": {
     "_id": "yeK7R5Lws6MSeRQad",
     "username": "wesley",
@@ -195,20 +195,20 @@ could then look like:
 }
 ```
 
-Great! Now we have to fetch only this one document and we have everything needed to display a blog post. It is easy
-for us to publish it with Meteor and use it as any other document, with direct access to author's fields.
+Great! Now we have to fetch only this one W and we have everything needed to display a blog wNode. It is easy
+for us to publish it with Meteor and use it as any other W, with direct access to author's fields.
 
-Now, storing the author's name along with every blog post document brings an issue. What if user changes their
-name? Then you have to update all those fields in documents referencing the user. So you would have to make sure that
+Now, storing the author's name along with every blog wNode W brings an issue. What if user changes their
+name? Then you have to update all those fields in Ws referencing the user. So you would have to make sure that
 anywhere in your code where you are changing the name, you are also updating fields in references. What about changes
 to the database coming from outside of your code? Here is when PeerDB comes into action. With PeerDB you define those
 references once and then PeerDB makes sure they stay in sync. It does not matter where the changes come from, it will
-detect them and update fields in referenced sub-documents accordingly.
+detect them and update fields in referenced sub-Ws accordingly.
 
-If we have two documents:
+If we have two Ws:
 
 ```coffee
-class Person extends Document
+class wApp extends W
   # Other fields:
   #   username
   #   displayName
@@ -216,57 +216,57 @@ class Person extends Document
   #   homepage
 
   @Meta
-    name: 'Person'
+    name: 'wApp'
 
-class Post extends Document
+class wNode extends W
   # Other fields:
   #   body
 
   @Meta
-    name: 'Post'
+    name: 'wNode'
     fields: =>
-      # We can reference other document
-      author: @ReferenceField Person, ['username', 'displayName']
-      # Or an array of documents
-      subscribers: [@ReferenceField Person]
-      reviewers: [@ReferenceField Person, ['username', 'displayName']]
+      # We can reference other W
+      author: @ReferenceField wApp, ['username', 'displayName']
+      # Or an array of Ws
+      subscribers: [@ReferenceField wApp]
+      reviewers: [@ReferenceField wApp, ['username', 'displayName']]
 ```
 
 We are using `@Meta`'s `fields` argument to define references.
 
-In the above definition, the `author` field will be a subdocument containing `_id` (always added) and the `username`
-and `displayName` fields. If the `displayName` field in the referenced `Person` document is changed, the `author` field
-in all related `Post` documents will be automatically updated with the new value for the `displayName` field.
+In the above definition, the `author` field will be a subW containing `_id` (always added) and the `username`
+and `displayName` fields. If the `displayName` field in the referenced `wApp` W is changed, the `author` field
+in all related `wNode` Ws will be automatically updated with the new value for the `displayName` field.
 
 ```coffee
-Person.documents.update 'tMgj8mF2zF3gjCftS',
+wApp.Ws.update 'tMgj8mF2zF3gjCftS',
   $set:
     displayName: 'Deanna Troi-Riker'
 
 # Returns "Deanna Troi-Riker"
-Post.documents.findOne('frqejWeGWjDTPMj7P').reviewers[0].displayName
+wNode.Ws.findOne('frqejWeGWjDTPMj7P').reviewers[0].displayName
 
-# Returns "Deanna Troi-Riker", sub-documents are objectified into document instances as well
-Post.documents.findOne('frqejWeGWjDTPMj7P').reviewers[0].getDisplayName()
+# Returns "Deanna Troi-Riker", sub-Ws are objectified into W instances as well
+wNode.Ws.findOne('frqejWeGWjDTPMj7P').reviewers[0].getDisplayName()
 ```
 
-The `subscribers` field is an array of references to `Person` documents, where every element in the array will
-be a subdocument containing only the `_id` field.
+The `subscribers` field is an array of references to `wApp` Ws, where every element in the array will
+be a subW containing only the `_id` field.
 
 Circular references are possible as well:
 
 ```coffee
-class CircularFirst extends Document
+class CircularFirst extends W
   # Other fields:
   #   content
 
   @Meta
     name: 'CircularFirst'
     fields: =>
-      # We can reference circular documents
+      # We can reference circular Ws
       second: @ReferenceField CircularSecond, ['content']
 
-class CircularSecond extends Document
+class CircularSecond extends W
   # Other fields:
   #   content
 
@@ -277,10 +277,10 @@ class CircularSecond extends Document
       first: @ReferenceField CircularFirst, ['content'], false
 ```
 
-If you want to reference the same document recursively, use the string `'self'` as an argument to `@ReferenceField`.
+If you want to reference the same W recursively, use the string `'self'` as an argument to `@ReferenceField`.
 
 ```coffee
-class Recursive extends Document
+class Recursive extends W
   # Other fields:
   #   content
 
@@ -290,17 +290,17 @@ class Recursive extends Document
       other: @ReferenceField 'self', ['content'], false
 ```
 
-All those references between documents can be tricky as you might want to reference documents defined afterwards
+All those references between Ws can be tricky as you might want to reference Ws defined afterwards
 and JavaScript symbols might not even exist yet in the scope, and PeerDB works hard to still allow you to do that.
-But to make sure all symbols are correctly resolved you should call `Document.defineAll()` after all your definitions.
+But to make sure all symbols are correctly resolved you should call `W.defineAll()` after all your definitions.
 The best is to put it in the filename which is loaded last.
 
 One more example to show use of nested objects:
 
 ```coffee
-class ACLDocument extends Document
+class ACLW extends W
   @Meta
-    name: 'ACLDocument'
+    name: 'ACLW'
     fields: =>
       permissions:
         admins: [@ReferenceField User]
@@ -310,12 +310,12 @@ class ACLDocument extends Document
 You can also do:
 
 ```coffee
-class ACLDocument extends Document
+class ACLW extends W
   # Each permission object inside "permissions" could have also
   # timestamp and permission type fields.
 
   @Meta
-    name: 'ACLDocument'
+    name: 'ACLW'
     fields: =>
       permissions: [
         user: @ReferenceField User
@@ -325,9 +325,9 @@ class ACLDocument extends Document
 
 `ReferenceField` accepts the following arguments:
 
-* `targetDocument` – target document class, or `'self'`
-* `fields` – list of fields to sync in a reference's sub-document; instead of a field name you can use a MongoDB projection as well, like `emails: {$slice: 1}`
-* `required` – should the reference be required (default) or not. If required, when the referenced document is removed, this document will be removed as well. Ff not required, the reference will be set to `null`.
+* `targetW` – target W class, or `'self'`
+* `fields` – list of fields to sync in a reference's sub-W; instead of a field name you can use a MongoDB projection as well, like `emails: {$slice: 1}`
+* `required` – should the reference be required (default) or not. If required, when the referenced W is removed, this W will be removed as well. Ff not required, the reference will be set to `null`.
 * `reverseName` – name of a field for a reverse reference; specify to enable a reverse reference
 * `reverseFields` – list of fields to sync for a reference reference
 
@@ -336,21 +336,21 @@ What are reverse references?
 Reverse references
 ------------------
 
-Sometimes you want also to have easy access to information about all the documents referencing a given document.
-For example, for each author you might want to have a list of all blog posts they wrote, as part of their document.
+Sometimes you want also to have easy access to information about all the Ws referencing a given W.
+For example, for each author you might want to have a list of all blog wNodes they wrote, as part of their W.
 
 ```coffee
-class Post extends Post
+class wNode extends wNode
   @Meta
-    name: 'Post'
+    name: 'wNode'
     replaceParent: true
     fields: (fields) =>
-      fields.author = @ReferenceField Person, ['username', 'displayName'], true, 'posts'
+      fields.author = @ReferenceField wApp, ['username', 'displayName'], true, 'wNodes'
       fields
 ```
 
-We [redefine](#abstract-documents-and-replaceparent) the `Post` document and replace it with a new definition which enables
-reverse references for the `author` field. Now `Person.documents.findOne('yeK7R5Lws6MSeRQad')` returns:
+We [redefine](#abstract-Ws-and-replaceparent) the `wNode` W and replace it with a new definition which enables
+reverse references for the `author` field. Now `wApp.Ws.findOne('yeK7R5Lws6MSeRQad')` returns:
 
 ```json
 {
@@ -359,7 +359,7 @@ reverse references for the `author` field. Now `Person.documents.findOne('yeK7R5
   "displayName": "Wesley Crusher",
   "email": "wesley@enterprise.starfleet",
   "homepage": "https://gww.enterprise.starfleet/~wesley/",
-  "posts": [
+  "wNodes": [
     {
       "_id": "frqejWeGWjDTPMj7P"
     }
@@ -370,16 +370,16 @@ reverse references for the `author` field. Now `Person.documents.findOne('yeK7R5
 Auto-generated fields
 ---------------------
 
-Sometimes you need fields in a document which are based on other fields. PeerDB allows you an easy way to define
+Sometimes you need fields in a W which are based on other fields. PeerDB allows you an easy way to define
 such auto-generated fields:
 
 ```coffee
-class Post extends Post
+class wNode extends wNode
   # Other fields:
   #   title
 
   @Meta
-    name: 'Post'
+    name: 'wNode'
     replaceParent: true
     fields: (fields) =>
       fields.slug = @GeneratedField 'self', ['title'], (fields) ->
@@ -391,22 +391,22 @@ class Post extends Post
 ```
 
 The last argument of `GeneratedField` is a function which receives an object populated with values based on the list of
-fields you are interested in. In the example above, this is one field named `title` from the `Posts` collection. The `_id`
-field is always available in `fields`. Generator function receives or just `_id` (when document containing fields is being
-removed) or all fields requested. Generator function should return two values, a selector (often just the ID of a document)
+fields you are interested in. In the example above, this is one field named `title` from the `wNodes` collection. The `_id`
+field is always available in `fields`. Generator function receives or just `_id` (when W containing fields is being
+removed) or all fields requested. Generator function should return two values, a selector (often just the ID of a W)
 and a new value. If the value is undefined, the auto-generated field is removed. If the selector is undefined, nothing is done.
 
-You can define auto-generated fields across documents. Furthermore, you can combine reactivity. Maybe you want to also
-have a count of all posts made by a person?
+You can define auto-generated fields across Ws. Furthermore, you can combine reactivity. Maybe you want to also
+have a count of all wNodes made by a wApp?
 
 ```coffee
-class Person extends Person
+class wApp extends wApp
   @Meta
-    name: 'Person'
+    name: 'wApp'
     replaceParent: true
     fields: (fields) =>
-      fields.postsCount = @GeneratedField 'self', ['posts'], (fields) ->
-        [fields._id, fields.posts?.length or 0]
+      fields.wNodesCount = @GeneratedField 'self', ['wNodes'], (fields) ->
+        [fields._id, fields.wNodes?.length or 0]
       fields
 ```
 
@@ -416,21 +416,21 @@ Triggers
 You can define triggers which are run every time any of the specified fields changes:
 
 ```coffee
-class Post extends Post
+class wNode extends wNode
   # Other fields:
   #   updatedAt
 
   @Meta
-    name: 'Post'
+    name: 'wNode'
     replaceParent: true
     triggers: =>
-      updateUpdatedAt: @Trigger ['title', 'body'], (newDocument, oldDocument) ->
-        # Don't do anything when document is removed
-        return unless newDocument._id
+      updateUpdatedAt: @Trigger ['title', 'body'], (newW, oldW) ->
+        # Don't do anything when W is removed
+        return unless newW._id
 
         timestamp = new Date()
-        Post.documents.update
-          _id: newDocument._id
+        wNode.Ws.update
+          _id: newW._id
           updatedAt:
             $lt: timestamp
         ,
@@ -447,33 +447,33 @@ Why we are using a trigger here and not an auto-generated field? The main reason
 fields and auto-generated fields should be without side-effects and should be allowed to be called at any
 time. This is to enssure that we can re-sync any broken references as needed. If you would use an
 auto-generated field, it could be called again at a later time, updating `updatedAt` to a later time
-without any content of a document really changing.
+without any content of a W really changing.
 
 PeerDB does not really re-sync any broken references (made while your Meteor application was not running)
 automatically. If you believe such references exist (eg., after a hard crash of your application), you
-can trigger re-syncing by calling `Document.updateAll()`. All references will be resynced and all
+can trigger re-syncing by calling `W.updateAll()`. All references will be resynced and all
 auto-generated fields rerun. But not triggers. It is a quite heavy operation.
 
-Abstract documents and `replaceParent`
+Abstract Ws and `replaceParent`
 --------------------------------------
 
-You can define abstract documents by setting the `abstract` `Meta` flag to `true`. Such documents will not create
+You can define abstract Ws by setting the `abstract` `Meta` flag to `true`. Such Ws will not create
 a MongoDB collection. They are useful to define common fields and methods you want to reuse in multiple
-documents.
+Ws.
 
-We skimmed over `replaceParent` before. You should set it to `true` when you are defining a document with the
-same name as a document you are extending (parent). It is a kind of a sanity check that you know what you are
-doing and that you are promising you are not holding a reference to the extended (and replaced) document somewhere
+We skimmed over `replaceParent` before. You should set it to `true` when you are defining a W with the
+same name as a W you are extending (parent). It is a kind of a sanity check that you know what you are
+doing and that you are promising you are not holding a reference to the extended (and replaced) W somewhere
 and you expect it to work when using it. How useful `replaceParent` really is, is a good question, but it
-allows you to define a common (client and server side) document and then augment it on the server side with
+allows you to define a common (client and server side) W and then augment it on the server side with
 server-specific code.
 
 Initialization
 --------------
 
-If you would like to run some code after Meteor startup, but before observers are enabled, you can use `Document.prepare`
+If you would like to run some code after Meteor startup, but before observers are enabled, you can use `W.prepare`
 to register a callback. If you would like to run some code after Meteor startup and after observers are enabled, you can
-use `Document.startup` to register a callback.
+use `W.startup` to register a callback.
 
 Settings
 --------
@@ -506,7 +506,7 @@ Examples
 --------
 
 See [tests](https://github.com/peerlibrary/meteor-peerdb/blob/master/tests.coffee) for many examples. See
-[document definitions in PeerLibrary](https://github.com/peerlibrary/peerlibrary/tree/development/lib/documents) for
+[W definitions in PeerLibrary](https://github.com/peerlibrary/peerlibrary/tree/development/lib/Ws) for
 real-world definitions.
 
 Related projects
@@ -520,6 +520,6 @@ return quickly while PeerDB assures that data will be eventually consistent (thi
 so if you do not want that API calls return before all hooks run, `meteor-collection-hooks` might be more suitable for
 you)
 * [meteor-related](https://github.com/peerlibrary/meteor-related) – while PeerDB provides an easy way to embed referenced
-documents as subdocuments, it requires that those relations are the same for all users; if you want dynamic relations
-between documents, `meteor-related` provides an easy way to fetch related documents reactively on the server side, so
-when dependencies change, your published documents will be updated accordingly
+Ws as subWs, it requires that those relations are the same for all users; if you want dynamic relations
+between Ws, `meteor-related` provides an easy way to fetch related Ws reactively on the server side, so
+when dependencies change, your published Ws will be updated accordingly
