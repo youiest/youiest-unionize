@@ -1,3 +1,4 @@
+console.warn = ->
 # The main collection. Only inserts allowed. Unless by cron or hook.
 @W = new Meteor.Collection 'W'
 
@@ -18,7 +19,6 @@
     console.log 'returning false from l'
     return false
   console.time 'l'
-  console.log typeof args
   unless typeof args is 'string'
     for i in args
       console.log i
@@ -28,7 +28,7 @@
     console.log args
       
     
-  console.time 'l'
+  console.timeEnd 'l'
 
 l this.name, 'hi from lib'
 
