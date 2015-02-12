@@ -34,16 +34,23 @@ Package.on_use(function (api) {
 
 Package.on_test(function (api) {
   api.use(['matb33:collection-hooks', 'tinytest', 'test-helpers', 'coffeescript', 'insecure', 'accounts-base', 'accounts-password', 'underscore', 'random'], ['client', 'server']);
-
+ 
   api.add_files([
     'tests_defined.js',
     'lib.coffee',
-    'client.coffee',  
-    'server.coffee',
-    'client.coffee',
-    'publish.coffee',
     'tests.coffee'
   ], ['client', 'server']);
+
+  api.add_files([ 
+    'server.coffee',
+    'publish.coffee'
+  ], ['server']);
+
+  api.add_files([
+    'client.coffee' 
+  ], ['client']);
+
+ 
 });
 
 
