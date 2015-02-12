@@ -58,7 +58,11 @@ if Meteor.isClient
       #console.log("test_insert_collection2 AFTER INSERT", userId, doc);
       test.notEqual @_id, undefined, 'the _id should be available on this'
       return
+<<<<<<< HEAD
     Meteor.startup ->
+=======
+    InsecureLogin.ready ->
+>>>>>>> origin/hooks
       Meteor.call 'test_insert_reset_collection2', (err, result) ->
         #console.log("test_insert_collection2 INSERT");
         collection2.insert { start_value: true }, ->
