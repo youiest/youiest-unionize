@@ -1,7 +1,7 @@
 #client.coffee has trusted code for creating connections
 
 @connect =  (w) ->
-    l this.name, args
+    l this.name, args , 'hi from connect'
     #l 'connect', w 
     #lower case, collection name is upper
     #w is assumed to be a well formed object with

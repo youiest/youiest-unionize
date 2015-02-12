@@ -2,6 +2,7 @@
 
 # pre processing, validation should have been done in lib.coffee
 # validate again? 
+l 'hi from server'
 W.before.insert (userId, doc) ->
   l this.name, args
   doc.createdAt = Date.now()
