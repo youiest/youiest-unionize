@@ -14,9 +14,18 @@
 
 # shorthand log function
 @l = (arguments) ->
+<<<<<<< HEAD
+  # console.time 'l'
+  # for i in arguments
+  #   console.log i
+  #   for o in i
+  #     console.log o
+  # console.time 'l'
+=======
   console.time 'l'
   for i in arguments
     console.log i
     for o in i
       console.log o
   console.time 'l'
+>>>>>>> origin/hooks
