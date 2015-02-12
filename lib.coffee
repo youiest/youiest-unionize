@@ -1,9 +1,9 @@
 # The main collection. Only inserts allowed. Unless by cron or hook.
-@W = new Mongo.collection 'W'
+@W = new Meteor.Collection 'W'
 
 # Each user / profile gets a 'bucket' of pre-joined data kept up to date
 # only enough to load the app with only one findOne query
-@WI = new Mongo.collection 'WI'
+@WI = new Meteor.Collection 'WI'
 
 #Client and server..
 
@@ -13,9 +13,9 @@
 # need a shared bunch of react functions for making html out of W
 
 # shorthand log function
-@l = (arguments) ->
+@l = (args) ->
   console.time 'l'
-  for i in arguments
+  for i in args
     console.log i
     for o in i
       console.log o

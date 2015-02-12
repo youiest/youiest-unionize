@@ -3,7 +3,7 @@
 # pre processing, validation should have been done in lib.coffee
 # validate again? 
 W.before.insert (userId, doc) ->
-  l function.name, function.name, arguments
+  l this.name, args
   doc.createdAt = Date.now()
   return
 
@@ -11,14 +11,14 @@ W.before.insert (userId, doc) ->
 # write to a jobs collection, that embeds all earlier versions of the doc into the new one, so there's no dupes
 
 W.after.insert (userId, doc) ->
-  l function.name, arguments
+  l this.name, args
   # ...
   return
 
 # end this task if conditions dictate that we shouldn't touch it
 # if recently updated or user hasn't logged in recently postpone writes
 WI.before.update (userId, doc, fieldNames, modifier, options) ->
-  l function.name, arguments
+  l this.name, args
   modifier.$set = modifier.$set or {}
   modifier.$set.modifiedAt = Date.now()
   return
@@ -29,7 +29,7 @@ WI.before.update (userId, doc, fieldNames, modifier, options) ->
 # Call push notifications etc if we have new incomming
 # 
 WI.after.update ((userId, doc, fieldNames, modifier, options) ->
-  l function.name, arguments
+  l this.name, args
   # ...
   return
 ), fetchPrevious: false

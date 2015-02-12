@@ -1,7 +1,7 @@
 #client.coffee has trusted code for creating connections
 
-Meteor.methods 'connect': (w) ->
-    l function.name, arguments
+@connect =  (w) ->
+    l this.name, args
     #l 'connect', w 
     #lower case, collection name is upper
     #w is assumed to be a well formed object with
