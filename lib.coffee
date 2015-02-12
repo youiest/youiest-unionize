@@ -21,8 +21,8 @@ W.after.insert (userId, doc) ->
 	testName = 'inserting in WI ' +Random.id()
 	Tinytest.addAsync testName, (test, next) ->
 		app.Winsert = true;
-		WI.insert(doc);
 		test.isTrue(true,"insertion done")
+		WI.insert(doc);
 		next();		
 	
 
@@ -32,8 +32,7 @@ WI.before.insert (userId, doc) ->
 WI.after.insert (userId, doc) ->
 	testName = 'inserting complete W ' +Random.id()
 	Tinytest.addAsync testName, (test, next) ->
-		app.Winsert = true;
-		WI.insert(doc);
+		console.log app.Winsert, app.WIinsert
 		test.equal(app.Winsert, app.WIinsert, "went all good", "something went wrong")
 		next();
 
