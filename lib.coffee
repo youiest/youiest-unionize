@@ -16,7 +16,30 @@
 @W = new Meteor.Collection 'W'
 @WI = new Meteor.Collection 'WI'
 
+
+W.after.insert (userId, doc) ->
+	testName = 'inserting in WI ' +Random.id()
+	Tinytest.addAsync testName, (test, next) ->
+		app.Winsert = true;
+		WI.insert(doc);
+		test.isTrue(true,"insertion done")
+		next();		
+	
+
+WI.before.insert (userId, doc) ->
+	app.WIinsert = true
+
+WI.after.insert (userId, doc) ->
+	testName = 'inserting complete W ' +Random.id()
+	Tinytest.addAsync testName, (test, next) ->
+		app.Winsert = true;
+		WI.insert(doc);
+		test.equal(app.Winsert, app.WIinsert, "went all good", "something went wrong")
+		next();
+
 @app = {}
 app.userId = "nicolsondsouza"
 app.testMessage = "myMessage "+Random.id()
-app.dummyInsert = {"message":app.testMessage}
+app.dummyInsert = {"message":app.testMessage,"userId":app.userId}
+app.Winsert = false;
+app.WIinsert = false;

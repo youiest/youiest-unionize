@@ -13,12 +13,16 @@
     
 #     #above are required client side
 #     # w.grandfather this is the first .from in a chain and inherited
+Tinytest.addAsync 'Initiating test', (test, next) ->
+	Meteor.startup(()->
 
-Meteor.startup(()->
-    Tinytest.addAsync 'test started on client', (test, next) ->
-        Meteor.call("dummyInsert",app.dummyInsert,(err,message)->
-            if(err)
-                test.equal
-            next();
-        )
-)
+	        Meteor.call("dummyInsert",app.dummyInsert,(err,message)->
+	            if(err)
+	                test.isTrue(false, err)
+	            else
+	            	test.isTrue(true, "run corectly")
+	            
+	            
+	        )
+	)
+	next();
