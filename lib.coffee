@@ -20,3 +20,5 @@
     for o in i
       console.log o
   console.time 'l'
+
+console.log "lib"

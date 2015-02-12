@@ -15,4 +15,4 @@
     # w.grandfather this is the first .from in a chain and inherited
 
 
-  
+console.log "client"

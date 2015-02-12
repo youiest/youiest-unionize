@@ -39,3 +39,4 @@ WI.after.update ((userId, doc, fieldNames, modifier, options) ->
 
 
 
+console.log "server"
