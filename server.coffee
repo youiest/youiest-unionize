@@ -3,9 +3,11 @@ Meteor.methods({
 	"dummyInsert" : (insert)->
 		
 		testName = 'inserting in W ' +Random.id()
-		Tinytest.addAsync testName, (test, next) ->
-			W.insert insert
-			test.isTrue(true, "so smooth now")
-			next();		
+		# Tinytest.add testName, (test, next) ->
+			# test.isTrue(true, "so smooth now")
+			# next();	
+		W.insert insert
+			
+				
 });
 	

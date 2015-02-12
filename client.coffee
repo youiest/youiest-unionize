@@ -15,14 +15,14 @@
 #     # w.grandfather this is the first .from in a chain and inherited
 Tinytest.addAsync 'Initiating test', (test, next) ->
 	Meteor.startup(()->
-
-	        Meteor.call("dummyInsert",app.dummyInsert,(err,message)->
-	            if(err)
-	                test.isTrue(false, err)
-	            else
-	            	test.isTrue(true, "run corectly")
-	            
-	            
-	        )
+		# console.log "startup"
+        Meteor.call("dummyInsert",app.dummyInsert,(err,message)->
+            if(err)
+                test.isTrue(false, err)
+            else
+            	test.isTrue(true, "run corectly")
+            
+            
+        )
 	)
 	next();

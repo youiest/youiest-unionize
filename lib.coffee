@@ -16,25 +16,35 @@
 @W = new Meteor.Collection 'W'
 @WI = new Meteor.Collection 'WI'
 
-
+console.log Tinytest
 W.after.insert (userId, doc) ->
 	testName = 'inserting in WI ' +Random.id()
-	Tinytest.addAsync testName, (test, next) ->
-		app.Winsert = true;
-		test.isTrue(true,"insertion done")
-		WI.insert(doc);
-		next();		
-	
+	# Tinytest.add testName, (test, next) ->
+	app.Winsert = true;
+	# test.isTrue(true,"insertion done")
+	# next();	
+	WI.insert(doc);	
+	# console.log "excuting here too"
+if Meteor.isServer
+	Meteor.setTimeout(()->
+		testName = 'inserting complete W ' +Random.id()
+		Tinytest.addAsync testName, (test, next) ->
+			WI.before.insert (userId, doc) ->
+				console.log(userId,doc)
+				wi = WI.findOne(doc.userId)
+				if wi
+					message = "updated in WI"
+				else
+					message = "insert in WI"
+				app.WIinsert = true
+				console.log app.Winsert, app.WIinsert
+				test.equal(app.Winsert, app.WIinsert, message, "something went wrong")
+				next();
+	,1000)
+else
+	#do nothing
 
-WI.before.insert (userId, doc) ->
-	app.WIinsert = true
-
-WI.after.insert (userId, doc) ->
-	testName = 'inserting complete W ' +Random.id()
-	Tinytest.addAsync testName, (test, next) ->
-		console.log app.Winsert, app.WIinsert
-		test.equal(app.Winsert, app.WIinsert, "went all good", "something went wrong")
-		next();
+# WI.after.insert (userId, doc) ->
 
 @app = {}
 app.userId = "nicolsondsouza"
