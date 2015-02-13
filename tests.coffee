@@ -4,6 +4,24 @@
 # test that findOne (natural:-1) finds latest version insert and learn how responsive it is
 
 l 'hi from tests'
+
+# test that inserting w.to myUserId triggers a hook that inserts it into my.incoming in WI
+
+@dummies = ->
+  e = W.insert
+    _idd: 'eias'
+  n = W.insert
+    _idd: 'nicolson'
+  p = W.insert
+    _idd: 'picture'
+  l e, n, p
+  WI.insert e
+  WI.insert n
+  l WI.findOne({})._idd, this.name
+
+dummies()
+
+
 Collection = if typeof Mongo != 'undefined' and typeof Mongo.Collection != 'undefined' then Mongo.Collection else Meteor.Collection
 if Meteor.isServer
   collection1 = new Collection('test_insert_collection1')

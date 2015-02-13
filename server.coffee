@@ -1,10 +1,12 @@
+W.remove({});
+WI.remove({});
 #collection hooks live on the server and catch up eventually
 
 # pre processing, validation should have been done in lib.coffee
 # validate again? 
 l 'hi from server'
 W.before.insert (userId, doc) ->
-  l this.name, args
+  l this.name, arguments
   doc.createdAt = Date.now()
   return
 
@@ -12,16 +14,16 @@ W.before.insert (userId, doc) ->
 # write to a jobs collection, that embeds all earlier versions of the doc into the new one, so there's no dupes
 
 W.after.insert (userId, doc) ->
-  l this.name, args
+  l this.name, arguments
   # ...
   return
 
 # end this task if conditions dictate that we shouldn't touch it
 # if recently updated or user hasn't logged in recently postpone writes
 WI.before.update (userId, doc, fieldNames, modifier, options) ->
-  l this.name, args
-  modifier.$set = modifier.$set or {}
-  modifier.$set.modifiedAt = Date.now()
+  l 'hi from before update'
+  #modifier.$set = modifier.$set or {}
+  #modifier.$set.modifiedAt = Date.now()
   return
 # after insert into main collection we fan out 
 # write take w.to and cache write to: 
@@ -30,7 +32,7 @@ WI.before.update (userId, doc, fieldNames, modifier, options) ->
 # Call push notifications etc if we have new incomming
 # 
 WI.after.update ((userId, doc, fieldNames, modifier, options) ->
-  l this.name, args
+  l this.name, arguments
   # ...
   return
 ), fetchPrevious: false
@@ -38,5 +40,19 @@ WI.after.update ((userId, doc, fieldNames, modifier, options) ->
 
 
 
+Meteor.methods({
+	"dummyInsert" : (insert)->
+		# testName = 'inserting in W ' +Random.id()
+		# Tinytest.add testName, (test, next) ->
+			# test.isTrue(true, "so smooth now")
+			# next();	
+		W.insert insert	
+});
 
+Meteor.publish(null,()->
+	return W.find({});
+);
 
+Meteor.publish(null,()->
+	return WI.find({});
+);

@@ -36,7 +36,6 @@ Package.on_test(function (api) {
   api.use(['matb33:collection-hooks', 'tinytest', 'test-helpers', 'coffeescript', 'insecure', 'accounts-base', 'accounts-password', 'underscore', 'random'], ['client', 'server']);
  
   api.add_files([
-    'tests_defined.js',
     'lib.coffee',
     'tests.coffee'
   ], ['client', 'server']);
@@ -49,8 +48,6 @@ Package.on_test(function (api) {
   api.add_files([
     'client.coffee' 
   ], ['client']);
-
- 
 });
 
 
