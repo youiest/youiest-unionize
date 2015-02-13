@@ -5,7 +5,7 @@ l 'hi from client'
 # when users WI object is synced ot server before and after update hooks are fired
 
 @connect =  (w) ->
-    l 'hi from connect' , w
+    l 'hi from connect', w
     
     #something like this WI.outbox.[w.id]=w
 
@@ -22,9 +22,13 @@ l 'hi from client'
     
     # w.creator .. meteor user id
 
-    l w
-    l WI.findOne , 'WI'
-    l W.findOne , 'W'
+    x = W.findOne
+        _idd:'elias'
+    console.log x
+    l w, x
+    l WI.findOne
+        _idd: 'elias'
+    l W.findOne , 'W now, before elias WI'
 #     #l 'connect', w 
 #     #lower case, collection name is upper
 #     #w is assumed to be a well formed object with

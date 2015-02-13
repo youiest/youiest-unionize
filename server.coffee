@@ -47,11 +47,11 @@ Meteor.methods
     W.remove({});
     WI.remove({});
     e = W.insert
-      _idd: 'elias'
+      _id: 'elias'
     n = W.insert
-      _idd: 'nicolson'
+      _id: 'nicolson'
     p = W.insert
-      _idd: 'picture'
+      _id: 'picture'
     l e, n, p
     WI.insert e
     WI.insert n

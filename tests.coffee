@@ -51,7 +51,8 @@ if Meteor.isServer
     return
 if Meteor.isClient
   l 'calling dummyInsert', arguments.callee
-  Meteor.call 'dummyInsert' # so it's available
+  Meteor.call('dummyInsert')
+  setTimeout  l('waited'), 500 # so it's available # so db syncs
   l 'done'
   Meteor.subscribe 'test_insert_publish_collection2'
   Tinytest.addAsync 'insert - collection2 document on client should have client-added and server-added extra properties added to it before it is inserted', (test, next) ->
