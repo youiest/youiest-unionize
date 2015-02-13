@@ -7,7 +7,10 @@ l 'hi from client'
 connect =  (args) ->
     l 'hi from connect'#, args, arguments , arguments.callee
     l args
-    console.log args.to, arguments.callee
+    l args.from
+    #l arguments.callee
+    l a , 'aaa'
+
     x = WI.findOne
         _id:'elias'
     #console.log x

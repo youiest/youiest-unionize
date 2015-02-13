@@ -39,6 +39,9 @@ WI.after.update ((userId, doc, fieldNames, modifier, options) ->
 ), fetchPrevious: false
 
 
+WI.after.update (userId, doc, fieldNames, modifier, options) ->
+  #console.log arguments.callee, arguments
+  l 'got updated WI!' , arguments, arguments.callee, userId, doc, fieldNames, modifier, options
 
 
 Meteor.methods
@@ -57,9 +60,9 @@ Meteor.methods
       _id: 'elias'
     WI.insert
       _id: 'nicolson'
-    l WI.findOne({})._id, this.name
+    l WI.findOne({})._id #, this.name
     
-    l arguments.calle,  insert
+    #l arguments.calle,  insert
 		# testName = 'inserting in W ' +Random.id()
 		# Tinytest.add testName, (test, next) ->
 			# test.isTrue(true, "so smooth now")
