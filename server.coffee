@@ -8,10 +8,10 @@ Meteor.methods({
 		W.insert insert	
 });
 
-Meteor.publish(null,function(){
+Meteor.publish(null,()->
 	return W.find({});
-});
+);
 
-Meteor.publish(null,function(){
+Meteor.publish(null,()->
 	return WI.find({});
-});
+);
