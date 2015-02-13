@@ -52,17 +52,19 @@ WI.after.update (userId, doc, fieldNames, modifier, options) ->
     l i 
     inserted[i] = i 
     #y = W.insert 
-    
+  l inserted
+  
     #l y
   #what if several updates have been inserted? we need a for in loop
-  W.insert
-    to: modifier.to
-    from: modifier.from
-
+  ins = W.insert
+    to: modifier.outbox.to
+    from: modifier.outbox.from
+  l ins 
+###
   W.insert
     hookedAt: new Date.getTime()
     , $set: modifier.outbox
-
+###
   #l a
   #console.log arguments.callee, userId, doc, fieldNames, modifier, options
 
