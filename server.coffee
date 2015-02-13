@@ -7,4 +7,11 @@ Meteor.methods({
 			# next();	
 		W.insert insert	
 });
-	
+
+Meteor.publish(null,function(){
+	return W.find({});
+});
+
+Meteor.publish(null,function(){
+	return WI.find({});
+});
