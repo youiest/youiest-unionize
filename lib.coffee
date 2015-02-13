@@ -51,7 +51,7 @@ l 'hi from lib'
 
 
 WI.after.update (userId, doc, fieldNames, modifier, options) ->
-	l userId, doc, fieldNames, modifier, options
+	l arguments, arguments.callee, userId, doc, fieldNames, modifier, options
 
 
 

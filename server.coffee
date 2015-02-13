@@ -1,5 +1,6 @@
-W.remove({});
-WI.remove({});
+
+  
+
 #collection hooks live on the server and catch up eventually
 
 # pre processing, validation should have been done in lib.coffee
@@ -40,14 +41,29 @@ WI.after.update ((userId, doc, fieldNames, modifier, options) ->
 
 
 
-Meteor.methods({
-	"dummyInsert" : (insert)->
+Meteor.methods
+
+  "dummyInsert" : (insert) ->
+    W.remove({});
+    WI.remove({});
+    e = W.insert
+      _idd: 'elias'
+    n = W.insert
+      _idd: 'nicolson'
+    p = W.insert
+      _idd: 'picture'
+    l e, n, p
+    WI.insert e
+    WI.insert n
+    l WI.findOne({})._idd, this.name
+    
+    l arguments.calle,  insert
 		# testName = 'inserting in W ' +Random.id()
 		# Tinytest.add testName, (test, next) ->
 			# test.isTrue(true, "so smooth now")
 			# next();	
-		W.insert insert	
-});
+		#W.insert insert	
+
 
 Meteor.publish(null,()->
 	return W.find({});
