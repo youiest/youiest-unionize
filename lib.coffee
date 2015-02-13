@@ -35,14 +35,14 @@ console.warn = -> #this kills the warns from prior
     console.log 'returning false from l'
     return false
   else
-    console.log args 
+    console.log args
   # two levels deep, avoid printing single digits
   for i in args 
-  	unless typeof i is 'string'
+  	unless typeof i is 'string' or !i
     	console.log i
-    for o in i
-    	unless typeof o is 'string'
-      	console.log o
+	    for o in i
+	    	unless typeof o is 'string' or !o
+	      	console.log o
   
       
     
@@ -54,8 +54,9 @@ l 'hi from lib'
 
 
 WI.after.update (userId, doc, fieldNames, modifier, options) ->
-	console.log arguments.callee, arguments
+	#console.log arguments.callee, arguments
 	l arguments, arguments.callee, userId, doc, fieldNames, modifier, options
+
 
 
 

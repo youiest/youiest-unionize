@@ -4,15 +4,21 @@ l 'hi from client'
 # connect runs on the client and updates the client version of the users WI object
 # when users WI object is synced ot server before and after update hooks are fired
 
-@connect =  (args) ->
+connect =  (args) ->
 
-    l 'hi from connect', args
+    l 'hi from connect', args, arguments , arguments.callee
     x = WI.findOne
         _id:'elias'
     console.log x
-    l arguments, arguments.callee
+
+
+    #l arguments.callee # not working yet..
+    l arguments
     
-    
+@connect = connect
+
+setTimeout connect('picture','elias') 
+, 500
     #something like this WI.outbox.[w.id]=w
 
     #lower case, collection name is upper

@@ -56,7 +56,10 @@ if Meteor.isServer
 if Meteor.isClient
   l 'calling dummyInsert', arguments.callee
   Meteor.call('dummyInsert')
-  setTimeout  l('waited'), 500 # so it's available # so db syncs
+  # connect isn't in this scope, why?
+  #l 'trying after dummy startup waited'
+  #setTimeout connect('picture','elias') , 500
+  #setTimeout  l('waited'), 500 # so it's available # so db syncs
   l 'done'
   Meteor.subscribe 'test_insert_publish_collection2'
   Tinytest.addAsync 'insert - collection2 document on client should have client-added and server-added extra properties added to it before it is inserted', (test, next) ->
@@ -83,6 +86,7 @@ if Meteor.isClient
         return
       return
     return
+
 
 
 

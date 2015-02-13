@@ -53,9 +53,11 @@ Meteor.methods
     p = W.insert
       _id: 'picture'
     l e, n, p
-    WI.insert e
-    WI.insert n
-    l WI.findOne({})._idd, this.name
+    WI.insert 
+      _id: 'elias'
+    WI.insert
+      _id: 'nicolson'
+    l WI.findOne({})._id, this.name
     
     l arguments.calle,  insert
 		# testName = 'inserting in W ' +Random.id()
