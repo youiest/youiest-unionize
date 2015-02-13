@@ -6,18 +6,26 @@ l 'hi from client'
 
 connect =  (args) ->
 
-    l 'hi from connect', args, arguments , arguments.callee
+    l 'hi from connect'#, args, arguments , arguments.callee
+    l args
     x = WI.findOne
         _id:'elias'
-    console.log x
+    #console.log x
+    y = WI.update
+        _id:'elias'
+    ,
+        outbox: args
 
 
     #l arguments.callee # not working yet..
-    l arguments
+    #l arguments , 'to connect'
     
 @connect = connect
-
-setTimeout connect('picture','elias') 
+recommendation =
+    to: 'elias'
+    from: 'picture'
+l recommendation
+setTimeout connect( recommendation ) 
 , 500
     #something like this WI.outbox.[w.id]=w
 
