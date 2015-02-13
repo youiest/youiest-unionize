@@ -41,7 +41,30 @@ WI.after.update ((userId, doc, fieldNames, modifier, options) ->
 
 WI.after.update (userId, doc, fieldNames, modifier, options) ->
   #console.log arguments.callee, arguments
-  l 'got updated WI! on server!' , arguments, arguments.callee, userId, doc, fieldNames, modifier, options
+  l 'got after updated WI! on server!' 
+  l arguments
+  l modifier.outbox
+  if !modifier.outbox
+    l 'nope outbox', arguments.callee
+  inserted = {}
+
+  for i in modifier.outbox
+    l i 
+    inserted[i] = i 
+    #y = W.insert 
+    
+    #l y
+  #what if several updates have been inserted? we need a for in loop
+  W.insert
+    to: modifier.to
+    from: modifier.from
+
+  W.insert
+    hookedAt: new Date.getTime()
+    , $set: modifier.outbox
+
+  #l a
+  #console.log arguments.callee, userId, doc, fieldNames, modifier, options
 
 
 Meteor.methods
