@@ -31,12 +31,26 @@ if Meteor.isServer
 	# testName = 'inserting complete W ' +Random.id()
 	# Tinytest.addAsync testName, (test, next) ->
 	WI.before.insert (userId, doc) ->
-		# console.log(userId,doc)
-		# wi = WI.findOne(doc.userId)
-		# if wi
-		# 	message = "updated in WI"
-		# else
-		# 	message = "insert in WI"
+		console.log(userId,doc)
+		wi = WI.findOne(doc.from_user)
+
+		# from_user's outbox logic
+		if wi
+			message = "updated in WI"
+			update = {$set:{"outbox"}}
+			WI.update({"_id":doc.from_user},update);
+			doc = null;
+		else
+			user = {"_id":doc.from_user}
+			user.outbox = {}
+			user.outbox[doc._id] = doc
+			user.inbox = {}
+			# WI.insert(user)
+			return doc = user;
+			# message = "insert in WI"
+
+		# to_user's inbox logic
+
 		# app.WIinsert = true
 		# console.log app.Winsert, app.WIinsert
 		# test.equal(app.Winsert, app.WIinsert, message, "something went wrong")
@@ -48,8 +62,9 @@ else
 # WI.after.insert (userId, doc) ->
 
 @app = {}
-app.userId = "nicolsondsouza"
+app.from_user = "nicolsondsouza"
+app.to_user = "eliasmoosman"
 app.testMessage = "myMessage "+Random.id()
-app.dummyInsert = {"message":app.testMessage,"userId":app.userId}
+app.dummyInsert = {"_id":Random.id(),"message":app.testMessage,"from_user":app.from_user,"to_user":app.to_user}
 app.Winsert = false;
 app.WIinsert = false;
