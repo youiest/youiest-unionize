@@ -1,7 +1,9 @@
 #client.coffee has trusted code for creating connections
 
-# @connect =  (w) ->
-#     l this.name, args
+@connect =  (w) ->
+  l w
+  l WI.findOne , 'WI'
+  l W.findOne , 'W'
 #     #l 'connect', w 
 #     #lower case, collection name is upper
 #     #w is assumed to be a well formed object with
@@ -14,16 +16,16 @@
 #     #above are required client side
 #     # w.grandfather this is the first .from in a chain and inherited
 # Tinytest.addAsync 'Initiating test', (test, next) ->
-Meteor.startup(()->
-	# console.log "startup"
-    #intead of connect
-    Meteor.call("dummyInsert",app.dummyInsert,(err,message)->
+Meteor.startup () ->
+    l 'tried startup'
+    connect 'tried'
+    Meteor.call "dummyInsert",app.dummyInsert,(err,message)->
+
         # if(err)
         #     test.isTrue(false, err)
         # else
         # 	test.isTrue(true, "run corectly")
         
         
-    )
-)
-	# next();
+    
+

@@ -4,7 +4,7 @@
 # test that findOne (natural:-1) finds latest version insert and learn how responsive it is
 
 # test that inserting w.to myUserId triggers a hook that inserts it into my.incoming in WI
-console.log "test"
+l "test"
 Collection = if typeof Mongo != 'undefined' and typeof Mongo.Collection != 'undefined' then Mongo.Collection else Meteor.Collection
 if Meteor.isServer
   collection1 = new Collection('test_insert_collection1')
@@ -42,25 +42,25 @@ if Meteor.isServer
   Meteor.publish 'test_insert_publish_collection2', ->
     collection2.find()
   collection2.before.insert (userId, doc) ->
-    #console.log("test_insert_collection2 BEFORE INSERT", userId, doc);
+    #l("test_insert_collection2 BEFORE INSERT", userId, doc);
     doc.server_value = true
     return
 if Meteor.isClient
   Meteor.subscribe 'test_insert_publish_collection2'
   Tinytest.addAsync 'insert - collection2 document on client should have client-added and server-added extra properties added to it before it is inserted', (test, next) ->
     collection2.before.insert (userId, doc) ->
-      #console.log("test_insert_collection2 BEFORE INSERT", userId, doc);
+      #l("test_insert_collection2 BEFORE INSERT", userId, doc);
       test.notEqual userId, undefined, 'the userId should be present since we are on the client'
       test.equal collection2.find(start_value: true).count(), 0, 'collection2 should not have the test document in it'
       doc.client_value = true
       return
     collection2.after.insert (userId, doc) ->
-      #console.log("test_insert_collection2 AFTER INSERT", userId, doc);
+      #l("test_insert_collection2 AFTER INSERT", userId, doc);
       test.notEqual @_id, undefined, 'the _id should be available on this'
       return
     Meteor.startup ->
       Meteor.call 'test_insert_reset_collection2', (err, result) ->
-        #console.log("test_insert_collection2 INSERT");
+        #l("test_insert_collection2 INSERT");
         collection2.insert { start_value: true }, ->
           test.equal collection2.find(
             start_value: true
