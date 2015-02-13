@@ -15,10 +15,12 @@ console.warn = ->
 
 # shorthand log function
 @l = (args) ->
+  console.timeEnd 'elapsed'
+  console.time 'elapsed'
   unless args 
     console.log 'returning false from l'
     return false
-  console.time 'l'
+  
   unless typeof args is 'string'
     for i in args
       console.log i
@@ -28,8 +30,8 @@ console.warn = ->
     console.log args
       
     
-  console.timeEnd 'l'
+console.time 'elapsed'
 
-l this.name, 'hi from lib'
+l 'hi from lib'
 
 
