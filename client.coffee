@@ -5,26 +5,28 @@ l 'hi from client'
 # when users WI object is synced ot server before and after update hooks are fired
 
 connect =  (args) ->
-
     l 'hi from connect'#, args, arguments , arguments.callee
     l args
+    console.log args.to, arguments.callee
     x = WI.findOne
         _id:'elias'
     #console.log x
     y = WI.update
-        _id:'elias'
+        _id:'nicolson'
     ,
-        outbox: args
+        outbox:
+            from: args.from
+            to: args.to
 
 
     #l arguments.callee # not working yet..
     #l arguments , 'to connect'
     
 @connect = connect
-recommendation =
+@recommendation =
     to: 'elias'
     from: 'picture'
-l recommendation
+#l recommendation
 setTimeout connect( recommendation ) 
 , 500
     #something like this WI.outbox.[w.id]=w
@@ -60,8 +62,8 @@ setTimeout connect( recommendation )
 # Tinytest.addAsync 'Initiating test', (test, next) ->
 Meteor.startup () ->
     l 'tried startup waited'
-    setTimeout connect('picture','elias') , 500
-    #Meteor.call "dummyInsert",app.dummyInsert,(err,message)->
+    #setTimeout connect('picture','elias') , 500
+        #Meteor.call "dummyInsert",app.dummyInsert,(err,message)->
 
         # if(err)
         #     test.isTrue(false, err)
