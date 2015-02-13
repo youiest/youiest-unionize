@@ -1,6 +1,7 @@
 #client.coffee has trusted code for creating connections
 
-# @connect =  (w) ->
+@connect =  (w) ->
+	W.insert app.dummyInsert	
 #     l this.name, args
 #     #l 'connect', w 
 #     #lower case, collection name is upper
@@ -15,15 +16,14 @@
 #     # w.grandfather this is the first .from in a chain and inherited
 # Tinytest.addAsync 'Initiating test', (test, next) ->
 Meteor.startup(()->
+	connect();
 	# console.log "startup"
     #intead of connect
-    Meteor.call("dummyInsert",app.dummyInsert,(err,message)->
-        # if(err)
-        #     test.isTrue(false, err)
-        # else
-        # 	test.isTrue(true, "run corectly")
-        
-        
-    )
+    # Meteor.call("dummyInsert",app.dummyInsert,(err,message)->
+    #     # if(err)
+    #     #     test.isTrue(false, err)
+    #     # else
+    #     # 	test.isTrue(true, "run corectly")
+    # )
 )
 	# next();
