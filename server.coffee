@@ -31,17 +31,17 @@ WI.before.update (userId, doc, fieldNames, modifier, options) ->
 # WI.findOne('w.to').incomming.['w.from']
 
 # Call push notifications etc if we have new incomming
-# 
+### 
 WI.after.update ((userId, doc, fieldNames, modifier, options) ->
   l this.name, arguments
   # ...
   return
 ), fetchPrevious: false
-
+###
 
 WI.after.update (userId, doc, fieldNames, modifier, options) ->
   #console.log arguments.callee, arguments
-  l 'got updated WI!' , arguments, arguments.callee, userId, doc, fieldNames, modifier, options
+  l 'got updated WI! on server!' , arguments, arguments.callee, userId, doc, fieldNames, modifier, options
 
 
 Meteor.methods
