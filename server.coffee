@@ -1,5 +1,6 @@
-W.remove({});
-WI.remove({});
+
+  
+
 #collection hooks live on the server and catch up eventually
 
 # pre processing, validation should have been done in lib.coffee
@@ -30,24 +31,69 @@ WI.before.update (userId, doc, fieldNames, modifier, options) ->
 # WI.findOne('w.to').incomming.['w.from']
 
 # Call push notifications etc if we have new incomming
-# 
+### 
 WI.after.update ((userId, doc, fieldNames, modifier, options) ->
   l this.name, arguments
   # ...
   return
 ), fetchPrevious: false
+###
+
+WI.after.update (userId, doc, fieldNames, modifier, options) ->
+  #console.log arguments.callee, arguments
+  l 'got after updated WI! on server!' 
+  l arguments
+  l modifier.outbox
+  if !modifier.outbox
+    l 'nope outbox', arguments.callee
+  inserted = {}
+
+  for i in modifier.outbox
+    l i 
+    inserted[i] = i 
+    #y = W.insert 
+  l inserted
+  
+    #l y
+  #what if several updates have been inserted? we need a for in loop
+  ins = W.insert
+    to: modifier.outbox.to
+    from: modifier.outbox.from
+  l ins 
+###
+  W.insert
+    hookedAt: new Date.getTime()
+    , $set: modifier.outbox
+###
+  #l a
+  #console.log arguments.callee, userId, doc, fieldNames, modifier, options
 
 
+Meteor.methods
 
-
-Meteor.methods({
-	"dummyInsert" : (insert)->
+  "dummyInsert" : (insert) ->
+    W.remove({});
+    WI.remove({});
+    e = W.insert
+      _id: 'elias'
+    n = W.insert
+      _id: 'nicolson'
+    p = W.insert
+      _id: 'picture'
+    l e, n, p
+    WI.insert 
+      _id: 'elias'
+    WI.insert
+      _id: 'nicolson'
+    l WI.findOne({})._id #, this.name
+    
+    #l arguments.calle,  insert
 		# testName = 'inserting in W ' +Random.id()
 		# Tinytest.add testName, (test, next) ->
 			# test.isTrue(true, "so smooth now")
 			# next();	
-		W.insert insert	
-});
+		#W.insert insert	
+
 
 Meteor.publish(null,()->
 	return W.find({});

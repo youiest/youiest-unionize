@@ -5,21 +5,12 @@
 
 l 'hi from tests'
 
+#test that updating WI on client fires before update hook on server
+
+
+
 # test that inserting w.to myUserId triggers a hook that inserts it into my.incoming in WI
 
-@dummies = ->
-  e = W.insert
-    _idd: 'eias'
-  n = W.insert
-    _idd: 'nicolson'
-  p = W.insert
-    _idd: 'picture'
-  l e, n, p
-  WI.insert e
-  WI.insert n
-  l WI.findOne({})._idd, this.name
-
-dummies()
 
 
 Collection = if typeof Mongo != 'undefined' and typeof Mongo.Collection != 'undefined' then Mongo.Collection else Meteor.Collection
@@ -63,6 +54,13 @@ if Meteor.isServer
     doc.server_value = true
     return
 if Meteor.isClient
+  l 'calling dummyInsert', arguments.callee
+  Meteor.call('dummyInsert')
+  # connect isn't in this scope, why?
+  #l 'trying after dummy startup waited'
+  #setTimeout connect('picture','elias') , 500
+  #setTimeout  l('waited'), 500 # so it's available # so db syncs
+  l 'done'
   Meteor.subscribe 'test_insert_publish_collection2'
   Tinytest.addAsync 'insert - collection2 document on client should have client-added and server-added extra properties added to it before it is inserted', (test, next) ->
     collection2.before.insert (userId, doc) ->
@@ -88,6 +86,7 @@ if Meteor.isClient
         return
       return
     return
+
 
 
 

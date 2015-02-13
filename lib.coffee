@@ -11,6 +11,9 @@
 # # that they follow rules..
 
 # # need a shared bunch of react functions for making html out of W
+console.time 'elapsed'
+@a = arguments.callee
+
 
 console.warn = -> #this kills the warns from prior
 # The main collection. Only inserts allowed. Unless by cron or hook.
@@ -28,30 +31,46 @@ console.warn = -> #this kills the warns from prior
 # need a shared bunch of react functions for making html out of W
 
 # shorthand log function also a timer lapsed
+@o = (args) ->
+	return (args) ->
+	  console.timeEnd 'elapsed'
+	  console.time 'elapsed'
+	  if !args 
+	    console.log 'returning false from l'
+	    return false
+	  else
+	    console.log args
+	  # two levels deep, avoid printing single digits
+	  for i in args 
+	  	unless typeof i is 'string' or !i
+	    	console.log i
+		    for o in i
+		    	unless typeof o is 'string' or !o
+		      	console.log o
+  
 @l = (args) ->
   console.timeEnd 'elapsed'
   console.time 'elapsed'
-  unless args 
-    console.log 'returning false from l'
-    return false
-  unless typeof args is 'string'
-    for i in args
-      console.log i
-      for o in i
-        console.log o
-  else
-    console.log args
-      
-    
-console.time 'elapsed'
+  if !args 
+	    console.log 'returning false from l'
+	    return false
+	  else
+	    console.log args
+  for i in args 
+  	unless !i or typeof i is 'string' 
+    	console.log i
+	    for o in i
+	    	unless !o or typeof o is 'string'
+	      	console.log o
+	return true
+console.log 'false l'
+
+
 
 l 'hi from lib'
 
 
 
-
-WI.after.update (userId, doc, fieldNames, modifier, options) ->
-	l userId, doc, fieldNames, modifier, options
 
 
 

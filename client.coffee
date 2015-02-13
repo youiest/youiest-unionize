@@ -4,9 +4,34 @@ l 'hi from client'
 # connect runs on the client and updates the client version of the users WI object
 # when users WI object is synced ot server before and after update hooks are fired
 
-@connect =  (w) ->
-    l 'hi from connect' , w
+connect =  (args) ->
+    l 'hi from connect'#, args, arguments , arguments.callee
+    l args
+    l args.from
+    #l arguments.callee
+    l a , 'aaa'
+
+    x = WI.findOne
+        _id:'elias'
+    #console.log x
+    y = WI.update
+        _id:'nicolson'
+    ,
+        outbox:
+            from: args.from
+            to: args.to
+
+
+    #l arguments.callee # not working yet..
+    #l arguments , 'to connect'
     
+@connect = connect
+@recommendation =
+    to: 'elias'
+    from: 'picture'
+#l recommendation
+setTimeout connect( recommendation ) 
+, 500
     #something like this WI.outbox.[w.id]=w
 
     #lower case, collection name is upper
@@ -22,9 +47,9 @@ l 'hi from client'
     
     # w.creator .. meteor user id
 
-    l w
-    l WI.findOne , 'WI'
-    l W.findOne , 'W'
+    
+   
+    #l W.findOne , 'W now, before elias WI'
 #     #l 'connect', w 
 #     #lower case, collection name is upper
 #     #w is assumed to be a well formed object with
@@ -39,9 +64,9 @@ l 'hi from client'
 #     # w.grandfather this is the first .from in a chain and inherited
 # Tinytest.addAsync 'Initiating test', (test, next) ->
 Meteor.startup () ->
-    l 'tried startup'
-    connect 'tried'
-    #Meteor.call "dummyInsert",app.dummyInsert,(err,message)->
+    l 'tried startup waited'
+    #setTimeout connect('picture','elias') , 500
+        #Meteor.call "dummyInsert",app.dummyInsert,(err,message)->
 
         # if(err)
         #     test.isTrue(false, err)
