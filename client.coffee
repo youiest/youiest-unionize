@@ -4,8 +4,14 @@ l 'hi from client'
 # connect runs on the client and updates the client version of the users WI object
 # when users WI object is synced ot server before and after update hooks are fired
 
-@connect =  (w) ->
-    l 'hi from connect', w
+@connect =  (args) ->
+
+    l 'hi from connect', args
+    x = WI.findOne
+        _id:'elias'
+    console.log x
+    l arguments, arguments.callee
+    
     
     #something like this WI.outbox.[w.id]=w
 
@@ -22,13 +28,9 @@ l 'hi from client'
     
     # w.creator .. meteor user id
 
-    x = W.findOne
-        _idd:'elias'
-    console.log x
-    l w, x
-    l WI.findOne
-        _idd: 'elias'
-    l W.findOne , 'W now, before elias WI'
+    
+   
+    #l W.findOne , 'W now, before elias WI'
 #     #l 'connect', w 
 #     #lower case, collection name is upper
 #     #w is assumed to be a well formed object with
@@ -43,8 +45,8 @@ l 'hi from client'
 #     # w.grandfather this is the first .from in a chain and inherited
 # Tinytest.addAsync 'Initiating test', (test, next) ->
 Meteor.startup () ->
-    l 'tried startup'
-    connect 'tried'
+    l 'tried startup waited'
+    setTimeout connect('picture','elias') , 500
     #Meteor.call "dummyInsert",app.dummyInsert,(err,message)->
 
         # if(err)

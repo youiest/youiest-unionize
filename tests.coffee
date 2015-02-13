@@ -5,6 +5,10 @@
 
 l 'hi from tests'
 
+#test that updating WI on client fires before update hook on server
+
+
+
 # test that inserting w.to myUserId triggers a hook that inserts it into my.incoming in WI
 
 
