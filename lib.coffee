@@ -70,8 +70,36 @@ if Meteor.isServer
 	# Meteor.setTimeout(()->
 	# testName = 'inserting complete W ' +Random.id()
 	# Tinytest.addAsync testName, (test, next) ->
-	# WI.before.insert (userId, doc) ->
-		
+	WI.after.update (userId, doc) ->
+		# from_user's outbox logic
+		if wi
+			message = "updated in WI"
+			update = {}
+			update["outbox."+doc._id] = doc
+			console.log update
+			WI.update({"_id":doc.from_user},{$set:update});
+		else
+			user = {"_id":doc.from_user}
+			user.outbox = {}
+			user.outbox[doc._id] = doc
+			user.inbox = {}
+			WI.insert(user)
+
+		# to_user's inbox logic
+		wi = WI.findOne(doc.to_user)
+		if wi
+			message = "updated in WI"
+			update = {}
+			update["inbox."+doc._id] = doc
+			console.log update
+			WI.update({"_id":doc.from_user},{$set:update});
+		else
+			user = {"_id":doc.to_user}
+			user.inbox = {}
+			user.inbox[doc._id] = doc
+			user.outbox = {}
+			WI.insert(user)
+
 
 		
 
