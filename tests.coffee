@@ -3,7 +3,7 @@
 
 # test that findOne (natural:-1) finds latest version insert and learn how responsive it is
 
-l 'hi from tests'
+l t(), 'hi from tests'
 
 #test that updating WI on client fires before update hook on server
 
@@ -54,13 +54,13 @@ if Meteor.isServer
     doc.server_value = true
     return
 if Meteor.isClient
-  l 'calling dummyInsert'#, arguments.callee
+  l t(), 'calling dummyInsert'#, arguments.callee
   Meteor.call('dummyInsert')
   # connect isn't in this scope, why?
-  #l 'trying after dummy startup waited'
+  #l t(), 'trying after dummy startup waited'
   #setTimeout connect('picture','elias') , 500
   #setTimeout  l('waited'), 500 # so it's available # so db syncs
-  l 'done'
+  l t(), 'done'
   Meteor.subscribe 'test_insert_publish_collection2'
   Tinytest.addAsync 'insert - collection2 document on client should have client-added and server-added extra properties added to it before it is inserted', (test, next) ->
     collection2.before.insert (userId, doc) ->
@@ -74,7 +74,7 @@ if Meteor.isClient
       test.notEqual @_id, undefined, 'the _id should be available on this'
       return
     Meteor.startup ->
-      Meteor.call 'test_insert_reset_collection2', (err, result) ->
+      Meteor.call t(), 'test_insert_reset_collection2', (err, result) ->
         #l("test_insert_collection2 INSERT");
         collection2.insert { start_value: true }, ->
           test.equal collection2.find(

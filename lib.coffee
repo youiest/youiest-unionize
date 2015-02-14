@@ -32,18 +32,25 @@ console.warn = -> #this kills the warns from prior
 
 # shorthand log function also a timer lapsed
 
+
+
+
 @t = ->
 	console.timeEnd 'elapsed' 
 	console.time 'elapsed'
+	t = new Date().getTime()
+	return t
 
+#ti = new Date.getTime()
+#ti.t = toString(ti)
+#tim = ti
 @l = do ->
-  context = 't'
+  context =  ''#new Date().getTime()# - ti #'' #can be dynamic ?
   Function::bind.call console.log, console, context
 
 
 
 l t(), 'hi from lib'
-
 
 
 
