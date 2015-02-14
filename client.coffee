@@ -1,11 +1,11 @@
 #client.coffee has trusted code for creating connections
-l t(), 'hi from client'
+l  'hi from client'
 
 # connect runs on the client and updates the client version of the users WI object
 # when users WI object is synced ot server before and after update hooks are fired
 
 connect =  (args) ->
-    l t(), args.from, 'hi from connect'#, args, arguments , arguments.callee
+    l  args.from, 'hi from connect'#, args, arguments , arguments.callee
 
     x = WI.findOne
         _id:'elias'
@@ -46,7 +46,7 @@ setTimeout connect( recommendation )
     
    
     #l W.findOne , 'W now, before elias WI'
-#     #l t(), 'connect', w 
+#     #l  'connect', w 
 #     #lower case, collection name is upper
 #     #w is assumed to be a well formed object with
 #     # w.from must be from somewhere, this tells us what it is
@@ -60,7 +60,7 @@ setTimeout connect( recommendation )
 #     # w.grandfather this is the first .from in a chain and inherited
 # Tinytest.addAsync 'Initiating test', (test, next) ->
 Meteor.startup () ->
-    l t(), 'tried startup waited'
+    l  'tried startup waited'
     #setTimeout connect('picture','elias') , 500
         #Meteor.call "dummyInsert",app.dummyInsert,(err,message)->
 
