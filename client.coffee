@@ -6,7 +6,8 @@ l 'hi from client'
 
 connect =  (args) ->
     l 'hi from connect'#, args, arguments , arguments.callee
-    l args
+    t()
+    l t, args
     l args.from
     #l arguments.callee
     l a , 'aaa'

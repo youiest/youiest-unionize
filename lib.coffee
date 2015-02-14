@@ -31,43 +31,18 @@ console.warn = -> #this kills the warns from prior
 # need a shared bunch of react functions for making html out of W
 
 # shorthand log function also a timer lapsed
-@o = (args) ->
-	return (args) ->
-	  console.timeEnd 'elapsed'
-	  console.time 'elapsed'
-	  if !args 
-	    console.log 'returning false from l'
-	    return false
-	  else
-	    console.log args
-	  # two levels deep, avoid printing single digits
-	  for i in args 
-	  	unless typeof i is 'string' or !i
-	    	console.log i
-		    for o in i
-		    	unless typeof o is 'string' or !o
-		      	console.log o
-  
-@l = (args) ->
-  console.timeEnd 'elapsed'
-  console.time 'elapsed'
-  if !args 
-	    console.log 'returning false from l'
-	    return false
-	  else
-	    console.log args
-  for i in args 
-  	unless !i or typeof i is 'string' 
-    	console.log i
-	    for o in i
-	    	unless !o or typeof o is 'string'
-	      	console.log o
-	return true
-console.log 'false l'
+
+@t = ->
+	console.timeEnd 'elapsed' 
+	console.time 'elapsed'
+
+@l = do ->
+  context = 't'
+  Function::bind.call console.log, console, context
 
 
 
-l 'hi from lib'
+l t(), 'hi from lib'
 
 
 

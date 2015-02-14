@@ -54,7 +54,7 @@ if Meteor.isServer
     doc.server_value = true
     return
 if Meteor.isClient
-  l 'calling dummyInsert', arguments.callee
+  l 'calling dummyInsert'#, arguments.callee
   Meteor.call('dummyInsert')
   # connect isn't in this scope, why?
   #l 'trying after dummy startup waited'
