@@ -38,28 +38,33 @@ WI.after.update ((userId, doc, fieldNames, modifier, options) ->
   return
 ), fetchPrevious: false
 ###
-
+# there will be an outbox and inbox document, as well as a profile document.
+# profile document 
 WI.after.update (userId, doc, fieldNames, modifier, options) ->
   #console.log arguments.callee, arguments
   l  'got after updated WI! on server!' 
-  l arguments
-  l modifier.outbox
-  if !modifier.outbox
-    l  'nope outbox', arguments.callee
-  inserted = {}
-
-  for i in modifier.outbox
-    l i 
-    inserted[i] = i 
-    #y = W.insert 
-  l inserted
-  
-    #l y
-  #what if several updates have been inserted? we need a for in loop
   ins = W.insert
-    to: modifier.outbox.to
-    from: modifier.outbox.from
-  l ins 
+    to: doc.outbox.to
+    from: doc.outbox.from
+  l ins
+###
+  l arguments
+{ 
+'0': undefined,
+'1': { _id: 'nicolson', outbox: [ [Object], [Object] ] },
+'2': [ 'outbox' ],
+'3': { '$push': { outbox: [Object] } },
+ '4': {} 
+ }
+
+l modifier.outbox
+
+  if !doc.outbox
+    l  'nope outbox'
+  unless !userId
+      l 'unauthenticated after update hook'
+ ###
+#what if several updates have been inserted? we need a for in loop 
 ###
   W.insert
     hookedAt: new Date.getTime()
@@ -67,7 +72,6 @@ WI.after.update (userId, doc, fieldNames, modifier, options) ->
 ###
   #l a
   #console.log arguments.callee, userId, doc, fieldNames, modifier, options
-
 
 Meteor.methods
 

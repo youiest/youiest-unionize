@@ -4,20 +4,41 @@ l  'hi from client'
 # connect runs on the client and updates the client version of the users WI object
 # when users WI object is synced ot server before and after update hooks are fired
 
+
+formatUpdate = (args) ->
+    up = {} 
+    upd = {} 
+    upda = {}
+    #_id = args.from+'-'+args.to+'-'+new Date().getTime()
+    up = 
+        #_id: _id
+        from: args.from
+        to: args.to or false
+    #upd[_id]=up
+    #upda['outbox']=upd
+    return up
+
+#change to array instead, only the basic informationhere, actualy w objects are validated and created on server
 connect =  (args) ->
     l  args.from, 'hi from connect'#, args, arguments , arguments.callee
+    if !args.from
+        l 'not from anywhere! run!'
+    #now = t()
+    ups = formatUpdate args
+    l ups
 
-    x = WI.findOne
-        _id:'elias'
     #console.log x
     y = WI.update
         _id:'nicolson'
     ,
-        outbox:
-            from: args.from
-            to: args.to
+    '$push': 
+        'outbox': ups
 
-
+    x = WI.findOne
+        _id:'nicolson'
+    l t(), x.outbox
+            
+    
     #l arguments.callee # not working yet..
     #l arguments , 'to connect'
     
@@ -25,9 +46,14 @@ connect =  (args) ->
 @recommendation =
     to: 'elias'
     from: 'picture'
+@recommendation2 =
+    to: 'elias'
+    from: 'picture2'
 #l recommendation
 setTimeout connect( recommendation ) 
 , 500
+setTimeout connect( recommendation2 ) 
+, 600
     #something like this WI.outbox.[w.id]=w
 
     #lower case, collection name is upper

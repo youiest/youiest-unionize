@@ -32,19 +32,63 @@ console.warn = -> #this kills the warns from prior
 
 # shorthand log function also a timer lapsed
 
-orig = new Date().getTime()
-@t = ->
-	console.timeEnd 'elapsed' 
-	console.time 'elapsed'
-	new Date().getTime() - orig
 
+
+
+
+  # [ 1, 552 ]
+
+@daff = () ->
+	if Meteor.isServer #process.hrtime()? # ! 'undefined'
+		@time = process.hrtime()
+		d = process.hrtime(time)
+		d = d[0] * 1e9 + d[1]
+		console.log d 
+		d
+	else 
+		new Date().getTime()
+
+@dif = []
+
+@diff = () ->
+	dif.push daff()
+	console.log dif
+	#@di = @dif[0]
+	unless dif.length > 1
+		return dif[0] - dif[-1]
+	else 
+		return dif[0]
+
+@t = ->
+  #console.log orig , time()
+  console.timeEnd 'elapsed' 
+  console.time 'elapsed'
+  daff()
 
 @l = do ->
   context = 'l' # - ti #'' #can be dynamic ?
-  Function::bind.call console.log, console, context #,  new Date().getTime()
+  # it would be great if this actually executed so we'd have an exact time since start of app
+  # for some reason it's 'stuck' in th object instead of being re calculated.. closure
+  # find a package that does this right...
+  tim = daff()
+  Function::bind.call console.log, console, context, tim #,  new Date().getTime()
 
 
-l t(), 'hi from lib'
+
+
+
+console.log('starting lib.coffee at', diff() );
+
+
+d = diff()
+
+console.log d, 'hi from lib diff daff'
+l d
+l dif
+l diff()
+l daff()
+for i in '123'
+	l i , t() , daff(), 'counting to three t()'
 
 
 
