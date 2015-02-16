@@ -32,24 +32,41 @@ Package.on_use(function (api) {
   ], 'server');
 });
 
+// Package.on_test(function (api) {
+//   api.use(['matb33:collection-hooks', 'tinytest', 'test-helpers', 'coffeescript', 'insecure', 'accounts-base', 'accounts-password', 'underscore', 'random'], ['client', 'server']);
+ 
+//   api.add_files([
+//     'lib.coffee',
+//     'tests.coffee'
+//   ], ['client', 'server']);
+
+//   api.add_files([ 
+//     'server.coffee',
+//     'publish.coffee'
+//   ], ['server']);
+
+//   api.add_files([
+//     'client.coffee' 
+//   ], ['client']);
+// });
+
 Package.on_test(function (api) {
   api.use(['matb33:collection-hooks', 'tinytest', 'test-helpers', 'coffeescript', 'insecure', 'accounts-base', 'accounts-password', 'underscore', 'random'], ['client', 'server']);
  
   api.add_files([
-    'lib.coffee',
-    'tests.coffee'
+    'nicolson_lib.coffee',
+    'nicolson_tests.coffee'
   ], ['client', 'server']);
 
   api.add_files([ 
-    'server.coffee',
-    'publish.coffee'
+    'nicolson_server.coffee',
+    'nicolson_publish.coffee'
   ], ['server']);
 
   api.add_files([
-    'client.coffee' 
+    'nicolson_client.coffee' 
   ], ['client']);
 });
-
 
 
 

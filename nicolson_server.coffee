@@ -21,13 +21,20 @@ W.after.insert (userId, doc) ->
 
 # end this task if conditions dictate that we shouldn't touch it
 # if recently updated or user hasn't logged in recently postpone writes
+
+
 WI.before.update (userId, doc, fieldNames, modifier, options) ->
-  console.log("fieldNames")
-  console.log(fieldNames)
-  l  'hi from before update'
-  #modifier.$set = modifier.$set or {}
-  #modifier.$set.modifiedAt = Date.now()
-  return
+  Tinytest.addAsync('WI.before.update - before.update', (test,next)->
+    console.log("fieldNames")
+    console.log(fieldNames)
+    l  'hi from before update'
+    test.equal(1, 1, 'Expected values to be')
+    next() if next
+    #modifier.$set = modifier.$set or {}
+    #modifier.$set.modifiedAt = Date.now()
+    return
+  );
+
 # after insert into main collection we fan out 
 # write take w.to and cache write to: 
 # WI.findOne('w.to').incomming.['w.from']

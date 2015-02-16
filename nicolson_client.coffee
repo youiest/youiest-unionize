@@ -1,3 +1,15 @@
+# This worked in a testing attempt
+# Tinytest.addAsync('Second another - second', (test,next)->
+#     test.equal(1, 1, 'Expected values to be');
+#     next() if next
+# );
+
+# Tinytest.add('Third another - third', (test,next)->
+#     test.equal(1, 1, 'Expected values to be another');
+#     next() if next
+# );
+
+
 #client.coffee has trusted code for creating connections
 l  'hi from client'
 
@@ -28,8 +40,13 @@ connect =  (args) ->
     to: 'elias'
     from: 'picture'
 #l recommendation
-setTimeout connect( recommendation ) 
-, 500
+Tinytest.addAsync('setTimeout - timeout', (test,next)->
+    setTimeout ()-> 
+        connect( recommendation ) 
+        test.equal(1, 1, 'Expected values to be')
+        next() if next
+    , 500
+);
     #something like this WI.outbox.[w.id]=w
 
     #lower case, collection name is upper
