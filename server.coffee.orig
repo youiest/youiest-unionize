@@ -1,4 +1,14 @@
 
+<<<<<<< HEAD
+# Meteor.methods({
+# 	"dummyInsert" : (insert)->
+# 		# testName = 'inserting in W ' +Random.id()
+# 		# Tinytest.add testName, (test, next) ->
+# 			# test.isTrue(true, "so smooth now")
+# 			# next();	
+# 		W.insert insert	
+# });
+=======
   
 
 #collection hooks live on the server and catch up eventually
@@ -94,6 +104,7 @@ Meteor.methods
 			# next();	
 		#W.insert insert	
 
+>>>>>>> 6f634ce8d7b23b967d1cbf6123ffc339f74e5a26
 
 Meteor.publish(null,()->
 	return W.find({});

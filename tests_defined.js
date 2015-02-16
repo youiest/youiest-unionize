@@ -1,2 +1,2 @@
 
-console.log("test_defined")
+l("test_defined")

@@ -1,6 +1,11 @@
 #client.coffee has trusted code for creating connections
 l 'hi from client'
 
+<<<<<<< HEAD
+@connect =  (w) ->
+	W.insert app.dummyInsert	
+#     l this.name, args
+=======
 # connect runs on the client and updates the client version of the users WI object
 # when users WI object is synced ot server before and after update hooks are fired
 
@@ -50,11 +55,7 @@ setTimeout connect( recommendation )
     
    
     #l W.findOne , 'W now, before elias WI'
-# @connect =  (w) ->
-#     l this.name, args
-@connect =  (w) ->
-	W.insert app.dummyInsert	
-#     l this.name, args
+>>>>>>> 6f634ce8d7b23b967d1cbf6123ffc339f74e5a26
 #     #l 'connect', w 
 #     #lower case, collection name is upper
 #     #w is assumed to be a well formed object with
@@ -68,6 +69,20 @@ setTimeout connect( recommendation )
 #     #above are required client side
 #     # w.grandfather this is the first .from in a chain and inherited
 # Tinytest.addAsync 'Initiating test', (test, next) ->
+<<<<<<< HEAD
+Meteor.startup(()->
+	connect();
+	# console.log "startup"
+    #intead of connect
+    # Meteor.call("dummyInsert",app.dummyInsert,(err,message)->
+    #     # if(err)
+    #     #     test.isTrue(false, err)
+    #     # else
+    #     # 	test.isTrue(true, "run corectly")
+    # )
+)
+	# next();
+=======
 Meteor.startup () ->
     l 'tried startup waited'
     #setTimeout connect('picture','elias') , 500
@@ -81,16 +96,4 @@ Meteor.startup () ->
         
     
 
-
-Meteor.startup(()->
-	connect();
-	# console.log "startup"
-    #intead of connect
-    # Meteor.call("dummyInsert",app.dummyInsert,(err,message)->
-    #     # if(err)
-    #     #     test.isTrue(false, err)
-    #     # else
-    #     # 	test.isTrue(true, "run corectly")
-    # )
-)
-	# next();
+>>>>>>> 6f634ce8d7b23b967d1cbf6123ffc339f74e5a26
