@@ -50,45 +50,44 @@ console.warn = -> #this kills the warns from prior
 
 @dif = []
 
-@diff = () ->
+@t = () ->
 	dif.push daff()
-	console.log dif
-	#@di = @dif[0]
-	unless dif.length > 1
-		return dif[0] - dif[-1]
+	console.timeEnd 'elapsed' 
+	console.time 'elapsed'
+	return dif[0]-dif[-1..][0]
+
+@diff = ->
+###
+unless dif.length > 1
+		return dif[0]-dif[-1..][0]
 	else 
 		return dif[0]
-
 @t = ->
   #console.log orig , time()
   console.timeEnd 'elapsed' 
   console.time 'elapsed'
-  daff()
-
+  diff()
+###
 @l = do ->
   context = 'l' # - ti #'' #can be dynamic ?
   # it would be great if this actually executed so we'd have an exact time since start of app
   # for some reason it's 'stuck' in th object instead of being re calculated.. closure
   # find a package that does this right...
-  tim = daff()
+  tim = dif[0]-dif[-1..][0]
   Function::bind.call console.log, console, context, tim #,  new Date().getTime()
 
 
 
 
 
-console.log('starting lib.coffee at', diff() );
+#console.log('starting lib.coffee at', diff() );
 
 
-d = diff()
 
-console.log d, 'hi from lib diff daff'
-l d
-l dif
-l diff()
-l daff()
+console.log t(), 'hi from lib diff daff'
+
 for i in '123'
-	l i , t() , daff(), 'counting to three t()'
+	l i, t(), dif, dif[0]-dif[-1..][0],  'counting to three t()'
 
 
 
