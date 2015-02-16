@@ -43,7 +43,8 @@ connect =  (args) ->
 Tinytest.addAsync('setTimeout - timeout', (test,next)->
     setTimeout ()-> 
         connect( recommendation ) 
-        test.equal(1, 1, 'Expected values to be')
+        alert("setTimeout - timeout")
+        # test.equal(1, 1, 'timeout')
         next() if next
     , 500
 );

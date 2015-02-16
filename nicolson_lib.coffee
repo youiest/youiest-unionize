@@ -39,9 +39,11 @@ orig = new Date().getTime()
 	new Date().getTime() - orig
 
 
-@l = do ->
-  context = 'l' # - ti #'' #can be dynamic ?
-  Function::bind.call console.log, console, context #,  new Date().getTime()
+# @l = do ->
+#   context = 'l' # - ti #'' #can be dynamic ?
+#   Function::bind.call console.log, console, context #,  new Date().getTime()
+@l = () ->
+	#nothing to do
 
 
 l t(), 'hi from lib'
