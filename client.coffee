@@ -82,15 +82,15 @@ Meteor.startup () ->
     
 
 
-Meteor.startup(()->
-	connect();
-	# console.log "startup"
-    #intead of connect
-    # Meteor.call("dummyInsert",app.dummyInsert,(err,message)->
-    #     # if(err)
-    #     #     test.isTrue(false, err)
-    #     # else
-    #     # 	test.isTrue(true, "run corectly")
-    # )
-)
+# Meteor.startup(()->
+# 	connect();
+# 	# console.log "startup"
+#     #intead of connect
+#     # Meteor.call("dummyInsert",app.dummyInsert,(err,message)->
+#     #     # if(err)
+#     #     #     test.isTrue(false, err)
+#     #     # else
+#     #     # 	test.isTrue(true, "run corectly")
+#     # )
+# )
 	# next();
