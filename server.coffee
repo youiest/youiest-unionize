@@ -5,7 +5,7 @@
 
 # pre processing, validation should have been done in lib.coffee
 # validate again? 
-l 'hi from server'
+l  'hi from server'
 W.before.insert (userId, doc) ->
   l this.name, arguments
   doc.createdAt = Date.now()
@@ -22,7 +22,7 @@ W.after.insert (userId, doc) ->
 # end this task if conditions dictate that we shouldn't touch it
 # if recently updated or user hasn't logged in recently postpone writes
 WI.before.update (userId, doc, fieldNames, modifier, options) ->
-  l 'hi from before update'
+  l  'hi from before update'
   #modifier.$set = modifier.$set or {}
   #modifier.$set.modifiedAt = Date.now()
   return
@@ -41,11 +41,11 @@ WI.after.update ((userId, doc, fieldNames, modifier, options) ->
 
 WI.after.update (userId, doc, fieldNames, modifier, options) ->
   #console.log arguments.callee, arguments
-  l 'got after updated WI! on server!' 
+  l  'got after updated WI! on server!' 
   l arguments
   l modifier.outbox
   if !modifier.outbox
-    l 'nope outbox', arguments.callee
+    l  'nope outbox', arguments.callee
   inserted = {}
 
   for i in modifier.outbox
