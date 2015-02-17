@@ -1,5 +1,5 @@
 
-  
+
 
 #collection hooks live on the server and catch up eventually
 
@@ -7,7 +7,7 @@
 # validate again? 
 l t(), 'hi from server'
 W.before.insert (userId, doc) ->
-  l this.name, arguments
+  l t(), arguments, 'before insert arguments'
   doc.createdAt = Date.now()
   return
 

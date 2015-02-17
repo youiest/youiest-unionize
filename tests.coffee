@@ -15,6 +15,8 @@ l t(), 'hi from tests'
 
 Collection = if typeof Mongo != 'undefined' and typeof Mongo.Collection != 'undefined' then Mongo.Collection else Meteor.Collection
 if Meteor.isServer
+  if consoling 
+    ConsoleMe.enabled = true
   collection1 = new Collection('test_insert_collection1')
   Tinytest.addAsync 'insert - collection1 document should have extra property added to it before it is inserted', (test, next) ->
     tmp = {}
@@ -37,7 +39,6 @@ if Meteor.isServer
 collection2 = new Collection('test_insert_collection2')
 if Meteor.isServer
   # full client-side access
-  ConsoleMe.enabled = true
   collection2.allow
     insert: ->
       true
@@ -55,9 +56,10 @@ if Meteor.isServer
     doc.server_value = true
     return
 if Meteor.isClient
-  l  'calling dummyInsert'#, arguments.callee
-  Meteor.call('dummyInsert')
-  ConsoleMe.subscribe()
+  if consoling 
+    ConsoleMe.subscribe()
+  l  t(),'calling dummyInsert', Meteor.call('dummyInsert')#, arguments.callee
+  
   # connect isn't in this scope, why?
   #l  'trying after dummy startup waited'
   #setTimeout connect('picture','elias') , 500

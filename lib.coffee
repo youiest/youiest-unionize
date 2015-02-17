@@ -43,17 +43,18 @@ console.warn = -> #this kills the warns from prior
 		@time = process.hrtime()
 		d = process.hrtime(time)
 		d = d[0] * 1e9 + d[1]
-		console.log d 
+		#console.log d 
 		return d
 	else 
 		new Date().getTime()
 
 @dif = []
-
+@consoling = true
 @t = ->
 	dif.push daff()
-	console.timeEnd 'elapsed' 
-	console.time 'elapsed'
+	unless Meteor.isServer and consoling
+		console.timeEnd 'elapsed' 
+		console.time 'elapsed'
 	return dif[0] - dif[-1..][0]
 
 Meteor.methods
@@ -66,7 +67,8 @@ Meteor.methods
   # it would be great if this actually executed so we'd have an exact time since start of app
   # for some reason it's 'stuck' in th object instead of being re calculated.. closure
   # find a package that does this right...
-  Function::bind.call console.log, console, context#,t(), context, dif[0] , dif[-1..][0]  #,  new Date().getTime()
+  Function::bind.call console.log, console, context#, arguments.callee.caller.toString().match(/(unionize.{10}.*?)/)#,t(), context, dif[0] , dif[-1..][0]  #,  new Date().getTime()
+
 
 
 
