@@ -1,7 +1,7 @@
 # rule: no updates in W, only inserts. Unless it's a hook or cronjob, and we meaure it's speed
 
 #global variable not in here? what?
-@at = "eval(t());eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
+at = "eval(t());eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
 l eval(at), 'hi from updateClient.coffee'
 #test that updating WI on client fires before update hook on server
 

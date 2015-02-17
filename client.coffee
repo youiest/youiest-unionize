@@ -1,6 +1,7 @@
 #client.coffee has trusted code for creating connections
-l  'hi from client'
-a = do -> 
+at = "eval(t()),eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
+l eval(at), 'hi from client'
+
 # connect runs on the client and updates the client version of the users WI object
 # when users WI object is synced ot server before and after update hooks are fired
 
@@ -20,7 +21,7 @@ formatUpdate = (args) ->
 
 #change to array instead, only the basic informationhere, actualy w objects are validated and created on server
 @connect =  (args) ->
-    l eval(at),  args, 'hi from connect'#, args, arguments , arguments.callee
+    l eval(at), 'hi from connect'
     if !args.from
         l 'not from anywhere! run!'
     #now = t()
