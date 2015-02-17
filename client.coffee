@@ -20,12 +20,12 @@ formatUpdate = (args) ->
 
 #change to array instead, only the basic informationhere, actualy w objects are validated and created on server
 @connect =  (args) ->
-    l eval(t)[0] args, 'hi from connect'#, args, arguments , arguments.callee
+    l eval(t())[0], args, 'hi from connect'#, args, arguments , arguments.callee
     if !args.from
         l 'not from anywhere! run!'
     #now = t()
     ups = formatUpdate args
-    l eval(t)[0] ups , 'ups'
+    l eval(t())[0], ups , 'ups'
 
     #console.log x
     y = WI.update
@@ -36,7 +36,7 @@ formatUpdate = (args) ->
 
     x = WI.findOne
         _id:'nicolson'
-    l eval(t)[0] x.outbox
+    l eval(t())[0], x.outbox
             
         
 

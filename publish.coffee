@@ -2,5 +2,5 @@
 a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
 at = 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'
 att = eval(at)[0]
-l eval(t)[0] att, 'hi from publish'
+l eval(t())[0], att, 'hi from publish'
 
