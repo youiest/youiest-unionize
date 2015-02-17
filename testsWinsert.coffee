@@ -5,7 +5,6 @@
 a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
 l eval(at),  'hi from tests2'
 
-###
 
 # test that hook writes copy to .to in W
 
@@ -52,7 +51,7 @@ if Meteor.isServer
     return
 
 
-###
+
 
 
 # test that grounddb syncs back offline changes

@@ -1,6 +1,6 @@
 Package.describe({
   name: 'youiest:unionize',
-  version: '0.0.3',
+  version: '0.0.4',
   // Brief, one-line summary of the package.
   summary: ' for reactive network triggers with a simple ui',
   // URL to the Git repository containing the source code for this package.
@@ -33,7 +33,8 @@ Package.on_use(function (api) {
 });
 
 Package.on_test(function (api) {
-  api.use(['aldeed:console-me','matb33:collection-hooks', 'tinytest', 'test-helpers', 'coffeescript', 'insecure', 'accounts-base', 'accounts-password', 'underscore', 'random'], ['client', 'server']);
+  api.versionsFrom('1.0.3.1');
+  api.use(['aldeed:console-me','matb33:collection-hooks','tracker', 'tinytest', 'test-helpers', 'coffeescript', 'insecure', 'accounts-base', 'accounts-password', 'underscore', 'random'], ['client', 'server']);
  
   api.add_files([
     'lib.coffee',
