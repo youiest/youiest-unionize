@@ -1,33 +1,48 @@
 #client.coffee has trusted code for creating connections
-l  'hi from client'
-
+at = "eval(t());eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
+if consoling 
+  at = 't()'
+l eval(at), 'hi from client'
+l eval(at), 'hi from client again'
 # connect runs on the client and updates the client version of the users WI object
 # when users WI object is synced ot server before and after update hooks are fired
 
-connect =  (args) ->
-    l  args.from, 'hi from connect'#, args, arguments , arguments.callee
 
-    x = WI.findOne
-        _id:'elias'
+formatUpdate = (args) ->
+    up = {} 
+    upd = {} 
+    upda = {}
+    #_id = args.from+'-'+args.to+'-'+new Date().getTime()
+    up = 
+        #_id: _id
+        from: args.from
+        to: args.to or false
+    #upd[_id]=up
+    #upda['outbox']=upd
+    return up
+
+#change to array instead, only the basic informationhere, actualy w objects are validated and created on server
+@connect =  (args) ->
+    l eval(at), 'hi from connect'
+    if !args.from
+        l 'not from anywhere! run!'
+    #now = t()
+    ups = formatUpdate args
+    l eval(at),  ups , 'ups'
+
     #console.log x
     y = WI.update
         _id:'nicolson'
     ,
-        outbox:
-            from: args.from
-            to: args.to
+    '$push': 
+        'outbox': ups
 
+    x = WI.findOne
+        _id:'nicolson'
+    l eval(at),  x.outbox
+            
+        
 
-    #l arguments.callee # not working yet..
-    #l arguments , 'to connect'
-    
-@connect = connect
-@recommendation =
-    to: 'elias'
-    from: 'picture'
-#l recommendation
-setTimeout connect( recommendation ) 
-, 500
     #something like this WI.outbox.[w.id]=w
 
     #lower case, collection name is upper
@@ -60,7 +75,7 @@ setTimeout connect( recommendation )
 #     # w.grandfather this is the first .from in a chain and inherited
 # Tinytest.addAsync 'Initiating test', (test, next) ->
 Meteor.startup () ->
-    l  'tried startup waited'
+    l eval(at),  'client startup'
     #setTimeout connect('picture','elias') , 500
         #Meteor.call "dummyInsert",app.dummyInsert,(err,message)->
 

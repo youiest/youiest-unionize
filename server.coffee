@@ -1,13 +1,14 @@
+at = "eval(t());eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
 
-  
+#a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
 
 #collection hooks live on the server and catch up eventually
 
 # pre processing, validation should have been done in lib.coffee
 # validate again? 
-l  'hi from server'
+l eval(at), 'hi from server'
 W.before.insert (userId, doc) ->
-  l this.name, arguments
+  #l eval(at),  arguments, 'before insert arguments'
   doc.createdAt = Date.now()
   return
 
@@ -15,14 +16,14 @@ W.before.insert (userId, doc) ->
 # write to a jobs collection, that embeds all earlier versions of the doc into the new one, so there's no dupes
 
 W.after.insert (userId, doc) ->
-  l this.name, arguments
+  #l eval(at),  arguments , 'arguments after insert'
   # ...
   return
 
 # end this task if conditions dictate that we shouldn't touch it
 # if recently updated or user hasn't logged in recently postpone writes
 WI.before.update (userId, doc, fieldNames, modifier, options) ->
-  l  'hi from before update'
+  l eval(at),  fieldNames, 'before update fieldNames'
   #modifier.$set = modifier.$set or {}
   #modifier.$set.modifiedAt = Date.now()
   return
@@ -38,28 +39,44 @@ WI.after.update ((userId, doc, fieldNames, modifier, options) ->
   return
 ), fetchPrevious: false
 ###
-
-WI.after.update (userId, doc, fieldNames, modifier, options) ->
+# there will be an outbox and inbox document, as well as a profile document.
+# profile document 
+processInboxAfterUpdate = (doc)->
+  for i in doc 
+    l eval(at),  i, 'inserting into w'
+    ins = W.insert i
+    l eval(at),  ins , 'interted into w'
+WIAfterUpdate = WI.after.update (userId, doc, fieldNames, modifier, options) ->
   #console.log arguments.callee, arguments
-  l  'got after updated WI! on server!' 
-  l arguments
-  l modifier.outbox
-  if !modifier.outbox
-    l  'nope outbox', arguments.callee
-  inserted = {}
-
-  for i in modifier.outbox
-    l i 
-    inserted[i] = i 
-    #y = W.insert 
-  l inserted
+  l eval(at), doc, doc.outbox, 'got after updated WI! on server!' 
+  if doc.outbox.length > 0 
+    processInboxAfterUpdate(doc.outbox)
+   
   
-    #l y
-  #what if several updates have been inserted? we need a for in loop
-  ins = W.insert
-    to: modifier.outbox.to
-    from: modifier.outbox.from
-  l ins 
+### arguments
+ l 5734 { _id: 'nicolson',
+   outbox: [ { from: 'picture', to: 'elias' } ] } got after updated WI! on server!
+ l undefined { '0': undefined,
+  '1': { _id: 'nicolson', outbox: [ [Object] ] } }
+ 3648
+ elapsed: 5ms
+
+{ 
+'0': undefined,
+'1': { _id: 'nicolson', outbox: [ [Object], [Object] ] },
+'2': [ 'outbox' ],
+'3': { '$push': { outbox: [Object] } },
+ '4': {} 
+ }
+
+l modifier.outbox
+
+  if !doc.outbox
+    l  'nope outbox'
+  unless !userId
+      l 'unauthenticated after update hook'
+ ###
+#what if several updates have been inserted? we need a for in loop 
 ###
   W.insert
     hookedAt: new Date.getTime()
@@ -69,30 +86,6 @@ WI.after.update (userId, doc, fieldNames, modifier, options) ->
   #console.log arguments.callee, userId, doc, fieldNames, modifier, options
 
 
-Meteor.methods
-
-  "dummyInsert" : (insert) ->
-    W.remove({});
-    WI.remove({});
-    e = W.insert
-      _id: 'elias'
-    n = W.insert
-      _id: 'nicolson'
-    p = W.insert
-      _id: 'picture'
-    l e, n, p
-    WI.insert 
-      _id: 'elias'
-    WI.insert
-      _id: 'nicolson'
-    l WI.findOne({})._id #, this.name
-    
-    #l arguments.calle,  insert
-		# testName = 'inserting in W ' +Random.id()
-		# Tinytest.add testName, (test, next) ->
-			# test.isTrue(true, "so smooth now")
-			# next();	
-		#W.insert insert	
 
 
 Meteor.publish(null,()->
