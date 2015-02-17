@@ -100,7 +100,6 @@ if Meteor.isClient
       return
     return
 
-
 if Meteor.isServer
   if consoling 
     ConsoleMe.enabled = true
