@@ -44,37 +44,24 @@ console.warn = -> #this kills the warns from prior
 		d = process.hrtime(time)
 		d = d[0] * 1e9 + d[1]
 		console.log d 
-		d
+		return d
 	else 
 		new Date().getTime()
 
 @dif = []
 
-@t = () ->
+@t = ->
 	dif.push daff()
 	console.timeEnd 'elapsed' 
 	console.time 'elapsed'
-	return dif[0]-dif[-1..][0]
+	return dif[0] - dif[-1..][0]
 
-@diff = ->
-###
-unless dif.length > 1
-		return dif[0]-dif[-1..][0]
-	else 
-		return dif[0]
-@t = ->
-  #console.log orig , time()
-  console.timeEnd 'elapsed' 
-  console.time 'elapsed'
-  diff()
-###
 @l = do ->
-  context = 'l' # - ti #'' #can be dynamic ?
+  context = 'l' #dif[-1..][0] # - ti #'' #can be dynamic ?
   # it would be great if this actually executed so we'd have an exact time since start of app
   # for some reason it's 'stuck' in th object instead of being re calculated.. closure
   # find a package that does this right...
-  tim = dif[0]-dif[-1..][0]
-  Function::bind.call console.log, console, context, tim #,  new Date().getTime()
+  Function::bind.call console.log, console, context#,t(), context, dif[0] , dif[-1..][0]  #,  new Date().getTime()
 
 
 
@@ -82,12 +69,8 @@ unless dif.length > 1
 
 #console.log('starting lib.coffee at', diff() );
 
-
-
-console.log t(), 'hi from lib diff daff'
-
-for i in '123'
-	l i, t(), dif, dif[0]-dif[-1..][0],  'counting to three t()'
+for i in '123456789'
+	l t(), dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
 
 
 
