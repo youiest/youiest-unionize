@@ -1,11 +1,7 @@
-a = -> eval("t() , eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)")[0]
-#at = "t();eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)[0]"
-
 # rule: no updates in W, only inserts. Unless it's a hook or cronjob, and we meaure it's speed
-#
 
-# test that findOne (natural:-1) finds latest version insert and learn how responsive it is
-
+#global variable not in here? what?
+@at = "eval(t());eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
 l eval(at), 'hi from updateClient.coffee'
 #test that updating WI on client fires before update hook on server
 
@@ -77,7 +73,8 @@ if Meteor.isServer
 if Meteor.isClient
   if consoling 
     ConsoleMe.subscribe()
-  l  eval(at), Meteor.call('dummyInsert')
+  l  eval(at), 'calling dummyInsert'
+  Meteor.call('dummyInsert')
 
   Meteor.subscribe 'test_insert_publish_collection22'
   Tinytest.addAsync 'update - updating client WI should trigger insert into W', (test, next) ->
@@ -90,17 +87,17 @@ if Meteor.isClient
       test.notEqual @_id, undefined, 'the _id should be available on this'
       return
     Meteor.startup ->
-
-      l eval(at),  'startup dummyInsert', Meteor.call 'dummyInsert'
+      l eval(at),  'startup dummyInsert', 
+      Meteor.call 'dummyInsert'
       recommendation =
         to: 'elias'
         from: 'picture'
       recommendation2 =
         to: 'elias'
         from: 'picture2'
-      l t(), recommendation2, recommendation.from , 'testing recommendation'
+      l eval(at), recommendation2, recommendation.from , 'testing recommendation'
       
-      l t(), recommendation2, recommendation.from , 'testing recommendation'
+      l eval(at), recommendation2, recommendation.from , 'testing recommendation'
       #setTimeout 
       connect( recommendation ) 
       #, 500

@@ -80,7 +80,7 @@ Meteor.methods
 #console.log('starting lib.coffee at', diff() );
 l eval(at)
 for i in '123'
-	l t()
+	l eval(at)
 	l eval(at),  dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
 
 

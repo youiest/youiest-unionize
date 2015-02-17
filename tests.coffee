@@ -59,7 +59,7 @@ if Meteor.isServer
 if Meteor.isClient
   if consoling 
     ConsoleMe.subscribe()
-  l t(), a'calling dummyInsert', Meteor.call('dummyInsert')#, arguments.callee
+  l eval(at), a'calling dummyInsert', Meteor.call('dummyInsert')#, arguments.callee
   
   # connect isn't in this scope, why?
   #l  'trying after dummy startup waited'
