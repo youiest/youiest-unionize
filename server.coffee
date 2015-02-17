@@ -1,11 +1,11 @@
-at = "eval(t()),eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
-a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
+at = "eval(t());eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
+#a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
 
 #collection hooks live on the server and catch up eventually
 
 # pre processing, validation should have been done in lib.coffee
 # validate again? 
-l eval(at),  a, 'hi from server'
+l eval(at), 'hi from server'
 W.before.insert (userId, doc) ->
   #l eval(at),  arguments, 'before insert arguments'
   doc.createdAt = Date.now()
@@ -22,7 +22,7 @@ W.after.insert (userId, doc) ->
 # end this task if conditions dictate that we shouldn't touch it
 # if recently updated or user hasn't logged in recently postpone writes
 WI.before.update (userId, doc, fieldNames, modifier, options) ->
-  l eval(at),  fieldNames, 'hi from before update fieldNames'
+  l eval(at),  fieldNames, 'before update fieldNames'
   #modifier.$set = modifier.$set or {}
   #modifier.$set.modifiedAt = Date.now()
   return
@@ -40,13 +40,17 @@ WI.after.update ((userId, doc, fieldNames, modifier, options) ->
 ###
 # there will be an outbox and inbox document, as well as a profile document.
 # profile document 
-WI.after.update (userId, doc, fieldNames, modifier, options) ->
-  #console.log arguments.callee, arguments
-  l eval(at),  a, doc, 'got after updated WI! on server!' 
-  for i in doc.outbox 
-    l eval(at),  i
+processInboxAfterUpdate = (doc)->
+  for i in doc 
+    l eval(at),  i, 'inserting into w'
     ins = W.insert i
-    l eval(at),  ins 
+    l eval(at),  ins , 'interted into w'
+WIAfterUpdate = WI.after.update (userId, doc, fieldNames, modifier, options) ->
+  #console.log arguments.callee, arguments
+  l eval(at), doc, doc.outbox, 'got after updated WI! on server!' 
+  if doc.outbox.length > 0 
+    processInboxAfterUpdate(doc.outbox)
+   
   
 ### arguments
  l 5734 { _id: 'nicolson',

@@ -22,11 +22,85 @@ Meteor.methods
       _id: 'nicolson'
 
 
+
 # test that inserting w.to myUserId triggers a hook that inserts it into my.incoming in WI
 
 # test that updating WI on client fires hook and inserts same object into w on server
 
 Collection = if typeof Mongo != 'undefined' and typeof Mongo.Collection != 'undefined' then Mongo.Collection else Meteor.Collection
+
+
+if Meteor.isClient
+  if consoling 
+    ConsoleMe.subscribe()
+  l  eval(at), 'calling dummyInsert'
+  Meteor.call('dummyInsert')
+
+  Meteor.subscribe 'test_insert_publish_collection22'
+  Tinytest.addAsync 'update - updating client WI should work', (test, next) ->
+    collection22.before.insert (userId, doc) ->
+      test.notEqual userId, undefined, 'the userId should be present since we are on the client'
+      test.equal collection22.find(start_value: true).count(), 0, 'collection22 should not have the test document in it'
+      doc.client_value = true
+      return
+    collection22.after.insert (userId, doc) ->
+      test.notEqual @_id, undefined, 'the _id should be available on this'
+      return
+    Meteor.startup ->
+      l eval(at),  'startup dummyInsert'
+      Meteor.call 'dummyInsert'
+      recommendation =
+        to: 'elias'
+        from: 'picture'
+      recommendation2 =
+        to: 'elias'
+        from: 'picture2'
+      l eval(at)
+      , recommendation, recommendation.from 
+      ,'testing recommendation'
+      , connect(recommendation) 
+      
+      l eval(at), recommendation2, recommendation2.from 
+      , 'testing recommendation2', connect(recommendation2) 
+      
+      l eval(at), recommendation.from, WI.findOne({}).outbox , 'outbox'
+      @checks = (c)->
+        console.log c
+        l eval(at)
+        , c
+        , 'running checks'
+        , W.findOne {}
+        , W.findOne({'from':'picture'})
+        alert 'about to check'
+        r = W.findOne
+          to: recommendation.to
+          from: recommendation.from
+        r2 = W.findOne
+          to: recommendation2.to
+          from: recommendation2.from
+        unless r.from
+          setTimeout checks(), 1000
+          return
+        l eval(at),  'testing for rec n r' , recommendation.from, r, r2, W.findOne({'from':'picture'})
+        
+        test.equal recommendation.from, WI.findOne {"from":from}
+
+
+      check()
+      Meteor.call  'test_insert_reset_collection22', (err, result) ->
+        #l("test_insert_collection22 INSERT");
+        collection22.insert { start_value: true }, ->
+          test.equal collection22.find(
+            start_value: true
+            client_value: true
+            server_value: true).count(), 1, 'collection22 should have the test document with client_value AND server_value in it'
+          next()
+          return
+        return
+      return
+    return
+
+
 if Meteor.isServer
   if consoling 
     ConsoleMe.enabled = true
@@ -67,65 +141,6 @@ if Meteor.isServer
   collection22.before.insert (userId, doc) ->
     #l("test_insert_collection22 BEFORE INSERT", userId, doc);
     doc.server_value = true
-    return
-
-
-if Meteor.isClient
-  if consoling 
-    ConsoleMe.subscribe()
-  l  eval(at), 'calling dummyInsert'
-  Meteor.call('dummyInsert')
-
-  Meteor.subscribe 'test_insert_publish_collection22'
-  Tinytest.addAsync 'update - updating client WI should trigger insert into W', (test, next) ->
-    collection22.before.insert (userId, doc) ->
-      test.notEqual userId, undefined, 'the userId should be present since we are on the client'
-      test.equal collection22.find(start_value: true).count(), 0, 'collection22 should not have the test document in it'
-      doc.client_value = true
-      return
-    collection22.after.insert (userId, doc) ->
-      test.notEqual @_id, undefined, 'the _id should be available on this'
-      return
-    Meteor.startup ->
-      l eval(at),  'startup dummyInsert', 
-      Meteor.call 'dummyInsert'
-      recommendation =
-        to: 'elias'
-        from: 'picture'
-      recommendation2 =
-        to: 'elias'
-        from: 'picture2'
-      l eval(at), recommendation2, recommendation.from , 'testing recommendation'
-      
-      l eval(at), recommendation2, recommendation.from , 'testing recommendation'
-      #setTimeout 
-      connect( recommendation ) 
-      #, 500
-      #setTimeout 
-      connect( recommendation2 ) 
-      l eval(at), recommendation.from WI.findOne({}).outbox
-      checks = ->
-        l eval(at),  'running checks', W.findOne {}, W.findOne {'from':'picture'}
-        r = W.findOne
-          to: recommendation.to
-          from: recommendation.from
-        r2 = W.findOne
-          to: recommendation2.to
-          from: recommendation2.from
-        l eval(at),  'testing for rec n r' , recommendation.from, r, r2, W.findOne {'from':'picture'}
-        test.equal recommendation.from, r.from
-      setTimeout checks(), 10500
-      Meteor.call  'test_insert_reset_collection22', (err, result) ->
-        #l("test_insert_collection22 INSERT");
-        collection22.insert { start_value: true }, ->
-          test.equal collection22.find(
-            start_value: true
-            client_value: true
-            server_value: true).count(), 1, 'collection22 should have the test document with client_value AND server_value in it'
-          next()
-          return
-        return
-      return
     return
 
 

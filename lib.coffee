@@ -11,7 +11,7 @@
 # # that they follow rules..
 
 # # need a shared bunch of react functions for making html out of W
-@at = "eval(t()),eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
+@at = "eval(t());eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
 @att = "'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]"
 
 console.time 'elapsed'
