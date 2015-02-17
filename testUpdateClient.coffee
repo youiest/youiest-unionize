@@ -21,7 +21,7 @@ Meteor.methods
     WI.insert
       _id: 'nicolson'
 
-
+Meteor.call('dummyInsert')
 
 # test that inserting w.to myUserId triggers a hook that inserts it into my.incoming in WI
 
@@ -34,10 +34,9 @@ if Meteor.isClient
   if consoling 
     ConsoleMe.subscribe()
   l  eval(at), 'calling dummyInsert'
-  Meteor.call('dummyInsert')
 
   Meteor.subscribe 'test_insert_publish_collection22'
-  Tinytest.addAsync 'update - updating client WI should work', (test, next) ->
+  Tinytest.addAsync 'update - clientside update of WI should trigger insert into W', (test, next) ->
     collection22.before.insert (userId, doc) ->
       test.notEqual userId, undefined, 'the userId should be present since we are on the client'
       test.equal collection22.find(start_value: true).count(), 0, 'collection22 should not have the test document in it'
@@ -83,7 +82,7 @@ if Meteor.isClient
           return
         l eval(at),  'testing for rec n r' , recommendation.from, r, r2, W.findOne({'from':'picture'})
         
-        test.equal recommendation.from, WI.findOne {"from":from}
+        test.equal recommendation.from , W.findOne {"from":from}.from
 
 
       check()
