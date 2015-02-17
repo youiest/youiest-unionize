@@ -39,11 +39,10 @@ console.warn = -> #this kills the warns from prior
   # [ 1, 552 ]
 
 @daff = () ->
-	if Meteor.isServer #process.hrtime()? # ! 'undefined'
+	if Meteor.isServer
 		@time = process.hrtime()
 		d = process.hrtime(time)
-		d = d[0] * 1e9 + d[1]
-		#console.log d 
+		d = d[1] #+d[0] * 1e9 
 		return d
 	else 
 		new Date().getTime()
@@ -55,8 +54,7 @@ console.warn = -> #this kills the warns from prior
 	unless Meteor.isServer and consoling
 		console.timeEnd 'elapsed' 
 		console.time 'elapsed'
-	console.log dif[0] - dif[-1..][0]
-	return 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'
+	return dif[0] - dif[-1..][0] #"arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)[0]"
 
 Meteor.methods
 	"t" : () ->
@@ -78,7 +76,7 @@ Meteor.methods
 #console.log('starting lib.coffee at', diff() );
 
 for i in '123'
-	l eval(t())[0], dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
+	l t(), a, dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
 
 
 

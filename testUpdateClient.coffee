@@ -6,14 +6,13 @@ a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')
 
 # test that findOne (natural:-1) finds latest version insert and learn how responsive it is
 
-l eval(t())[0], 'hi from updateClient.coffee'
+l t(), a, 'hi from updateClient.coffee'
 
 #test that updating WI on client fires before update hook on server
 
 Meteor.methods
-
   "dummyInsert" : (insert) ->
-    l eval(t())[0], a
+    #l eval(t()) #l eval(t())#a #eval(t()) #null in methods? eh?
     W.remove({});
     WI.remove({});
     e = W.insert
@@ -22,12 +21,12 @@ Meteor.methods
       _id: 'nicolson'
     p = W.insert
       _id: 'picture'
-    l e, n, p
     WI.insert 
       _id: 'elias'
     WI.insert
       _id: 'nicolson'
-    l WI.findOne({})._id #, this.name
+    #l WI.findOne({})._id #, this.name
+
 
 # test that inserting w.to myUserId triggers a hook that inserts it into my.incoming in WI
 
@@ -80,7 +79,7 @@ if Meteor.isServer
 if Meteor.isClient
   if consoling 
     ConsoleMe.subscribe()
-  l  t(),'calling dummyInsert', Meteor.call('dummyInsert')#, arguments.callee
+  l  eval(t()),'calling dummyInsert', Meteor.call('dummyInsert')#, arguments.callee
   
   Meteor.subscribe 'test_insert_publish_collection22'
   Tinytest.addAsync 'update - updating client WI should trigger insert into W', (test, next) ->
@@ -98,7 +97,7 @@ if Meteor.isClient
     
 
 
-      l eval(t())[0], 'starup dummyInsert'
+      l t(), a, 'starup dummyInsert'
       Meteor.call 'dummyInsert'
       recommendation =
         to: 'elias'
@@ -106,7 +105,7 @@ if Meteor.isClient
       recommendation2 =
         to: 'elias'
         from: 'picture2'
-      l eval(t())[0], recommendation2, recommendation.from
+      l t(), a, recommendation2, recommendation.from
       #setTimeout 
       connect( recommendation ) 
       #, 500
@@ -119,7 +118,7 @@ if Meteor.isClient
         r2 = W.findOne
           to: recommendation2.to
           from: recommendation2.from
-        l eval(t())[0], 'looking for rec n r' , recommendation.from, r.from
+        l t(), a, 'looking for rec n r' , recommendation.from, r.from
         test.equal recommendation.from, r.from
       setTimeout checks(), 500
       Meteor.call  'test_insert_reset_collection22', (err, result) ->

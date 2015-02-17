@@ -3,7 +3,7 @@
 
 # test that findOne (natural:-1) finds latest version insert and learn how responsive it is
 a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
-l eval(t())[0], 'hi from tests'
+l t(), a, 'hi from tests'
 
 
 #test that updating WI on client fires before update hook on server
@@ -59,7 +59,7 @@ if Meteor.isServer
 if Meteor.isClient
   if consoling 
     ConsoleMe.subscribe()
-  l  t(),'calling dummyInsert', Meteor.call('dummyInsert')#, arguments.callee
+  l t(), a'calling dummyInsert', Meteor.call('dummyInsert')#, arguments.callee
   
   # connect isn't in this scope, why?
   #l  'trying after dummy startup waited'
