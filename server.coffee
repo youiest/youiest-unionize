@@ -1,11 +1,11 @@
 
-
+a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
 
 #collection hooks live on the server and catch up eventually
 
 # pre processing, validation should have been done in lib.coffee
 # validate again? 
-l t(), 'hi from server'
+l t(), a, 'hi from server'
 W.before.insert (userId, doc) ->
   l t(), arguments, 'before insert arguments'
   doc.createdAt = Date.now()
@@ -42,7 +42,7 @@ WI.after.update ((userId, doc, fieldNames, modifier, options) ->
 # profile document 
 WI.after.update (userId, doc, fieldNames, modifier, options) ->
   #console.log arguments.callee, arguments
-  l t(), doc, 'got after updated WI! on server!' 
+  l t(), a, doc, 'got after updated WI! on server!' 
   for i in doc.outbox 
     l t(), i
     ins = W.insert i

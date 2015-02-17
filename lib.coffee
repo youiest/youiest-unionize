@@ -12,8 +12,8 @@
 
 # # need a shared bunch of react functions for making html out of W
 console.time 'elapsed'
-@a = arguments.callee
-
+a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
+# this fetches to filename so logs can know where they're logged from
 
 console.warn = -> #this kills the warns from prior
 # The main collection. Only inserts allowed. Unless by cron or hook.

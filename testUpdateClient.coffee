@@ -1,3 +1,6 @@
+a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
+
+
 # rule: no updates in W, only inserts. Unless it's a hook or cronjob, and we meaure it's speed
 #
 
@@ -10,6 +13,7 @@ l t(), 'hi from updateClient.coffee'
 Meteor.methods
 
   "dummyInsert" : (insert) ->
+    l t(), a
     W.remove({});
     WI.remove({});
     e = W.insert
@@ -96,27 +100,28 @@ if Meteor.isClient
 
       l t(), 'starup dummyInsert'
       Meteor.call 'dummyInsert'
-      @recommendation =
+      recommendation =
         to: 'elias'
         from: 'picture'
-      @recommendation2 =
+      recommendation2 =
         to: 'elias'
         from: 'picture2'
-      l t(), recommendation2
+      l t(), recommendation2, recommendation.from
       #setTimeout 
       connect( recommendation ) 
       #, 500
       #setTimeout 
       connect( recommendation2 ) 
-      r = W.findOne
-        to: recommendation.to
-        from: recommendation.from
-      r2 = W.findOne
-        to: recommendation.to
-        from: recommendation.from
-      l t(), recommendation.from, r.from
-      test.equal recommendation.from, r.from
-
+      checks = ->
+        r = W.findOne
+          to: recommendation.to
+          from: recommendation.from
+        r2 = W.findOne
+          to: recommendation2.to
+          from: recommendation2.from
+        l t(), 'looking for rec n r' , recommendation.from, r.from
+        test.equal recommendation.from, r.from
+      setTimeout checks(), 500
       Meteor.call  'test_insert_reset_collection22', (err, result) ->
         #l("test_insert_collection22 INSERT");
         collection22.insert { start_value: true }, ->

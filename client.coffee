@@ -1,6 +1,6 @@
 #client.coffee has trusted code for creating connections
 l  'hi from client'
-
+a = do -> 
 # connect runs on the client and updates the client version of the users WI object
 # when users WI object is synced ot server before and after update hooks are fired
 
