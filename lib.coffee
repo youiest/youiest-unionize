@@ -56,6 +56,11 @@ console.warn = -> #this kills the warns from prior
 	console.time 'elapsed'
 	return dif[0] - dif[-1..][0]
 
+Meteor.methods
+	"t" : () ->
+		return t()
+
+
 @l = do ->
   context = 'l' #dif[-1..][0] # - ti #'' #can be dynamic ?
   # it would be great if this actually executed so we'd have an exact time since start of app
@@ -69,7 +74,7 @@ console.warn = -> #this kills the warns from prior
 
 #console.log('starting lib.coffee at', diff() );
 
-for i in '123456789'
+for i in '123'
 	l t(), dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
 
 

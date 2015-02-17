@@ -20,12 +20,12 @@ formatUpdate = (args) ->
 
 #change to array instead, only the basic informationhere, actualy w objects are validated and created on server
 connect =  (args) ->
-    l  args.from, 'hi from connect'#, args, arguments , arguments.callee
+    l t(), args, 'hi from connect'#, args, arguments , arguments.callee
     if !args.from
         l 'not from anywhere! run!'
     #now = t()
     ups = formatUpdate args
-    l ups
+    l t(), ups , 'ups'
 
     #console.log x
     y = WI.update
@@ -38,10 +38,7 @@ connect =  (args) ->
         _id:'nicolson'
     l t(), x.outbox
             
-    
-    #l arguments.callee # not working yet..
-    #l arguments , 'to connect'
-    
+        
 @connect = connect
 @recommendation =
     to: 'elias'
@@ -86,7 +83,7 @@ setTimeout connect( recommendation2 )
 #     # w.grandfather this is the first .from in a chain and inherited
 # Tinytest.addAsync 'Initiating test', (test, next) ->
 Meteor.startup () ->
-    l  'tried startup waited'
+    l  t(), 'client startup'
     #setTimeout connect('picture','elias') , 500
         #Meteor.call "dummyInsert",app.dummyInsert,(err,message)->
 

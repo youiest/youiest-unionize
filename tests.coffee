@@ -3,7 +3,7 @@
 
 # test that findOne (natural:-1) finds latest version insert and learn how responsive it is
 
-l  'hi from tests'
+l t(), 'hi from tests'
 
 #test that updating WI on client fires before update hook on server
 
@@ -37,6 +37,7 @@ if Meteor.isServer
 collection2 = new Collection('test_insert_collection2')
 if Meteor.isServer
   # full client-side access
+  ConsoleMe.enabled = true
   collection2.allow
     insert: ->
       true
@@ -56,6 +57,7 @@ if Meteor.isServer
 if Meteor.isClient
   l  'calling dummyInsert'#, arguments.callee
   Meteor.call('dummyInsert')
+  ConsoleMe.subscribe()
   # connect isn't in this scope, why?
   #l  'trying after dummy startup waited'
   #setTimeout connect('picture','elias') , 500

@@ -5,7 +5,7 @@
 
 # pre processing, validation should have been done in lib.coffee
 # validate again? 
-l  'hi from server'
+l t(), 'hi from server'
 W.before.insert (userId, doc) ->
   l this.name, arguments
   doc.createdAt = Date.now()
@@ -15,14 +15,14 @@ W.before.insert (userId, doc) ->
 # write to a jobs collection, that embeds all earlier versions of the doc into the new one, so there's no dupes
 
 W.after.insert (userId, doc) ->
-  l this.name, arguments
+  l t(), arguments , 'arguments after insert'
   # ...
   return
 
 # end this task if conditions dictate that we shouldn't touch it
 # if recently updated or user hasn't logged in recently postpone writes
 WI.before.update (userId, doc, fieldNames, modifier, options) ->
-  l  'hi from before update'
+  l t(), fieldNames, 'hi from before update fieldNames'
   #modifier.$set = modifier.$set or {}
   #modifier.$set.modifiedAt = Date.now()
   return
@@ -42,13 +42,20 @@ WI.after.update ((userId, doc, fieldNames, modifier, options) ->
 # profile document 
 WI.after.update (userId, doc, fieldNames, modifier, options) ->
   #console.log arguments.callee, arguments
-  l  'got after updated WI! on server!' 
-  ins = W.insert
-    to: doc.outbox.to
-    from: doc.outbox.from
-  l ins
-###
-  l arguments
+  l t(), doc, 'got after updated WI! on server!' 
+  for i in doc.outbox 
+    l t(), i
+    ins = W.insert i
+    l t(), ins 
+  
+### arguments
+ l 5734 { _id: 'nicolson',
+   outbox: [ { from: 'picture', to: 'elias' } ] } got after updated WI! on server!
+ l undefined { '0': undefined,
+  '1': { _id: 'nicolson', outbox: [ [Object] ] } }
+ 3648
+ elapsed: 5ms
+
 { 
 '0': undefined,
 '1': { _id: 'nicolson', outbox: [ [Object], [Object] ] },
