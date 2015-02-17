@@ -7,7 +7,23 @@ l t(), 'hi from updateClient.coffee'
 
 #test that updating WI on client fires before update hook on server
 
+Meteor.methods
 
+  "dummyInsert" : (insert) ->
+    W.remove({});
+    WI.remove({});
+    e = W.insert
+      _id: 'elias'
+    n = W.insert
+      _id: 'nicolson'
+    p = W.insert
+      _id: 'picture'
+    l e, n, p
+    WI.insert 
+      _id: 'elias'
+    WI.insert
+      _id: 'nicolson'
+    l WI.findOne({})._id #, this.name
 
 # test that inserting w.to myUserId triggers a hook that inserts it into my.incoming in WI
 
@@ -55,18 +71,15 @@ if Meteor.isServer
     #l("test_insert_collection22 BEFORE INSERT", userId, doc);
     doc.server_value = true
     return
+
+
 if Meteor.isClient
   if consoling 
     ConsoleMe.subscribe()
   l  t(),'calling dummyInsert', Meteor.call('dummyInsert')#, arguments.callee
   
-  # connect isn't in this scope, why?
-  #l  'trying after dummy startup waited'
-  #setTimeout connect('picture','elias') , 500
-  #setTimeout  l('waited'), 500 # so it's available # so db syncs
-  l  'done'
   Meteor.subscribe 'test_insert_publish_collection22'
-  Tinytest.addAsync 'update - collection22 document on client should have client-added and server-added extra properties added to it before it is inserted', (test, next) ->
+  Tinytest.addAsync 'update - updating client WI should trigger insert into W', (test, next) ->
     collection22.before.insert (userId, doc) ->
       #l("test_insert_collection22 BEFORE INSERT", userId, doc);
       test.notEqual userId, undefined, 'the userId should be present since we are on the client'
@@ -78,6 +91,32 @@ if Meteor.isClient
       test.notEqual @_id, undefined, 'the _id should be available on this'
       return
     Meteor.startup ->
+    
+
+
+      l t(), 'starup dummyInsert'
+      Meteor.call 'dummyInsert'
+      @recommendation =
+        to: 'elias'
+        from: 'picture'
+      @recommendation2 =
+        to: 'elias'
+        from: 'picture2'
+      l t(), recommendation2
+      #setTimeout 
+      connect( recommendation ) 
+      #, 500
+      #setTimeout 
+      connect( recommendation2 ) 
+      r = W.findOne
+        to: recommendation.to
+        from: recommendation.from
+      r2 = W.findOne
+        to: recommendation.to
+        from: recommendation.from
+      l t(), recommendation.from, r.from
+      test.equal recommendation.from, r.from
+
       Meteor.call  'test_insert_reset_collection22', (err, result) ->
         #l("test_insert_collection22 INSERT");
         collection22.insert { start_value: true }, ->

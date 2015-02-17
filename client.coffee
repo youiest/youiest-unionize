@@ -19,7 +19,7 @@ formatUpdate = (args) ->
     return up
 
 #change to array instead, only the basic informationhere, actualy w objects are validated and created on server
-connect =  (args) ->
+@connect =  (args) ->
     l t(), args, 'hi from connect'#, args, arguments , arguments.callee
     if !args.from
         l 'not from anywhere! run!'
@@ -39,18 +39,7 @@ connect =  (args) ->
     l t(), x.outbox
             
         
-@connect = connect
-@recommendation =
-    to: 'elias'
-    from: 'picture'
-@recommendation2 =
-    to: 'elias'
-    from: 'picture2'
-#l recommendation
-setTimeout connect( recommendation ) 
-, 500
-setTimeout connect( recommendation2 ) 
-, 600
+
     #something like this WI.outbox.[w.id]=w
 
     #lower case, collection name is upper

@@ -11,7 +11,7 @@ l t(), 'hi from tests'
 
 # test that inserting w.to myUserId triggers a hook that inserts it into my.incoming in WI
 
-
+###
 
 Collection = if typeof Mongo != 'undefined' and typeof Mongo.Collection != 'undefined' then Mongo.Collection else Meteor.Collection
 if Meteor.isServer
@@ -102,3 +102,5 @@ if Meteor.isClient
 # test that hooks follow rules and only maintain enough data on WI objects to load fresh data
 
 # test that I have a sane WI waiting for me when I log in
+
+###

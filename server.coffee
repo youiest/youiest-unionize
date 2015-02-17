@@ -80,30 +80,7 @@ l modifier.outbox
   #l a
   #console.log arguments.callee, userId, doc, fieldNames, modifier, options
 
-Meteor.methods
 
-  "dummyInsert" : (insert) ->
-    W.remove({});
-    WI.remove({});
-    e = W.insert
-      _id: 'elias'
-    n = W.insert
-      _id: 'nicolson'
-    p = W.insert
-      _id: 'picture'
-    l e, n, p
-    WI.insert 
-      _id: 'elias'
-    WI.insert
-      _id: 'nicolson'
-    l WI.findOne({})._id #, this.name
-    
-    #l arguments.calle,  insert
-		# testName = 'inserting in W ' +Random.id()
-		# Tinytest.add testName, (test, next) ->
-			# test.isTrue(true, "so smooth now")
-			# next();	
-		#W.insert insert	
 
 
 Meteor.publish(null,()->
