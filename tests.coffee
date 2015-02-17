@@ -2,8 +2,9 @@
 #
 
 # test that findOne (natural:-1) finds latest version insert and learn how responsive it is
+a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
+l t(), a, 'hi from tests'
 
-l t(), 'hi from tests'
 
 #test that updating WI on client fires before update hook on server
 

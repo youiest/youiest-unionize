@@ -5,9 +5,9 @@ a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')
 
 # pre processing, validation should have been done in lib.coffee
 # validate again? 
-l t(), a, 'hi from server'
+l t(), a, a, 'hi from server'
 W.before.insert (userId, doc) ->
-  l t(), arguments, 'before insert arguments'
+  l t(), a, arguments, 'before insert arguments'
   doc.createdAt = Date.now()
   return
 
@@ -15,14 +15,14 @@ W.before.insert (userId, doc) ->
 # write to a jobs collection, that embeds all earlier versions of the doc into the new one, so there's no dupes
 
 W.after.insert (userId, doc) ->
-  l t(), arguments , 'arguments after insert'
+  l t(), a, arguments , 'arguments after insert'
   # ...
   return
 
 # end this task if conditions dictate that we shouldn't touch it
 # if recently updated or user hasn't logged in recently postpone writes
 WI.before.update (userId, doc, fieldNames, modifier, options) ->
-  l t(), fieldNames, 'hi from before update fieldNames'
+  l t(), a, fieldNames, 'hi from before update fieldNames'
   #modifier.$set = modifier.$set or {}
   #modifier.$set.modifiedAt = Date.now()
   return
@@ -42,11 +42,11 @@ WI.after.update ((userId, doc, fieldNames, modifier, options) ->
 # profile document 
 WI.after.update (userId, doc, fieldNames, modifier, options) ->
   #console.log arguments.callee, arguments
-  l t(), a, doc, 'got after updated WI! on server!' 
+  l t(), a, a, doc, 'got after updated WI! on server!' 
   for i in doc.outbox 
-    l t(), i
+    l t(), a, i
     ins = W.insert i
-    l t(), ins 
+    l t(), a, ins 
   
 ### arguments
  l 5734 { _id: 'nicolson',

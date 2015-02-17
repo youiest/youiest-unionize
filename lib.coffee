@@ -55,7 +55,8 @@ console.warn = -> #this kills the warns from prior
 	unless Meteor.isServer and consoling
 		console.timeEnd 'elapsed' 
 		console.time 'elapsed'
-	return dif[0] - dif[-1..][0]
+	console.log dif[0] - dif[-1..][0]
+	-> 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'
 
 Meteor.methods
 	"t" : () ->
@@ -77,7 +78,7 @@ Meteor.methods
 #console.log('starting lib.coffee at', diff() );
 
 for i in '123'
-	l t(), dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
+	l t(), a, dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
 
 
 
