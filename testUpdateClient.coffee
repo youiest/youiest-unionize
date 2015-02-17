@@ -6,14 +6,14 @@ a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')
 
 # test that findOne (natural:-1) finds latest version insert and learn how responsive it is
 
-l t(), a, 'hi from updateClient.coffee'
+l eval(t)[0] 'hi from updateClient.coffee'
 
 #test that updating WI on client fires before update hook on server
 
 Meteor.methods
 
   "dummyInsert" : (insert) ->
-    l t(), a, a
+    l eval(t)[0] a
     W.remove({});
     WI.remove({});
     e = W.insert
@@ -98,7 +98,7 @@ if Meteor.isClient
     
 
 
-      l t(), a, 'starup dummyInsert'
+      l eval(t)[0] 'starup dummyInsert'
       Meteor.call 'dummyInsert'
       recommendation =
         to: 'elias'
@@ -106,7 +106,7 @@ if Meteor.isClient
       recommendation2 =
         to: 'elias'
         from: 'picture2'
-      l t(), a, recommendation2, recommendation.from
+      l eval(t)[0] recommendation2, recommendation.from
       #setTimeout 
       connect( recommendation ) 
       #, 500
@@ -119,7 +119,7 @@ if Meteor.isClient
         r2 = W.findOne
           to: recommendation2.to
           from: recommendation2.from
-        l t(), a, 'looking for rec n r' , recommendation.from, r.from
+        l eval(t)[0] 'looking for rec n r' , recommendation.from, r.from
         test.equal recommendation.from, r.from
       setTimeout checks(), 500
       Meteor.call  'test_insert_reset_collection22', (err, result) ->
