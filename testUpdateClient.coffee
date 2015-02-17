@@ -8,8 +8,7 @@ l eval(at), 'hi from updateClient.coffee'
 
 Meteor.methods
   "dummyInsert" : (insert) ->
-    W.remove({});
-    WI.remove({});
+    Meteor.call 'clearDb'
     e = W.insert
     _id: 'elias'
     n = W.insert
@@ -21,6 +20,9 @@ Meteor.methods
     WI.insert
       _id: 'nicolson'
     l eval(at), 'dummyInsert done and waitingForIt'
+  "clearDb": () ->
+    W.remove {}
+    WI.remove {}
     
 
 
@@ -37,40 +39,40 @@ if Meteor.isClient
   if consoling 
     ConsoleMe.subscribe()
   l  eval(at), 'calling dummyInsert'
-
-  Meteor.subscribe 'test_insert_publish_collection22'
   
   Tinytest.addAsync 'update - clientside update of WI should trigger insert into W', (test, next) ->
-    collection22.before.insert (userId, doc) ->
-      test.notEqual userId, undefined, 'the userId should be present since we are on the client'
-      test.equal collection22.find(start_value: true).count(), 0, 'collection22 should not have the test document in it'
-      doc.client_value = true
-      return
-    collection22.after.insert (userId, doc) ->
-      test.notEqual @_id, undefined, 'the _id should be available on this'
-      return
     Meteor.startup ->
+      # performance obsessed logging
       l eval(at),  'startup dummyInsert'
+
       Meteor.call 'dummyInsert'
       recommendation =
         to: 'elias'
         from: 'picture'
-      recommendation2 =
-        to: 'elias'
-        from: 'picture2'
+      
       l eval(at)
       , recommendation, recommendation.from 
       ,'testing recommendation'
+
+      # calling connect on the client to do update our WI, later synced when online
       , connect(recommendation) 
       
-      l eval(at), recommendation2, recommendation2.from 
-      , 'testing recommendation2', connect(recommendation2) 
+      #l eval(at), recommendation2, recommendation2.from 
+      #, 'testing recommendation2', connect(recommendation2) 
       l eval(at), recommendation.from, WI.findOne({}).outbox , 'outbox'
+
+      # since the sync hasn't gone to server and back (hooks!) we test once the data is here
       picd = Tracker.autorun (computation) ->
         l eval(at), 'checking if ready for test pictured' , W.findOne({to:'elias'})
+        # only run the test if we have a candidate
         unless !W.findOne({to:'elias'})
+          l eval(at), 'we have a hit' , W.findOne {to:'elias'} .from
+
+          # this appears to fire multiple times. 41 ms untill first pass of sync back and fourth seems good
           test.equal recommendation.from , W.findOne {to:'elias'}.from
+          Meteor.call 'clearDb'
         next()
+
         
         
     # there will only be to:elias if hooks have finishes, add test then
@@ -80,50 +82,6 @@ if Meteor.isClient
         return
       return
     return
-
-if Meteor.isServer
-  if consoling 
-    ConsoleMe.enabled = true
-  collection12 = new Collection('test_insert_collection12')
-  Tinytest.addAsync 'update - calling connect on client to update WI, then check that hook inserted into w', (test, next) ->
-    tmp = {}
-    collection12.remove {}
-    collection12.before.insert (userId, doc) ->
-      # There should be no userId because the insert was initiated
-      # on the server -- there's no correlation to any specific user
-      tmp.userId = userId
-      # HACK: can't test here directly otherwise refreshing test stops execution here
-      doc.before_insert_value = true
-      return
-    collection12.insert { start_value: true }, ->
-      test.equal collection12.find(
-        start_value: true
-        before_insert_value: true).count(), 1
-      test.equal tmp.userId, undefined
-      next()
-      return
-    return
-collection22 = new Collection('test_insert_collection22')
-if Meteor.isServer
-  # full client-side access
-  collection22.allow
-    insert: ->
-      true
-    update: ->
-      true
-    remove: ->
-      true
-  Meteor.methods test_insert_reset_collection22: ->
-    collection22.remove {}
-    return
-  Meteor.publish 'test_insert_publish_collection22', ->
-    collection22.find()
-  collection22.before.insert (userId, doc) ->
-    #l("test_insert_collection22 BEFORE INSERT", userId, doc);
-    doc.server_value = true
-    return
-
-
 
 
 

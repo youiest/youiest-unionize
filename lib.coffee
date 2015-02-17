@@ -73,14 +73,13 @@ Meteor.methods
   Function::bind.call console.log, console, context#, arguments.callee.caller.toString().match(/(unionize.{10}.*?)/)#,t(), context, dif[0] , dif[-1..][0]  #,  new Date().getTime()
 
 
-
+#console.log.apply(console, [Array.prototype.join.call(arguments, " ")]);
 
 
 
 #console.log('starting lib.coffee at', diff() );
 l eval(at)
 for i in '123'
-	l eval(at)
 	l eval(at),  dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
 
 
