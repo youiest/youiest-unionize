@@ -11,8 +11,11 @@
 # # that they follow rules..
 
 # # need a shared bunch of react functions for making html out of W
+@at = "eval(t()),eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
+@att = "'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]"
+
 console.time 'elapsed'
-a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
+@a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
 # this fetches to filename so logs can know where they're logged from
 
 console.warn = -> #this kills the warns from prior
@@ -37,12 +40,12 @@ console.warn = -> #this kills the warns from prior
 
 
   # [ 1, 552 ]
-
+arrowofhrt = false
 @daff = () ->
-	if Meteor.isServer
+	if Meteor.isServer and arrowofhrt
 		@time = process.hrtime()
 		d = process.hrtime(time)
-		d = d[1] #+d[0] * 1e9 
+		d = d[1]+d[0] * 1e9 
 		return d
 	else 
 		new Date().getTime()
@@ -54,7 +57,8 @@ console.warn = -> #this kills the warns from prior
 	unless Meteor.isServer and consoling
 		console.timeEnd 'elapsed' 
 		console.time 'elapsed'
-	return dif[0] - dif[-1..][0] #"arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)[0]"
+	console.log d= dif[0] - dif[-1..][0]
+	return d #dif[0] - dif[-1..][0] #"arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)[0]"
 
 Meteor.methods
 	"t" : () ->
@@ -74,9 +78,10 @@ Meteor.methods
 
 
 #console.log('starting lib.coffee at', diff() );
-
+l eval(at)
 for i in '123'
-	l t(), a, dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
+	l t()
+	l eval(at),  dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
 
 
 

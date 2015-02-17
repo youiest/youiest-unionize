@@ -1,18 +1,17 @@
-a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
-
+a = -> eval("t() , eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)")[0]
+#at = "t();eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)[0]"
 
 # rule: no updates in W, only inserts. Unless it's a hook or cronjob, and we meaure it's speed
 #
 
 # test that findOne (natural:-1) finds latest version insert and learn how responsive it is
 
-l t(), a, 'hi from updateClient.coffee'
-
+l eval(at), 'hi from updateClient.coffee'
 #test that updating WI on client fires before update hook on server
 
 Meteor.methods
   "dummyInsert" : (insert) ->
-    #l eval(t()) #l eval(t())#a #eval(t()) #null in methods? eh?
+    l eval(at), 'dummyInsert'
     W.remove({});
     WI.remove({});
     e = W.insert
@@ -25,7 +24,6 @@ Meteor.methods
       _id: 'elias'
     WI.insert
       _id: 'nicolson'
-    #l WI.findOne({})._id #, this.name
 
 
 # test that inserting w.to myUserId triggers a hook that inserts it into my.incoming in WI
@@ -79,48 +77,47 @@ if Meteor.isServer
 if Meteor.isClient
   if consoling 
     ConsoleMe.subscribe()
-  l  eval(t()),'calling dummyInsert', Meteor.call('dummyInsert')#, arguments.callee
-  
+  l  eval(at), Meteor.call('dummyInsert')
+
   Meteor.subscribe 'test_insert_publish_collection22'
   Tinytest.addAsync 'update - updating client WI should trigger insert into W', (test, next) ->
     collection22.before.insert (userId, doc) ->
-      #l("test_insert_collection22 BEFORE INSERT", userId, doc);
       test.notEqual userId, undefined, 'the userId should be present since we are on the client'
       test.equal collection22.find(start_value: true).count(), 0, 'collection22 should not have the test document in it'
       doc.client_value = true
       return
     collection22.after.insert (userId, doc) ->
-      #l("test_insert_collection22 AFTER INSERT", userId, doc);
       test.notEqual @_id, undefined, 'the _id should be available on this'
       return
     Meteor.startup ->
-    
 
-
-      l t(), a, 'starup dummyInsert'
-      Meteor.call 'dummyInsert'
+      l eval(at),  'startup dummyInsert', Meteor.call 'dummyInsert'
       recommendation =
         to: 'elias'
         from: 'picture'
       recommendation2 =
         to: 'elias'
         from: 'picture2'
-      l t(), a, recommendation2, recommendation.from
+      l t(), recommendation2, recommendation.from , 'testing recommendation'
+      
+      l t(), recommendation2, recommendation.from , 'testing recommendation'
       #setTimeout 
       connect( recommendation ) 
       #, 500
       #setTimeout 
       connect( recommendation2 ) 
+      l eval(at), recommendation.from WI.findOne({}).outbox
       checks = ->
+        l eval(at),  'running checks', W.findOne {}, W.findOne {'from':'picture'}
         r = W.findOne
           to: recommendation.to
           from: recommendation.from
         r2 = W.findOne
           to: recommendation2.to
           from: recommendation2.from
-        l t(), a, 'looking for rec n r' , recommendation.from, r.from
+        l eval(at),  'testing for rec n r' , recommendation.from, r, r2, W.findOne {'from':'picture'}
         test.equal recommendation.from, r.from
-      setTimeout checks(), 500
+      setTimeout checks(), 10500
       Meteor.call  'test_insert_reset_collection22', (err, result) ->
         #l("test_insert_collection22 INSERT");
         collection22.insert { start_value: true }, ->
