@@ -1,12 +1,12 @@
 #client.coffee has trusted code for creating connections
-at = "eval(t());eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
-if consoling 
-  at = 't()'
+@at = "eval(t());eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
+
 l eval(at), 'hi from client'
-l eval(at), 'hi from client again'
 # connect runs on the client and updates the client version of the users WI object
 # when users WI object is synced ot server before and after update hooks are fired
 
+Meteor.startup () ->
+    l eval(at),  'client startup'
 
 formatUpdate = (args) ->
     up = {} 
@@ -21,16 +21,13 @@ formatUpdate = (args) ->
     #upda['outbox']=upd
     return up
 
-#change to array instead, only the basic informationhere, actualy w objects are validated and created on server
 @connect =  (args) ->
     l eval(at), 'hi from connect'
     if !args.from
         l 'not from anywhere! run!'
-    #now = t()
     ups = formatUpdate args
     l eval(at),  ups , 'ups'
 
-    #console.log x
     y = WI.update
         _id:'nicolson'
     ,
@@ -43,10 +40,6 @@ formatUpdate = (args) ->
             
         
 
-    #something like this WI.outbox.[w.id]=w
-
-    #lower case, collection name is upper
-    #w is assumed to be a well formed object with
     # w.from must be from somewhere, this tells us what it is
 
     # TODO from 'picture'
@@ -74,8 +67,7 @@ formatUpdate = (args) ->
 #     #above are required client side
 #     # w.grandfather this is the first .from in a chain and inherited
 # Tinytest.addAsync 'Initiating test', (test, next) ->
-Meteor.startup () ->
-    l eval(at),  'client startup'
+
     #setTimeout connect('picture','elias') , 500
         #Meteor.call "dummyInsert",app.dummyInsert,(err,message)->
 

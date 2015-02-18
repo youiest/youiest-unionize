@@ -11,10 +11,13 @@
 # # that they follow rules..
 
 # # need a shared bunch of react functions for making html out of W
-@at = "eval(t());eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
+@at = "eval(t());eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
 @att = "'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]"
 
 console.time 'elapsed'
+
+
+
 @a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
 # this fetches to filename so logs can know where they're logged from
 
@@ -52,7 +55,6 @@ arrowofhrt = false
 
 @dif = []
 @consoling = true
-ConsoleMe.enabled = true
 @t = ->
 	dif.push daff()
 	unless Meteor.isServer and consoling
@@ -79,7 +81,7 @@ Meteor.methods
 
 
 #console.log('starting lib.coffee at', diff() );
-
+l eval(at)
 for i in '123'
 	l eval(at),  dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
 

@@ -1,15 +1,9 @@
-
+@at = "eval(t());eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
 l eval(at), 'hi from testUpdateClient.coffee'
 
 
 if Meteor.isClient
-  consoling = true
-  if consoling 
-    ConsoleMe.subscribe()
-
-  Meteor.call 'clearDb' , (res,err) ->
-      Meteor.call 'dummyInsert'
-
+  Meteor.call 'dummyInsert'
   @recFrom = 'picture'
   recommendation =
       to: 'elias'

@@ -17,11 +17,10 @@
 # test that inserting w.to myUserId triggers a hook that inserts it into my.incoming in WI
 
 # test that updating WI on client fires hook and inserts same object into w on server
-    
+
+at = "eval(t());eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
 
 
-
-l eval(at),  'hi from tests orig'
 Collection = if typeof Mongo != 'undefined' and typeof Mongo.Collection != 'undefined' then Mongo.Collection else Meteor.Collection
 
 Meteor.methods
@@ -37,7 +36,7 @@ Meteor.methods
         _id: 'elias'
       WI.insert
         _id: 'nicolson'
-      l eval(at), 'dummyInsert caled clear and done'
+      #l eval(at), 'dummyInsert called clear and done'
   "clearDb": () ->
     l eval(at), 'clearDb'
     W.remove {}
