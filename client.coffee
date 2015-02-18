@@ -1,12 +1,26 @@
 #client.coffee has trusted code for creating connections
 @at = "eval(t());eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
+@LineNFile = do ->
+  getErrorObject = ->
+    try
+      throw Error('')
+    catch err
+      return err
+    return
+
+  err = getErrorObject()
+  
+  caller_line = err.stack.split('\n')[4]
+  index = caller_line.indexOf('at ')
+  clean = caller_line.slice(index + 2, caller_line.length)
+  return clean
 ###
-l eval(at), 'hi from client'
+l a(), 'hi from client'
 # connect runs on the client and updates the client version of the users WI object
 # when users WI object is synced ot server before and after update hooks are fired
 
 Meteor.startup () ->
-    l eval(at),  'client startup'
+    l a(),  'client startup'
 ###
 ConsoleMe.subscribe()
 formatUpdate = (args) ->
@@ -23,11 +37,11 @@ formatUpdate = (args) ->
     return up
 
 @connect =  (args) ->
-    l eval(at), 'hi from connect'
+    l a(), 'hi from connect'
     if !args.from
         l 'not from anywhere! run!'
     ups = formatUpdate args
-    l eval(at),  ups , 'ups'
+    l a(),  ups , 'ups'
 
     y = WI.update
         _id:'nicolson'
@@ -37,7 +51,7 @@ formatUpdate = (args) ->
 
     x = WI.findOne
         _id:'nicolson'
-    l eval(at),  x.outbox
+    l a(),  x.outbox
             
         
 

@@ -1,14 +1,27 @@
 @at = "eval(t());eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
+@LineNFile = do ->
+  getErrorObject = ->
+    try
+      throw Error('')
+    catch err
+      return err
+    return
 
+  err = getErrorObject()
+  
+  caller_line = err.stack.split('\n')[4]
+  index = caller_line.indexOf('at ')
+  clean = caller_line.slice(index + 2, caller_line.length)
+  return clean
 #a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
 
 #collection hooks live on the server and catch up eventually
 
 # pre processing, validation should have been done in lib.coffee
 # validate again? 
-l eval(at), 'hi from server'
+l a(), 'hi from server'
 W.before.insert (userId, doc) ->
-  #l eval(at),  arguments, 'before insert arguments'
+  #l a(),  arguments, 'before insert arguments'
   doc.createdAt = Date.now()
   return
 
@@ -16,14 +29,14 @@ W.before.insert (userId, doc) ->
 # write to a jobs collection, that embeds all earlier versions of the doc into the new one, so there's no dupes
 
 W.after.insert (userId, doc) ->
-  #l eval(at),  arguments , 'arguments after insert'
+  #l a(),  arguments , 'arguments after insert'
   # ...
   return
 
 # end this task if conditions dictate that we shouldn't touch it
 # if recently updated or user hasn't logged in recently postpone writes
 WI.before.update (userId, doc, fieldNames, modifier, options) ->
-  l eval(at),  fieldNames, 'before update fieldNames'
+  l a(),  fieldNames, 'before update fieldNames'
   #modifier.$set = modifier.$set or {}
   #modifier.$set.modifiedAt = Date.now()
   return
@@ -43,12 +56,12 @@ WI.after.update ((userId, doc, fieldNames, modifier, options) ->
 # profile document 
 processInboxAfterUpdate = (doc)->
   for i in doc 
-    l eval(at),  i, 'inserting into w'
+    l a(),  i, 'inserting into w'
     ins = W.insert i
-    l eval(at),  ins , 'interted into w'
+    l a(),  ins , 'interted into w'
 WIAfterUpdate = WI.after.update (userId, doc, fieldNames, modifier, options) ->
   #console.log arguments.callee, arguments
-  l eval(at), doc, doc.outbox, 'got after updated WI! on server!' 
+  l a(), doc, doc.outbox, 'got after updated WI! on server!' 
   if doc.outbox.length > 0 
     processInboxAfterUpdate(doc.outbox)
    

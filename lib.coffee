@@ -101,14 +101,15 @@ Meteor.methods
   t()
   unless Meteor.isClient
     return @LineNFile[-30..]
+  else return ''
   #return filename
 #console.log (new Error).stack.split("\n")[4]
 l a(), 'trying two parts'
 
 
 #console.log('starting lib.coffee at', diff() );
-l eval(at)
+l a()
 for i in '123'
-	l eval(at),  dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
+	l a(),  dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
 
 
