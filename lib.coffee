@@ -96,11 +96,11 @@ Meteor.methods
 
 
 
-filename = 'libb.cofeeeee'
+
 @a = -> 
   t()
   unless Meteor.isClient
-    return @LineNFile
+    return @LineNFile[-30..]
   #return filename
 #console.log (new Error).stack.split("\n")[4]
 l a(), 'trying two parts'
