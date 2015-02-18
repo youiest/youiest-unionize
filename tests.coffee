@@ -26,18 +26,18 @@ Collection = if typeof Mongo != 'undefined' and typeof Mongo.Collection != 'unde
 
 Meteor.methods
   "dummyInsert" : (insert) ->
-    Meteor.call 'clearDb'
-    e = W.insert
-    _id: 'elias'
-    n = W.insert
-      _id: 'nicolson'
-    p = W.insert
-      _id: 'picture'
-    WI.insert 
+    Meteor.call 'clearDb', (res,req) ->
+      e = W.insert
       _id: 'elias'
-    WI.insert
-      _id: 'nicolson'
-    l eval(at), 'dummyInsert done and waitingForIt'
+      n = W.insert
+        _id: 'nicolson'
+      p = W.insert
+        _id: 'picture'
+      WI.insert 
+        _id: 'elias'
+      WI.insert
+        _id: 'nicolson'
+      l eval(at), 'dummyInsert caled clear and done'
   "clearDb": () ->
     l eval(at), 'clearDb'
     W.remove {}
