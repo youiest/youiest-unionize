@@ -1,6 +1,6 @@
 Package.describe({
   name: 'youiest:unionize',
-  version: '0.0.3',
+  version: '0.0.4',
   // Brief, one-line summary of the package.
   summary: ' for reactive network triggers with a simple ui',
   // URL to the Git repository containing the source code for this package.
@@ -32,41 +32,26 @@ Package.on_use(function (api) {
   ], 'server');
 });
 
-// Package.on_test(function (api) {
-//   api.use(['matb33:collection-hooks', 'tinytest', 'test-helpers', 'coffeescript', 'insecure', 'accounts-base', 'accounts-password', 'underscore', 'random'], ['client', 'server']);
- 
-//   api.add_files([
-//     'lib.coffee',
-//     'tests.coffee'
-//   ], ['client', 'server']);
-
-//   api.add_files([ 
-//     'server.coffee',
-//     'publish.coffee'
-//   ], ['server']);
-
-//   api.add_files([
-//     'client.coffee' 
-//   ], ['client']);
-// });
-
 Package.on_test(function (api) {
-  api.use(['matb33:collection-hooks', 'tinytest', 'test-helpers', 'coffeescript', 'insecure', 'accounts-base', 'accounts-password', 'underscore', 'random'], ['client', 'server']);
+  api.versionsFrom('1.0.3.1');
+  api.use(['ground:db','aldeed:console-me','matb33:collection-hooks','tracker', 'tinytest', 'test-helpers', 'coffeescript', 'insecure', 'accounts-base', 'accounts-password', 'underscore', 'random'], ['client', 'server']);
  
   api.add_files([
-    'nicolson_lib.coffee',
-    'nicolson_tests.coffee'
+    'lib.coffee',
+    'testUpdateClient.coffee',
+    'tests.coffee'
   ], ['client', 'server']);
 
   api.add_files([ 
-    'nicolson_server.coffee',
-    'nicolson_publish.coffee'
+    'server.coffee',
+    'publish.coffee'
   ], ['server']);
 
   api.add_files([
-    'nicolson_client.coffee' 
+    'client.coffee' 
   ], ['client']);
 });
+
 
 
 

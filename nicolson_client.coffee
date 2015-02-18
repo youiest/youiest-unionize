@@ -40,14 +40,17 @@ connect =  (args) ->
     to: 'elias'
     from: 'picture'
 #l recommendation
-Tinytest.addAsync('setTimeout - timeout', (test,next)->
-    setTimeout ()-> 
-        connect( recommendation ) 
-        alert("setTimeout - timeout")
-        # test.equal(1, 1, 'timeout')
-        next() if next
-    , 500
-);
+Meteor.startup(()->
+    Tinytest.addAsync('setTimeout - timeout', (test,next)->
+        setTimeout ()-> 
+            connect( recommendation ) 
+            alert("setTimeout - timeout")
+            # test.equal(1, 1, 'timeout')
+            next() if next
+        , 500
+    );
+)
+
     #something like this WI.outbox.[w.id]=w
 
     #lower case, collection name is upper
