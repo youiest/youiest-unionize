@@ -3,7 +3,11 @@
 #global variable not in here? what?
 at = "eval(t());eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
 l eval(at), 'hi from updateClient.coffee'
-  
+
+
+# test that inserting w.to myUserId triggers a hook that inserts it into my.incoming in WI
+
+# test that updating WI on client fires hook and inserts same object into w on server
     
 
 Meteor.methods
@@ -21,6 +25,7 @@ Meteor.methods
       _id: 'nicolson'
     l eval(at), 'dummyInsert done and waitingForIt'
   "clearDb": () ->
+    l eval(at), 'clearDb'
     W.remove {}
     WI.remove {}
     
@@ -28,14 +33,12 @@ Meteor.methods
 
 Meteor.call 'dummyInsert'
 
-# test that inserting w.to myUserId triggers a hook that inserts it into my.incoming in WI
-
-# test that updating WI on client fires hook and inserts same object into w on server
 
 Collection = if typeof Mongo != 'undefined' and typeof Mongo.Collection != 'undefined' then Mongo.Collection else Meteor.Collection
 
 
 if Meteor.isClient
+  consoling = true
   if consoling 
     ConsoleMe.subscribe()
   l  eval(at), 'calling dummyInsert'
@@ -46,9 +49,10 @@ if Meteor.isClient
       l eval(at),  'startup dummyInsert'
 
       Meteor.call 'dummyInsert'
+      recFrom = 'picture'
       recommendation =
         to: 'elias'
-        from: 'picture'
+        from: recFrom
       
       l eval(at)
       , recommendation, recommendation.from 
@@ -66,24 +70,26 @@ if Meteor.isClient
         l eval(at), 'checking if ready for test pictured' , W.findOne({to:'elias'})
         # only run the test if we have a candidate
         unless !W.findOne({to:'elias'})
-          l eval(at), 'we have a hit' , W.findOne {to:'elias'} .from
+          pict.stop()
+          this.stop()
+          computation.stop()
+          l eval(at), 'we have a hit' , W.findOne {to:'elias'}
 
           # this appears to fire multiple times. 41 ms untill first pass of sync back and fourth seems good
-          test.equal recommendation.from , W.findOne {to:'elias'}.from
+          # currently misbehaving
+          test.equal 'nothing' , W.findOne {to:'elias'}.from
           Meteor.call 'clearDb'
+
         next()
-
-        
-        
-    # there will only be to:elias if hooks have finishes, add test then
-      
-      
-
+        # there will only be to:elias if hooks have finishes, add test then
         return
       return
     return
 
 
+# test that inserting w.to myUserId triggers a hook that inserts it into my.incoming in WI
+
+# test that updating WI on client fires hook and inserts same object into w on server
 
 # test that grounddb syncs back offline changes
 

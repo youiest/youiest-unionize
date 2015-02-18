@@ -52,6 +52,7 @@ arrowofhrt = false
 
 @dif = []
 @consoling = true
+ConsoleMe.enabled = true
 @t = ->
 	dif.push daff()
 	unless Meteor.isServer and consoling
