@@ -30,7 +30,7 @@ Meteor.methods
     WI.remove {}
     
 
-
+Meteor.call 'clearDb'
 Meteor.call 'dummyInsert'
 
 
@@ -41,47 +41,41 @@ if Meteor.isClient
   consoling = true
   if consoling 
     ConsoleMe.subscribe()
-  l  eval(at), 'calling dummyInsert'
+  Meteor.startup
   
   Tinytest.addAsync 'update - clientside update of WI should trigger insert into W', (test, next) ->
-    Meteor.startup ->
-      # performance obsessed logging
-      l eval(at),  'startup dummyInsert'
-
-      Meteor.call 'dummyInsert'
-      recFrom = 'picture'
-      recommendation =
-        to: 'elias'
-        from: recFrom
+    Meteor.call 'clearDb' , (res,err) ->
+      l eval(at), '1 called clreadb and calling dummyInsert', res, err
+      Meteor.call 'dummyInsert', (res,err) ->
+        l eval(at) , ' 2 called dummyInsert', res, err
       
-      l eval(at)
-      , recommendation, recommendation.from 
-      ,'testing recommendation'
+        recFrom = 'picture'
+        recommendation =
+          to: 'elias'
+          from: recFrom
+          
+        l eval(at)
+        , recommendation, recommendation.from 
+        ,'testing recommendation calling connnect()'
+        # calling connect on the client to do update our WI, later synced when online
+        , connect(recommendation)
 
-      # calling connect on the client to do update our WI, later synced when online
-      , connect(recommendation) 
-      
-      #l eval(at), recommendation2, recommendation2.from 
-      #, 'testing recommendation2', connect(recommendation2) 
-      l eval(at), recommendation.from, WI.findOne({}).outbox , 'outbox'
+        picd = Tracker.autorun (computation) ->
+          l eval(at), 'checking if ready for test pictured ->' , W.findOne({to:'elias'})
+          l eval(at), recommendation.from, WI.findOne({}).outbox , 'outbox'
+          # only run the test if we have a candidate
+          unless !W.findOne({to:'elias'})
+            l eval(at), 'we have a hit' , W.findOne {to:'elias'}
+            # this appears to fire multiple times. 41 ms untill first pass of sync back and fourth seems good
+            # currently misbehaving
+            test.equal 'n' , W.findOne {to:'elias'}.from
+            #Meteor.call 'clearDb'
 
-      # since the sync hasn't gone to server and back (hooks!) we test once the data is here
-      picd = Tracker.autorun (computation) ->
-        l eval(at), 'checking if ready for test pictured' , W.findOne({to:'elias'})
-        # only run the test if we have a candidate
-        unless !W.findOne({to:'elias'})
-          pict.stop()
-          this.stop()
-          computation.stop()
-          l eval(at), 'we have a hit' , W.findOne {to:'elias'}
+            computation.stop()  
+            next()
 
-          # this appears to fire multiple times. 41 ms untill first pass of sync back and fourth seems good
-          # currently misbehaving
-          test.equal 'nothing' , W.findOne {to:'elias'}.from
-          Meteor.call 'clearDb'
-
-        next()
-        # there will only be to:elias if hooks have finishes, add test then
+            # since the sync hasn't gone to server and back (hooks!) we test once the data is here
+            # there will only be to:elias if hooks have finishes, add test then
         return
       return
     return

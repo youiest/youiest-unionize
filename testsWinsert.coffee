@@ -12,7 +12,7 @@ if Meteor.isServer
   if consoling 
     ConsoleMe.enabled = true
   collection12 = new Collection('test_insert_collection12')
-  Tinytest.addAsync 'update - calling connect on client to update WI, then check that hook inserted into w', (test, next) ->
+  Tinytest.addAsync 'update - wrong test', (test, next) ->
     tmp = {}
     collection12.remove {}
     collection12.before.insert (userId, doc) ->
