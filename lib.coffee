@@ -79,10 +79,7 @@ Meteor.methods
 
 #console.log.apply(console, [Array.prototype.join.call(arguments, " ")]);
 
-filename = -> 'libb.cofeeeee'
-a = do -> eval("eval(t()); filename;")
 
-l a(), 'trying two part'
 
 
 #console.log('starting lib.coffee at', diff() );
