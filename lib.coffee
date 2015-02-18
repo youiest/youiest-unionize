@@ -12,6 +12,7 @@
 
 # # need a shared bunch of react functions for making html out of W
 @at = "eval(t());eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
+
 @att = "'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]"
 
 console.time 'elapsed'
@@ -78,6 +79,10 @@ Meteor.methods
 
 #console.log.apply(console, [Array.prototype.join.call(arguments, " ")]);
 
+filename = -> 'libb.cofeeeee'
+a = do -> eval("eval(t()); filename;")
+
+l a(), 'trying two part'
 
 
 #console.log('starting lib.coffee at', diff() );

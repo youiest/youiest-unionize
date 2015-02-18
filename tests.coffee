@@ -20,25 +20,7 @@
 
 at = "eval(t());eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
 
+#Collection = if typeof Mongo != 'undefined' and typeof Mongo.Collection != 'undefined' then Mongo.Collection else Meteor.Collection
 
-Collection = if typeof Mongo != 'undefined' and typeof Mongo.Collection != 'undefined' then Mongo.Collection else Meteor.Collection
 
-Meteor.methods
-  "dummyInsert" : (insert) ->
-    Meteor.call 'clearDb', (res,req) ->
-      e = W.insert
-      _id: 'elias'
-      n = W.insert
-        _id: 'nicolson'
-      p = W.insert
-        _id: 'picture'
-      WI.insert 
-        _id: 'elias'
-      WI.insert
-        _id: 'nicolson'
-      #l eval(at), 'dummyInsert called clear and done'
-  "clearDb": () ->
-    l eval(at), 'clearDb'
-    W.remove {}
-    WI.remove {}
 
