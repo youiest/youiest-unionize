@@ -8,6 +8,7 @@ l eval(at), 'hi from client'
 Meteor.startup () ->
     l eval(at),  'client startup'
 ###
+ConsoleMe.subscribe()
 formatUpdate = (args) ->
     up = {} 
     upd = {} 

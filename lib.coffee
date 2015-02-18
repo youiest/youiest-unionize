@@ -79,13 +79,36 @@ Meteor.methods
 
 #console.log.apply(console, [Array.prototype.join.call(arguments, " ")]);
 
+@LineNFile = do ->
+  getErrorObject = ->
+    try
+      throw Error('')
+    catch err
+      return err
+    return
 
+  err = getErrorObject()
+  
+  caller_line = err.stack.split('\n')[4]
+  index = caller_line.indexOf('at ')
+  clean = caller_line.slice(index + 2, caller_line.length)
+  return clean
+
+
+
+filename = 'libb.cofeeeee'
+@a = -> 
+  t()
+  unless Meteor.isClient
+    return @LineNFile
+  #return filename
+#console.log (new Error).stack.split("\n")[4]
+l a(), 'trying two parts'
 
 
 #console.log('starting lib.coffee at', diff() );
 l eval(at)
 for i in '123'
 	l eval(at),  dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
-
 
 

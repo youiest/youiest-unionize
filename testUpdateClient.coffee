@@ -20,10 +20,10 @@ Meteor.methods
     W.remove {}
     WI.remove {}
 
+ConsoleMe.enabled = true
 
 
 if Meteor.isClient
-  
   @recFrom = 'picture'
   recommendation =
       to: 'elias'
