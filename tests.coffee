@@ -42,7 +42,8 @@ at = "eval(t());eval('arguments.callee.caller.toString().match(/(unionize.{20}.*
 filename = 'libb.cofeeeee'
 @a = -> 
   t()
-  return @LineNFile
+  unless Meteor.isClient
+    return @LineNFile
   #return filename
 #console.log (new Error).stack.split("\n")[4]
 l a(), 'trying two parts'
