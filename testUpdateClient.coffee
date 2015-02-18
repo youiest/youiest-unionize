@@ -41,41 +41,26 @@ if Meteor.isClient
   consoling = true
   if consoling 
     ConsoleMe.subscribe()
-  Meteor.startup
-  
+  l eval(at), 'starting clearing calls'
+
+  Meteor.call 'clearDb' , (res,err) ->
+      Meteor.call 'dummyInsert'
+
+  @recFrom = 'picture'
+  recommendation =
+      to: 'elias'
+      from: recFrom
   Tinytest.addAsync 'update - clientside update of WI should trigger insert into W', (test, next) ->
-    Meteor.call 'clearDb' , (res,err) ->
-      l eval(at), '1 called clreadb and calling dummyInsert', res, err
-      Meteor.call 'dummyInsert', (res,err) ->
-        l eval(at) , ' 2 called dummyInsert', res, err
-      
-        recFrom = 'picture'
-        recommendation =
-          to: 'elias'
-          from: recFrom
-          
-        l eval(at)
-        , recommendation, recommendation.from 
-        ,'testing recommendation calling connnect()'
-        # calling connect on the client to do update our WI, later synced when online
-        , connect(recommendation)
+    
+    connect(recommendation)
 
-        picd = Tracker.autorun (computation) ->
-          l eval(at), 'checking if ready for test pictured ->' , W.findOne({to:'elias'})
-          l eval(at), recommendation.from, WI.findOne({}).outbox , 'outbox'
-          # only run the test if we have a candidate
-          unless !W.findOne({to:'elias'})
-            l eval(at), 'we have a hit' , W.findOne {to:'elias'}
-            # this appears to fire multiple times. 41 ms untill first pass of sync back and fourth seems good
-            # currently misbehaving
-            test.equal 'n' , W.findOne {to:'elias'}.from
-            #Meteor.call 'clearDb'
-
-            computation.stop()  
-            next()
-
-            # since the sync hasn't gone to server and back (hooks!) we test once the data is here
-            # there will only be to:elias if hooks have finishes, add test then
+    #when client update synced to server, hook inserts w and w is synced to client tracker reruns
+    picd = Tracker.autorun (computation) ->
+      # since the sync hasn't gone to server and back (hooks!) we test once the data is here
+      unless !W.findOne({to:'elias'})
+        test.equal recFrom , W.findOne({to:'elias'}).from
+        next()
+        # computation.stop() # APPEARS not necessary
         return
       return
     return
