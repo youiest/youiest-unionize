@@ -1,24 +1,4 @@
-@at = "eval(t());eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
-@LineNFile = do ->
-  getErrorObject = ->
-    try
-      throw Error('')
-    catch err
-      return err
-    return
 
-  err = getErrorObject()
-  
-  caller_line = err.stack.split('\n')[4]
-  index = caller_line.indexOf('at ')
-  clean = caller_line.slice(index + 2, caller_line.length)
-  return clean
-#a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
-
-#collection hooks live on the server and catch up eventually
-
-# pre processing, validation should have been done in lib.coffee
-# validate again? 
 l eval('L()'), 'hi from server', eval('L()'), 'evaled Li'
 W.before.insert (userId, doc) ->
   #l eval('L()'),  arguments, 'before insert arguments'
@@ -30,15 +10,26 @@ W.before.insert (userId, doc) ->
 
 W.after.insert (userId, doc) ->
   #l eval('L()'),  arguments , 'arguments after insert'
-  # ...
+
   return
+
+Meteor.methods
+  # called dynamically if outbox is the changed fieldname
+  "outbox" : (doc, userId) ->
+    unless userId == Meteor.userId 
+      l eval('L()'), 'userId did not match'
+    for i in doc.outbox
+      l eval('L()'), i, 'outbox document'
+
 
 # end this task if conditions dictate that we shouldn't touch it
 # if recently updated or user hasn't logged in recently postpone writes
 WI.before.update (userId, doc, fieldNames, modifier, options) ->
   l eval('L()'),  fieldNames, 'before update fieldNames'
-  #modifier.$set = modifier.$set or {}
-  #modifier.$set.modifiedAt = Date.now()
+  for i in fieldNames
+    l eval('L()'), i
+    Meteor.call i, doc, userId, (res,err) ->
+      l eval('L()'), res, err
   return
 # after insert into main collection we fan out 
 # write take w.to and cache write to: 

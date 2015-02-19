@@ -23,6 +23,7 @@ ConsoleMe.enabled = true
 
 
 if Meteor.isClient
+
   @recFrom = 'picture'
   recommendation =
       to: 'elias'
@@ -48,6 +49,7 @@ if Meteor.isClient
           computation.stop() # APPEARS not necessary
 
 if Meteor.isClient
+
   @recFrom = 'picture'
   recommendation =
       to: 'elias'
