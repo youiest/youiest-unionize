@@ -19,7 +19,7 @@
 
 # pre processing, validation should have been done in lib.coffee
 # validate again? 
-l a(), 'hi from server'
+l a(), 'hi from server', eval('Li()'), 'evaled Li'
 W.before.insert (userId, doc) ->
   #l a(),  arguments, 'before insert arguments'
   doc.createdAt = Date.now()

@@ -94,6 +94,24 @@ Meteor.methods
   clean = caller_line.slice(index + 2, caller_line.length)
   return clean
 
+@Li = ->
+	if Meteor.isClient
+		return false
+	else
+	  getErrorObject = ->
+	    try
+	      throw Error('')
+	    catch err
+	      return err
+	    return
+
+	  err = getErrorObject()
+	  
+	  caller_line = err.stack.split('\n')[4]
+	  index = caller_line.indexOf('at ')
+	  clean = caller_line.slice(index + 2, caller_line.length)
+	  clean = clean[15..]
+	  return clean
 
 
 
