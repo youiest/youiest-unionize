@@ -1,4 +1,10 @@
 
+@clearClientGroundDbs = ->
+  WI.remove
+    _id: 'elias'
+  WI.remove
+    _id: 'nicolson'
+  -> WI.find({}).count()
 
 Meteor.methods
   "dummyInsert" : (insert) ->
@@ -14,6 +20,7 @@ Meteor.methods
       WI.insert
         _id: 'nicolson'
       #smite eval(s), 'dummyInsert called clear and done'
+      return clearClientGroundDbs
   "clearDb": () ->
     smite eval(s), 'clearDb'
     W.remove {}
@@ -58,6 +65,8 @@ if Meteor.isClient
 if Meteor.isClient
   smite eval(s), 'starting number 2'
   Meteor.call 'dummyInsert', (req,res) ->
+    eval(res)
+    WI.find({}).count
     smite eval(s), 'returned from dummyinsert'
     Tinytest.addAsync 'update -  trying again for awake server clientside update of WI should trigger insert into W', (test, next) ->
       smite eval(s), 'added'
@@ -79,7 +88,11 @@ if Meteor.isClient
 
 if Meteor.isClient
   smite eval(s), 'starting number 3'
-  Meteor.call 'dummyInsert', (req,res) ->
+  pre = WI.find({}).count()
+  cl = clearClientGroundDbs()
+  smite 'did we flush the groundlings out?', pre, cl(), 'if pre > 0 cl yes', eval s
+  Meteor.call 'dummyInsert', (res,err) ->
+    
     smite eval(s), 'returned from dummyinsert'
     Tinytest.addAsync 'update -  recommend leads to w leads to inbox', (test, next) ->
       smite eval(s), 'added'
