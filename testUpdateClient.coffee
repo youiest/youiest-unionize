@@ -46,4 +46,29 @@ if Meteor.isClient
           test.equal W.findOne({to:'elias'}).from , recFrom
           next()
           computation.stop() # APPEARS not necessary
+
+if Meteor.isClient
+  @recFrom = 'picture'
+  recommendation =
+      to: 'elias'
+      from: recFrom
+  l eval('L()'), 'starting'
+  Meteor.call 'dummyInsert', (req,res) ->
+    l eval('L()'), 'returned'
+    Tinytest.addAsync 'update - clientside update of WI should update of target users WI if present', (test, next) ->
+      l eval('L()'), 'added'
+      # update outbox serverside with minimal information.  
+      connect(recommendation)
+      l eval('L()'), 'connected'
+      #when client update synced to server, hook inserts w and w is synced to client tracker reruns
+      picd = Tracker.autorun (computation) ->
+        #TODO Exception from Tracker recompute function: Error: Can't call Tracker.flush while flushing
+        # this doesn't affect the test but looks bad
+        l eval('L()'), 'ran tracker'
+        # since the sync hasn't gone to server and back (hooks!) we test once the data is here
+        unless !W.findOne({to:'elias'})
+          l eval('L()'), 'got hit'
+          test.equal W.findOne({to:'elias'}).from , WI.findOne({_id:'elias'}).inbox[0].from
+          next()
+          computation.stop() # APPEARS not necessary
           
