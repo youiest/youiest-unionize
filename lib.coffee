@@ -130,7 +130,7 @@ clean = caller_line.slice(index + 2, caller_line.length)
     return c(new Error)
   else return ''
 
-console.log eval("c(new Error(''))") , 'straight'
+console.log c(new Error()) , 'straight'
   
 console.log eval("c(new Error)") , 'straight2'
 

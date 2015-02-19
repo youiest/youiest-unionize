@@ -43,7 +43,7 @@ example from testUpdateClient.coffee
 (on client)
 Meteor.startup ->
       # performance obsessed logging
-      l a(),  'startup dummyInsert'
+      l c(new Error()),  'startup dummyInsert'
 
       Meteor.call 'dummyInsert'
       recommendation =
@@ -52,20 +52,20 @@ Meteor.startup ->
       recommendation2 =
         to: 'elias'
         from: 'picture2'
-      l a()
+      l c(new Error())
       , recommendation, recommendation.from 
       ,'testing recommendation'
 
       # calling connect on the client to do update our WI, later synced when online
       , connect(recommendation) 
       
-      l a(), recommendation2, recommendation2.from 
+      l c(new Error()), recommendation2, recommendation2.from 
       , 'testing recommendation2', connect(recommendation2) 
-      l a(), recommendation.from, WI.findOne({}).outbox , 'outbox'
+      l c(new Error()), recommendation.from, WI.findOne({}).outbox , 'outbox'
 
       # since the sync hasn't gone to server and back (hooks!) we test once the data is here
       picd = Tracker.autorun (computation) ->
-        l a(), 'checking if ready for test pictured' , W.findOne({to:'elias'})
+        l c(new Error()), 'checking if ready for test pictured' , W.findOne({to:'elias'})
         # only run the test if we have a candidate
         unless !W.findOne({to:'elias'})
           test.equal recommendation.from , W.findOne {to:'elias'}.from

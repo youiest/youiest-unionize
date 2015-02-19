@@ -15,12 +15,12 @@
   clean = caller_line.slice(index + 2, caller_line.length)
   return clean
 ###
-l a(), 'hi from client'
+l c(new Error()), 'hi from client'
 # connect runs on the client and updates the client version of the users WI object
 # when users WI object is synced ot server before and after update hooks are fired
 
 Meteor.startup () ->
-    l a(),  'client startup'
+    l c(new Error()),  'client startup'
 ###
 ConsoleMe.subscribe()
 formatUpdate = (args) ->
@@ -37,11 +37,11 @@ formatUpdate = (args) ->
     return up
 
 @connect =  (args) ->
-    l a(), 'hi from connect'
+    l c(new Error()), 'hi from connect'
     if !args.from
         l 'not from anywhere! run!'
     ups = formatUpdate args
-    l a(),  ups , 'ups'
+    l c(new Error()),  ups , 'ups'
 
     y = WI.update
         _id:'nicolson'
@@ -51,7 +51,7 @@ formatUpdate = (args) ->
 
     x = WI.findOne
         _id:'nicolson'
-    l a(),  x.outbox
+    l c(new Error()),  x.outbox
             
         
 

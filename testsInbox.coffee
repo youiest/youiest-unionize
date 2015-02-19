@@ -17,11 +17,11 @@
   index = caller_line.indexOf('at ')
   clean = caller_line.slice(index + 2, caller_line.length)
   return clean
-l a(),  'hi from tests2', a
+l c(new Error()),  'hi from tests2', a
 
 # test that hook writes to .inbox of .to in WI
 @at = "eval(t());eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
-l a(), 'hi from testUpdateClient.coffee'
+l c(new Error()), 'hi from testUpdateClient.coffee'
 
 
 if Meteor.isClient
