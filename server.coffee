@@ -1,92 +1,70 @@
-at = "eval(t());eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
 
-#a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
-
-#collection hooks live on the server and catch up eventually
-
-# pre processing, validation should have been done in lib.coffee
-# validate again? 
-l eval(at), 'hi from server'
+smite eval(s) 
 W.before.insert (userId, doc) ->
-  #l eval(at),  arguments, 'before insert arguments'
+  #smite eval(s),  arguments, 'before insert arguments'
   doc.createdAt = Date.now()
   return
 
-# will like cause a write to WI and triggering that hook
 # write to a jobs collection, that embeds all earlier versions of the doc into the new one, so there's no dupes
 
 W.after.insert (userId, doc) ->
-  #l eval(at),  arguments , 'arguments after insert'
-  # ...
+  #smite eval(s),  arguments , 'arguments after insert'
+
   return
+
+Meteor.methods
+  # called dynamically if outbox is the changed fieldname on update WI
+  "outbox" : (doc, userId) ->
+    unless userId == Meteor.userId 
+      smite eval(s), 'userId did not match'
+
+    if typeof doc.journey #TODO why is this acting inverted? == null
+      doc.journey = []
+
+    doc.journey.push
+      'insertedW': new Date().getTime()
+    for i in doc.outbox
+      smite eval(s), i, 'outbox document'
+      intruder = W.insert
+        to: i.to
+        from: i.from
+        w:'now'
+        journey: doc.journey
+
+      smite 'scout targets!', eval s
+      found = WI.find
+        _id: i.to
+      ,
+        limit: 1
+
+      smite 'do we have target?', found.count(), W.findOne({_id: intruder}), eval s 
+      # this smite action found a kickass way to poll the db without returning actual documents
+      if found.count() > .5
+        WI.update
+          _id: i.to
+        ,
+          '$push': 
+            'inbox': W.findOne {_id: intruder}
+      
+
+
 
 # end this task if conditions dictate that we shouldn't touch it
 # if recently updated or user hasn't logged in recently postpone writes
 WI.before.update (userId, doc, fieldNames, modifier, options) ->
-  l eval(at),  fieldNames, 'before update fieldNames'
-  #modifier.$set = modifier.$set or {}
-  #modifier.$set.modifiedAt = Date.now()
-  return
-# after insert into main collection we fan out 
-# write take w.to and cache write to: 
-# WI.findOne('w.to').incomming.['w.from']
+  smite eval(s),  fieldNames, 'before update fieldNames'
+ 
 
-# Call push notifications etc if we have new incomming
-### 
-WI.after.update ((userId, doc, fieldNames, modifier, options) ->
-  l this.name, arguments
-  # ...
-  return
-), fetchPrevious: false
-###
-# there will be an outbox and inbox document, as well as a profile document.
-# profile document 
-processInboxAfterUpdate = (doc)->
-  for i in doc 
-    l eval(at),  i, 'inserting into w'
-    ins = W.insert i
-    l eval(at),  ins , 'interted into w'
 WIAfterUpdate = WI.after.update (userId, doc, fieldNames, modifier, options) ->
   #console.log arguments.callee, arguments
-  l eval(at), doc, doc.outbox, 'got after updated WI! on server!' 
-  if doc.outbox.length > 0 
-    processInboxAfterUpdate(doc.outbox)
-   
+  for i in fieldNames
+    smite eval(s), i
+    Meteor.call i, doc, userId, (res,err) ->
+      smite eval(s), res, err
+  return
+
+  smite eval(s), doc, doc.outbox, 'got after updated WI! on server!' 
   
-### arguments
- l 5734 { _id: 'nicolson',
-   outbox: [ { from: 'picture', to: 'elias' } ] } got after updated WI! on server!
- l undefined { '0': undefined,
-  '1': { _id: 'nicolson', outbox: [ [Object] ] } }
- 3648
- elapsed: 5ms
-
-{ 
-'0': undefined,
-'1': { _id: 'nicolson', outbox: [ [Object], [Object] ] },
-'2': [ 'outbox' ],
-'3': { '$push': { outbox: [Object] } },
- '4': {} 
- }
-
-l modifier.outbox
-
-  if !doc.outbox
-    l  'nope outbox'
-  unless !userId
-      l 'unauthenticated after update hook'
- ###
-#what if several updates have been inserted? we need a for in loop 
-###
-  W.insert
-    hookedAt: new Date.getTime()
-    , $set: modifier.outbox
-###
-  #l a
-  #console.log arguments.callee, userId, doc, fieldNames, modifier, options
-
-
-
 
 Meteor.publish(null,()->
 	return W.find({});

@@ -20,7 +20,7 @@ Package.on_use(function (api) {
   api.export('W');
 
   api.add_files([
-    'lib.coffee'
+    'lib.coffee','ground:db'
   ], ['client','server']);
 
   api.add_files([
@@ -34,7 +34,7 @@ Package.on_use(function (api) {
 
 Package.on_test(function (api) {
   api.versionsFrom('1.0.3.1');
-  api.use(['aldeed:console-me','matb33:collection-hooks','tracker', 'tinytest', 'test-helpers', 'coffeescript', 'insecure', 'accounts-base', 'accounts-password', 'underscore', 'random'], ['client', 'server']);
+  api.use(['ground:db','aldeed:console-me','matb33:collection-hooks','tracker', 'tinytest', 'test-helpers', 'coffeescript', 'insecure', 'accounts-base', 'accounts-password', 'underscore', 'random'], ['client', 'server']);
  
   api.add_files([
     'lib.coffee',

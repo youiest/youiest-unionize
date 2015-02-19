@@ -1,13 +1,10 @@
    youiest:unionize connects reactively. 
 
-
-How to use a private package:
-
-https://medium.com/@davidjwoody/how-to-write-a-package-for-meteor-js-e5534c6bd3c2
-
-mrt link-package path/to/yourpackage
+cd path/to/yourpackage
 
 meteor test-packages ./
+
+Go to http://localhost:3000/ in private mode since junk can stick around in mem and throw off test times
 
 
 Unionize
@@ -43,7 +40,7 @@ example from testUpdateClient.coffee
 (on client)
 Meteor.startup ->
       # performance obsessed logging
-      l eval(at),  'startup dummyInsert'
+      l a(),  'startup dummyInsert'
 
       Meteor.call 'dummyInsert'
       recommendation =
@@ -52,20 +49,20 @@ Meteor.startup ->
       recommendation2 =
         to: 'elias'
         from: 'picture2'
-      l eval(at)
+      l a()
       , recommendation, recommendation.from 
       ,'testing recommendation'
 
       # calling connect on the client to do update our WI, later synced when online
       , connect(recommendation) 
       
-      l eval(at), recommendation2, recommendation2.from 
+      l a(), recommendation2, recommendation2.from 
       , 'testing recommendation2', connect(recommendation2) 
-      l eval(at), recommendation.from, WI.findOne({}).outbox , 'outbox'
+      l a(), recommendation.from, WI.findOne({}).outbox , 'outbox'
 
       # since the sync hasn't gone to server and back (hooks!) we test once the data is here
       picd = Tracker.autorun (computation) ->
-        l eval(at), 'checking if ready for test pictured' , W.findOne({to:'elias'})
+        l a(), 'checking if ready for test pictured' , W.findOne({to:'elias'})
         # only run the test if we have a candidate
         unless !W.findOne({to:'elias'})
           test.equal recommendation.from , W.findOne {to:'elias'}.from
