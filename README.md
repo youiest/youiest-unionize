@@ -1,13 +1,10 @@
    youiest:unionize connects reactively. 
 
-
-How to use a private package:
-
-https://medium.com/@davidjwoody/how-to-write-a-package-for-meteor-js-e5534c6bd3c2
-
-mrt link-package path/to/yourpackage
+cd path/to/yourpackage
 
 meteor test-packages ./
+
+Go to http://localhost:3000/ in private mode since junk can stick around in mem and throw off test times
 
 
 Unionize

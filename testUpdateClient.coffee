@@ -37,11 +37,13 @@ if Meteor.isClient
       l eval('L()'), 'connected'
       #when client update synced to server, hook inserts w and w is synced to client tracker reruns
       picd = Tracker.autorun (computation) ->
+        #TODO Exception from Tracker recompute function: Error: Can't call Tracker.flush while flushing
+        # this doesn't affect the test but looks bad
         l eval('L()'), 'ran tracker'
         # since the sync hasn't gone to server and back (hooks!) we test once the data is here
         unless !W.findOne({to:'elias'})
           l eval('L()'), 'got hit'
           test.equal W.findOne({to:'elias'}).from , recFrom
           next()
-          #computation.stop() # APPEARS not necessary
+          computation.stop() # APPEARS not necessary
           

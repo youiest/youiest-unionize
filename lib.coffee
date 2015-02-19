@@ -1,11 +1,13 @@
+@l = do ->
+  context = 'l' #dif[-1..][0] # - ti #'' #can be dynamic ?
+  # it would be great if this actually executed so we'd have an exact time since start of app
+  # for some reason it's 'stuck' in th object instead of being re calculated.. closure
+  # find a package that does this right...
+  Function::bind.call console.log, console, context#, arguments.callee.caller.toString().match(/(unionize.{10}.*?)/)#,t(), context, dif[0] , dif[-1..][0]  #,  new Date().getTime()
 
 console.warn = -> #this kills the warns from prior
 # The main collection. Only inserts allowed. Unless by cron or hook.
-@W = new Meteor.Collection 'W'
 
-# Each user / profile gets a 'bucket' of pre-joined data kept up to date
-# only enough to load the app with only one findOne query
-@WI = new Meteor.Collection 'WI'
 
 #Client and server..
 
@@ -43,20 +45,13 @@ arrowofhrt = false
 
 Meteor.methods
 	"t" : () ->
-		return t()
-
-
-@l = do ->
-  context = 'l' #dif[-1..][0] # - ti #'' #can be dynamic ?
-  # it would be great if this actually executed so we'd have an exact time since start of app
-  # for some reason it's 'stuck' in th object instead of being re calculated.. closure
-  # find a package that does this right...
-  Function::bind.call console.log, console, context#, arguments.callee.caller.toString().match(/(unionize.{10}.*?)/)#,t(), context, dif[0] , dif[-1..][0]  #,  new Date().getTime()
+		return L()
 
 
 
+
+# eval('L()') brings this function into local scope so we get correct line numbers on server.
 @L = ->
-
 	if Meteor.isClient
 		return ''
 	else
@@ -66,25 +61,21 @@ Meteor.methods
 	    catch err
 	      return err
 	    return
-
 	  err = getErrorObject()
-	  
 	  caller_line = err.stack.split('\n')[4]
 	  index = caller_line.indexOf('at ')
 	  clean = caller_line.slice(index + 2, caller_line.length)
-	  #start = .3*clean.length
-	  r = clean[58..90]+' '+t()
-	  return r #+t()#+' '+clean.length #depending on path length..
+	  # TODO will need to depend on your path untill a proper split function is created
+	  pathChars = 50
+	  start = clean.length-pathChars
+	  end = start+42
+	  r = clean[start..end]+' '+t()
+	  return r 
 
-
-
-
-l eval('L()'), 'trying two parts'
-
-
-#console.log('starting lib.coffee at', diff() );
-l eval('L()')
 for i in '123'
 	l eval('L()'),  dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
 
+@W = new Meteor.Collection 'W'
+@WI = new Meteor.Collection 'WI'
+@WI = Ground.Collection(WI)
 
