@@ -78,7 +78,7 @@ Meteor.methods
 
 
 #console.log.apply(console, [Array.prototype.join.call(arguments, " ")]);
-
+###
 getErrorObject = ->
     try
       throw Error('')
@@ -108,11 +108,15 @@ clean = caller_line.slice(index + 2, caller_line.length)
   clean = caller_line.slice(index + 2, caller_line.length)
 
   return clean
+###
 
 @c = (err) ->
-	caller_line = err.stack.split('\n')[4]
-	index = caller_line.indexOf('at ')
-	clean = caller_line.slice(index + 2, caller_line.length)
+	unless Meteor.isClient
+		caller_line = err.stack.split('\n')[4]
+		index = caller_line.indexOf('at ')
+		clean = caller_line.slice(index + 2, caller_line.length)
+		return clean
+	t()
 
 @Li = "function getErrorObject(){ try { throw Error('') } catch(err) { return err; } } var err = getErrorObject(); var caller_line = err.stack.split('"+"\n"+"')[4]; var index = caller_line.indexOf('at '); var clean = caller_line.slice(index+2, caller_line.length);"
 @a = (err) -> 
