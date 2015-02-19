@@ -11,15 +11,15 @@
 # # that they follow rules..
 
 # # need a shared bunch of react functions for making html out of W
-@at = "eval(t());eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
+#@at = "eval(t());eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
 
-@att = "'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]"
+#@att = "'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]"
 
 console.time 'elapsed'
 
 
 
-@a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
+#@a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
 # this fetches to filename so logs can know where they're logged from
 
 console.warn = -> #this kills the warns from prior
@@ -79,6 +79,20 @@ Meteor.methods
 
 #console.log.apply(console, [Array.prototype.join.call(arguments, " ")]);
 
+getErrorObject = ->
+    try
+      throw Error('')
+    catch err
+      return err
+    return
+
+err = getErrorObject()
+
+caller_line = err.stack.split('\n')[4]
+index = caller_line.indexOf('at ')
+clean = caller_line.slice(index + 2, caller_line.length)
+
+
 @LineNFile = do ->
   getErrorObject = ->
     try
@@ -92,24 +106,28 @@ Meteor.methods
   caller_line = err.stack.split('\n')[4]
   index = caller_line.indexOf('at ')
   clean = caller_line.slice(index + 2, caller_line.length)
+
   return clean
 
+@c = (err) ->
+	caller_line = err.stack.split('\n')[4]
+	index = caller_line.indexOf('at ')
+	clean = caller_line.slice(index + 2, caller_line.length)
 
-
-
-@a = -> 
+@Li = "function getErrorObject(){ try { throw Error('') } catch(err) { return err; } } var err = getErrorObject(); var caller_line = err.stack.split('"+"\n"+"')[4]; var index = caller_line.indexOf('at '); var clean = caller_line.slice(index+2, caller_line.length);"
+@a = (err) -> 
   t()
+  #call = @LineNFile[-30..]
+	
+
+  #clean = arguments.stack.split('\n')[4].slice(index + 2, caller_line.length)
   unless Meteor.isClient
-    return @LineNFile[-30..]
+  	
+    return c(new Error)
   else return ''
-  #return filename
-#console.log (new Error).stack.split("\n")[4]
-l a(), 'trying two parts'
 
-
-#console.log('starting lib.coffee at', diff() );
-l a()
-for i in '123'
-	l a(),  dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
+console.log eval("c(new Error(''))") , 'straight'
+  
+console.log eval("c(new Error)") , 'straight2'
 
 
