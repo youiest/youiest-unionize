@@ -1,11 +1,13 @@
 @s = 'L()'
+
+#nuff said
 @smite = do ->
-  context = 'l' #dif[-1..][0] # - ti #'' #can be dynamic ?
+  context = 's' #dif[-1..][0] # - ti #'' #can be dynamic ?
   # it would be great if this actually executed so we'd have an exact time since start of app
   # for some reason it's 'stuck' in th object instead of being re calculated.. closure
   # find a package that does this right...
   Function::bind.call console.log, console, context#, arguments.callee.caller.toString().match(/(unionize.{10}.*?)/)#,t(), context, dif[0] , dif[-1..][0]  #,  new Date().getTime()
-@l = ->
+
 
 console.warn = -> #this kills the warns from prior
 # The main collection. Only inserts allowed. Unless by cron or hook.
