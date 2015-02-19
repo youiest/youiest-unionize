@@ -1,6 +1,6 @@
 #client.coffee has code for creating connections
 
-l eval('L()')
+smite eval(s)
 
 ConsoleMe.subscribe()
 formatUpdate = (args) ->
@@ -17,7 +17,7 @@ formatUpdate = (args) ->
     return up
 
 @connect =  (args) ->
-    l eval('L()'), 'hi from connect'
+    smite eval(s), 'hi from connect'
     if !args.from
         l 'not from anywhere! run!'
     ups = formatUpdate args
