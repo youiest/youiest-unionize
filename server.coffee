@@ -1,3 +1,14 @@
+Kadira.connect('EpzKPjKCE7GqsMnrg', '3cb66067-c801-4c9d-9e71-f61a4c426de3')
+
+process.on 'uncaughtException', (err) ->
+  Kadira.ignoreErrorTracking err
+  # send error to the third party service
+  return
+
+process.on 'Error', (err) ->
+  Kadira.ignoreErrorTracking err
+  # send error to the third party service
+  return
 @at = "eval(t());eval( 'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
 @LineNFile = do ->
   getErrorObject = ->

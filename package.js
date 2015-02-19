@@ -14,13 +14,13 @@ Package.describe({
 // add grounddb here
 Package.on_use(function (api) {
   api.versionsFrom('1.0.3.1');
-  api.use(['matb33:collection-hooks','coffeescript'], ['client', 'server']);
+  api.use(['matb33:collection-hooks','coffeescript','ground:db'], ['client', 'server']);
 
   // like Document W will be an extended coll..
   api.export('W');
 
   api.add_files([
-    'lib.coffee','ground:db'
+    'lib.coffee'
   ], ['client','server']);
 
   api.add_files([
@@ -34,7 +34,7 @@ Package.on_use(function (api) {
 
 Package.on_test(function (api) {
   api.versionsFrom('1.0.3.1');
-  api.use(['ground:db','aldeed:console-me','matb33:collection-hooks','tracker', 'tinytest', 'test-helpers', 'coffeescript', 'insecure', 'accounts-base', 'accounts-password', 'underscore', 'random'], ['client', 'server']);
+  api.use(['meteorhacks:kadira','meteorhacks:zones','ground:db','aldeed:console-me','matb33:collection-hooks','tracker', 'tinytest', 'test-helpers', 'coffeescript', 'insecure', 'accounts-base', 'accounts-password', 'underscore', 'random'], ['client', 'server']);
  
   api.add_files([
     'lib.coffee',
