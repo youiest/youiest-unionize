@@ -95,7 +95,8 @@ if Meteor.isClient
         # since the sync hasn't gone to server and back (hooks!) we test once the data is here
         unless !inboxed
           smite eval(s), 'got hit'
-          test.equal W.findOne({to:'elias'}).from , recFrom
+          smite WI.findOne({inbox:{ $exists: true }}).inbox , eval s
+          test.equal WI.findOne({inbox:{ $exists: true }}).inbox[0].from , recFrom
           next()
           #computation.stop() # APPEARS not necessary
 

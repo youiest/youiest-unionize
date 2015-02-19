@@ -25,11 +25,28 @@ Meteor.methods
       'insertedW': new Date().getTime()
     for i in doc.outbox
       smite eval(s), i, 'outbox document'
-      W.insert
+      intruder = W.insert
         to: i.to
         from: i.from
         w:'now'
         journey: doc.journey
+
+      smite 'scout targets!', eval s
+      found = WI.find
+        _id: i.to
+      ,
+        limit: 1
+
+      smite 'do we have target?', found.count(), W.findOne({_id: intruder}), eval s 
+      # this smite action found a kickass way to poll the db without returning actual documents
+      if found.count() > .5
+        WI.update
+          _id: i.to
+        ,
+          '$push': 
+            'inbox': W.findOne {_id: intruder}
+      
+
 
 
 # end this task if conditions dictate that we shouldn't touch it
