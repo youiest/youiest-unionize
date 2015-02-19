@@ -95,6 +95,7 @@ Meteor.methods
   return clean
 
 @Li = ->
+
 	if Meteor.isClient
 		return ''
 	else
@@ -110,8 +111,9 @@ Meteor.methods
 	  caller_line = err.stack.split('\n')[4]
 	  index = caller_line.indexOf('at ')
 	  clean = caller_line.slice(index + 2, caller_line.length)
-	  clean = clean[15..]
-	  return clean
+	  #start = .3*clean.length
+	  r = clean[58..90]+' '+t()
+	  return r #+t()#+' '+clean.length #depending on path length..
 
 
 
