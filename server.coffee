@@ -27,7 +27,7 @@ Meteor.methods
       l eval('L()'), i, 'outbox document'
       W.insert
         to: i.to
-        from: i.from
+        from: i.from  
         w:'now'
         journey: doc.journey
 

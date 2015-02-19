@@ -56,10 +56,10 @@ if Meteor.isClient
           #computation.stop() # APPEARS not necessary
 
 if Meteor.isClient
-  l eval('L()'), 'starting'
+  l eval('L()'), 'starting number 2'
   Meteor.call 'dummyInsert', (req,res) ->
-    l eval('L()'), 'returned'
-    Tinytest.addAsync 'update -  x9 clientside update of WI should trigger insert into W', (test, next) ->
+    l eval('L()'), 'returned from dummyinsert'
+    Tinytest.addAsync 'update -  trying again for awake server clientside update of WI should trigger insert into W', (test, next) ->
       l eval('L()'), 'added'
       # update outbox serverside with minimal information.  
       connect(recommendation)
@@ -76,6 +76,28 @@ if Meteor.isClient
           next()
           #computation.stop() # APPEARS not necessary
 
+
+if Meteor.isClient
+  l eval('L()'), 'starting number 3'
+  Meteor.call 'dummyInsert', (req,res) ->
+    l eval('L()'), 'returned from dummyinsert'
+    Tinytest.addAsync 'update -  recommend leads to w leads to inbox', (test, next) ->
+      l eval('L()'), 'added'
+      # update outbox serverside with minimal information.  
+      connect(recommendation)
+      l eval('L()'), 'connected'
+      #when client update synced to server, hook inserts w and w is synced to client tracker reruns
+      inbox = Tracker.autorun (computation) ->
+        #TODO Exception from Tracker recompute function: Error: Can't call Tracker.flush while flushing
+        # this doesn't affect the test but looks bad
+        inboxed = WI.findOne({inbox:{ $exists: true}})
+        l eval('L()'), 'ran tracker inbox', inboxed
+        # since the sync hasn't gone to server and back (hooks!) we test once the data is here
+        unless !inboxed
+          l eval('L()'), 'got hit'
+          test.equal W.findOne({to:'elias'}).from , recFrom
+          next()
+          #computation.stop() # APPEARS not necessary
 
 
 ###
@@ -108,7 +130,7 @@ if Meteor.isClient
     
     
 ###
-
+###
 if Meteor.isClient
 
   @recFrom = 'picture'
