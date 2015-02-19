@@ -1,19 +1,4 @@
-@at = "eval(t());eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
-#l eval('Li()'), 'hi from testUpdateClient.coffee'
-@LineNFile = do ->
-  getErrorObject = ->
-    try
-      throw Error('')
-    catch err
-      return err
-    return
 
-  err = getErrorObject()
-  
-  caller_line = err.stack.split('\n')[4]
-  index = caller_line.indexOf('at ')
-  clean = caller_line.slice(index + 2, caller_line.length)
-  return clean
 
 Meteor.methods
   "dummyInsert" : (insert) ->
@@ -28,9 +13,9 @@ Meteor.methods
         _id: 'elias'
       WI.insert
         _id: 'nicolson'
-      #l eval('Li()'), 'dummyInsert called clear and done'
+      #l eval('L()'), 'dummyInsert called clear and done'
   "clearDb": () ->
-    l eval('Li()'), 'clearDb'
+    l eval('L()'), 'clearDb'
     W.remove {}
     WI.remove {}
 
@@ -42,20 +27,20 @@ if Meteor.isClient
   recommendation =
       to: 'elias'
       from: recFrom
-  l eval('Li()'), 'starting'
+  l eval('L()'), 'starting'
   Meteor.call 'dummyInsert', (req,res) ->
-    l eval('Li()'), 'returned'
+    l eval('L()'), 'returned'
     Tinytest.addAsync 'update - clientside update of WI should trigger insert into W', (test, next) ->
-      l eval('Li()'), 'added'
+      l eval('L()'), 'added'
       # update outbox serverside with minimal information.  
       connect(recommendation)
-      l eval('Li()'), 'connected'
+      l eval('L()'), 'connected'
       #when client update synced to server, hook inserts w and w is synced to client tracker reruns
       picd = Tracker.autorun (computation) ->
-        l eval('Li()'), 'ran tracker'
+        l eval('L()'), 'ran tracker'
         # since the sync hasn't gone to server and back (hooks!) we test once the data is here
         unless !W.findOne({to:'elias'})
-          l eval('Li()'), 'got hit'
+          l eval('L()'), 'got hit'
           test.equal W.findOne({to:'elias'}).from , recFrom
           next()
           #computation.stop() # APPEARS not necessary

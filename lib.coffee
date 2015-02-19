@@ -1,26 +1,3 @@
-# # The main collection. Only inserts allowed. Unless by cron or hook.
-# @W = new Meteor.Collection 'W'
-
-# # Each user / profile gets a 'bucket' of pre-joined data kept up to date
-# # only enough to load the app with only one findOne query
-# @WI = new Meteor.Collection 'WI'
-
-# #Client and server..
-
-# # need a shared function that validates w objects
-# # that they follow rules..
-
-# # need a shared bunch of react functions for making html out of W
-@at = "eval(t());eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
-
-@att = "'arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]"
-
-console.time 'elapsed'
-
-
-
-@a = do -> eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)')[0]
-# this fetches to filename so logs can know where they're logged from
 
 console.warn = -> #this kills the warns from prior
 # The main collection. Only inserts allowed. Unless by cron or hook.
@@ -62,7 +39,7 @@ arrowofhrt = false
 		console.timeEnd 'elapsed' 
 		console.time 'elapsed'
 	console.log d= dif[0] - dif[-1..][0]
-	return d #dif[0] - dif[-1..][0] #"arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)[0]"
+	return -d #dif[0] - dif[-1..][0] #"arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)[0]"
 
 Meteor.methods
 	"t" : () ->
@@ -77,24 +54,8 @@ Meteor.methods
   Function::bind.call console.log, console, context#, arguments.callee.caller.toString().match(/(unionize.{10}.*?)/)#,t(), context, dif[0] , dif[-1..][0]  #,  new Date().getTime()
 
 
-#console.log.apply(console, [Array.prototype.join.call(arguments, " ")]);
 
-@LineNFile = do ->
-  getErrorObject = ->
-    try
-      throw Error('')
-    catch err
-      return err
-    return
-
-  err = getErrorObject()
-  
-  caller_line = err.stack.split('\n')[4]
-  index = caller_line.indexOf('at ')
-  clean = caller_line.slice(index + 2, caller_line.length)
-  return clean
-
-@Li = ->
+@L = ->
 
 	if Meteor.isClient
 		return ''
@@ -117,19 +78,13 @@ Meteor.methods
 
 
 
-@a = -> 
-  t()
-  unless Meteor.isClient
-    return @LineNFile[-30..]
-  else return ''
-  #return filename
-#console.log (new Error).stack.split("\n")[4]
-l eval('Li()'), 'trying two parts'
+
+l eval('L()'), 'trying two parts'
 
 
 #console.log('starting lib.coffee at', diff() );
-l eval('Li()')
+l eval('L()')
 for i in '123'
-	l eval('Li()'),  dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
+	l eval('L()'),  dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
 
 

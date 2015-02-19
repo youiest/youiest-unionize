@@ -1,19 +1,6 @@
 #client.coffee has trusted code for creating connections
-@at = "eval(t());eval('arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)'[0]);"
-@LineNFile = do ->
-  getErrorObject = ->
-    try
-      throw Error('')
-    catch err
-      return err
-    return
 
-  err = getErrorObject()
-  
-  caller_line = err.stack.split('\n')[4]
-  index = caller_line.indexOf('at ')
-  clean = caller_line.slice(index + 2, caller_line.length)
-  return clean
+
 ###
 l a(), 'hi from client'
 # connect runs on the client and updates the client version of the users WI object
@@ -37,11 +24,11 @@ formatUpdate = (args) ->
     return up
 
 @connect =  (args) ->
-    l a(), 'hi from connect'
+    l eval('L()'), 'hi from connect'
     if !args.from
         l 'not from anywhere! run!'
     ups = formatUpdate args
-    l a(),  ups , 'ups'
+
 
     y = WI.update
         _id:'nicolson'
@@ -51,7 +38,7 @@ formatUpdate = (args) ->
 
     x = WI.findOne
         _id:'nicolson'
-    l a(),  x.outbox
+
             
         
 
