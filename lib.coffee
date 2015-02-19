@@ -96,7 +96,7 @@ Meteor.methods
 
 @Li = ->
 	if Meteor.isClient
-		return false
+		return ''
 	else
 	  getErrorObject = ->
 	    try
@@ -122,12 +122,12 @@ Meteor.methods
   else return ''
   #return filename
 #console.log (new Error).stack.split("\n")[4]
-l a(), 'trying two parts'
+l eval('Li()'), 'trying two parts'
 
 
 #console.log('starting lib.coffee at', diff() );
-l a()
+l eval('Li()')
 for i in '123'
-	l a(),  dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
+	l eval('Li()'),  dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
 
 

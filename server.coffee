@@ -19,9 +19,9 @@
 
 # pre processing, validation should have been done in lib.coffee
 # validate again? 
-l a(), 'hi from server', eval('Li()'), 'evaled Li'
+l eval('Li()'), 'hi from server', eval('Li()'), 'evaled Li'
 W.before.insert (userId, doc) ->
-  #l a(),  arguments, 'before insert arguments'
+  #l eval('Li()'),  arguments, 'before insert arguments'
   doc.createdAt = Date.now()
   return
 
@@ -29,14 +29,14 @@ W.before.insert (userId, doc) ->
 # write to a jobs collection, that embeds all earlier versions of the doc into the new one, so there's no dupes
 
 W.after.insert (userId, doc) ->
-  #l a(),  arguments , 'arguments after insert'
+  #l eval('Li()'),  arguments , 'arguments after insert'
   # ...
   return
 
 # end this task if conditions dictate that we shouldn't touch it
 # if recently updated or user hasn't logged in recently postpone writes
 WI.before.update (userId, doc, fieldNames, modifier, options) ->
-  l a(),  fieldNames, 'before update fieldNames'
+  l eval('Li()'),  fieldNames, 'before update fieldNames'
   #modifier.$set = modifier.$set or {}
   #modifier.$set.modifiedAt = Date.now()
   return
@@ -56,12 +56,12 @@ WI.after.update ((userId, doc, fieldNames, modifier, options) ->
 # profile document 
 processInboxAfterUpdate = (doc)->
   for i in doc 
-    l a(),  i, 'inserting into w'
+    l eval('Li()'),  i, 'inserting into w'
     ins = W.insert i
-    l a(),  ins , 'interted into w'
+    l eval('Li()'),  ins , 'interted into w'
 WIAfterUpdate = WI.after.update (userId, doc, fieldNames, modifier, options) ->
   #console.log arguments.callee, arguments
-  l a(), doc, doc.outbox, 'got after updated WI! on server!' 
+  l eval('Li()'), doc, doc.outbox, 'got after updated WI! on server!' 
   if doc.outbox.length > 0 
     processInboxAfterUpdate(doc.outbox)
    
