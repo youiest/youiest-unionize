@@ -40,8 +40,8 @@ arrowofhrt = false
 	unless Meteor.isServer and consoling
 		console.timeEnd 'elapsed' 
 		console.time 'elapsed'
-	console.log d= dif[0] - dif[-1..][0]
-	return -d #dif[0] - dif[-1..][0] #"arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)[0]"
+	console.log d=  dif[-1..][0] - dif[0]
+	return d #dif[0] - dif[-1..][0] #"arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)[0]"
 
 Meteor.methods
 	"t" : () ->
@@ -52,6 +52,7 @@ Meteor.methods
 
 # eval('L()') brings this function into local scope so we get correct line numbers on server.
 @L = ->
+	t()
 	if Meteor.isClient
 		return ''
 	else

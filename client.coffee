@@ -1,14 +1,7 @@
-#client.coffee has trusted code for creating connections
+#client.coffee has code for creating connections
 
+l eval('L()')
 
-###
-l a(), 'hi from client'
-# connect runs on the client and updates the client version of the users WI object
-# when users WI object is synced ot server before and after update hooks are fired
-
-Meteor.startup () ->
-    l a(),  'client startup'
-###
 ConsoleMe.subscribe()
 formatUpdate = (args) ->
     up = {} 
