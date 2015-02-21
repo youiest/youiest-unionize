@@ -71,9 +71,9 @@ Meteor.methods
 	  index = caller_line.indexOf('at ')
 	  clean = caller_line.slice(index + 2, caller_line.length)
 	  # TODO will need to depend on your path untill a proper split function is created
-	  pathChars = 50
+	  pathChars = 38
 	  start = clean.length-pathChars
-	  end = start+42
+	  end = start+32
 	  r = clean[start..end]+' '+t()
 	  return r 
 

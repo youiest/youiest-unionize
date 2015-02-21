@@ -120,8 +120,9 @@ if Meteor.isClient
           smite eval(s), 'got hit'
           smite WI.findOne({inbox:{ $exists: true }}).inbox , eval s
           test.equal WI.findOne({inbox:{ $exists: true }}).inbox[0].from , recFrom
+          this.stop()
           next()
-          #computation.stop() # APPEARS not necessary
+           # APPEARS not necessary
 
 
 ###
