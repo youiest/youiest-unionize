@@ -1,5 +1,7 @@
    youiest:unionize connects reactively. 
 
+curl https://install.meteor.com/ | sh
+
 cd path/to/yourpackage
 
 meteor test-packages ./
