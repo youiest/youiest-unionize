@@ -45,6 +45,22 @@ Meteor.startup ->
     #window.location.reload()
 
 
+Meteor.startup ->
+  if Meteor.isClient
+    Meteor.call 'dummyInsert', (res,err) ->
+      smite eval(s), 'returned'
+      Tinytest.addAsync 'update - 0 sequential connect first clientside update of WI should trigger insert into W', (test, next) ->
+        smite 'added', eval s
+        connect(recommendation)
+        smite eval(s), 'connected afer test callback'
+        picd = Tracker.autorun (computation) ->
+          smite eval(s), 'ran tracker'
+          unless !W.findOne({to:'elias'})
+            smite eval(s), 'got hit'
+            test.equal W.findOne({to:'elias'}).from , recFrom
+            next()
+  
+
 test1 = ->
 if Meteor.isClient
 #Meteor.startup -> if Meteor.isClient

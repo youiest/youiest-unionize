@@ -77,8 +77,15 @@ Meteor.methods
 	  r = clean[start..end]+' '+t()
 	  return r 
 
+@smiter = do ->
+  context = eval s 
+  Function::bind.call console.log, console, context#, arguments.callee.caller.toString().match(/(unionize.{10}.*?)/)#,t(), context, dif[0] , dif[-1..][0]  #,  new Date().getTime()
+
+
 for i in '123'
 	smite eval(s),  dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
+	if Meteor.isServer # thros error on client
+		new smiter i
 
 @W = new Meteor.Collection 'W'
 @WI = new Meteor.Collection 'WI'
