@@ -37,12 +37,38 @@ ConsoleMe.enabled = true
   to: 'elias'
   from: recFrom
 
+Meteor.startup ->
+  if Meteor.isClient
+    test1()
+    test2()
+    test3()
+    #window.location.reload()
 
 
+Meteor.startup ->
+  if Meteor.isClient
+    Meteor.call 'dummyInsert', (res,err) ->
+      smite eval(s), 'returned'
+      Tinytest.addAsync 'update - 0 sequential connect first clientside update of WI should trigger insert into W', (test, next) ->
+        smite 'added', eval s
+        connect(recommendation)
+        smite eval(s), 'connected afer test callback'
+        picd = Tracker.autorun (computation) ->
+          smite eval(s), 'ran tracker'
+          unless !W.findOne({to:'elias'})
+            smite eval(s), 'got hit'
+            test.equal W.findOne({to:'elias'}).from , recFrom
+            next()
+  
 
-
+test1 = ->
 if Meteor.isClient
-  smite eval(s), 'starting'
+#Meteor.startup -> if Meteor.isClient
+#test1 = ->
+  smite eval(s), 'starting test 1'
+  pre = WI.find({}).count()
+  cl = clearClientGroundDbs()
+  smite 'did we flush the groundlings out?', pre, cl(), 'if pre > 0 cl yes', eval s
   Meteor.call 'dummyInsert', (req,res) ->
     smite eval(s), 'returned'
     Tinytest.addAsync 'update - clientside update of WI should trigger insert into W', (test, next) ->
@@ -52,8 +78,6 @@ if Meteor.isClient
       smite eval(s), 'connected'
       #when client update synced to server, hook inserts w and w is synced to client tracker reruns
       picd = Tracker.autorun (computation) ->
-        #TODO Exception from Tracker recompute function: Error: Can't call Tracker.flush while flushing
-        # this doesn't affect the test but looks bad
         smite eval(s), 'ran tracker'
         # since the sync hasn't gone to server and back (hooks!) we test once the data is here
         unless !W.findOne({to:'elias'})
@@ -62,11 +86,14 @@ if Meteor.isClient
           next()
           #computation.stop() # APPEARS not necessary
 
+#Meteor.startup -> if Meteor.isClient
+test2 = -> 'why not start on start'
 if Meteor.isClient
-  smite eval(s), 'starting number 2'
+  smite eval(s), 'starting test 2'
+  pre = WI.find({}).count()
+  cl = clearClientGroundDbs()
+  smite 'did we flush the groundlings out?', pre, cl(), 'if pre > 0 cl yes', eval s
   Meteor.call 'dummyInsert', (req,res) ->
-    eval(res)
-    WI.find({}).count
     smite eval(s), 'returned from dummyinsert'
     Tinytest.addAsync 'update -  trying again for awake server clientside update of WI should trigger insert into W', (test, next) ->
       smite eval(s), 'added'
@@ -75,8 +102,6 @@ if Meteor.isClient
       smite eval(s), 'connected'
       #when client update synced to server, hook inserts w and w is synced to client tracker reruns
       picd = Tracker.autorun (computation) ->
-        #TODO Exception from Tracker recompute function: Error: Can't call Tracker.flush while flushing
-        # this doesn't affect the test but looks bad
         smite eval(s), 'ran tracker'
         # since the sync hasn't gone to server and back (hooks!) we test once the data is here
         unless !W.findOne({to:'elias'})
@@ -86,13 +111,14 @@ if Meteor.isClient
           #computation.stop() # APPEARS not necessary
 
 
+#if Meteor.isClient
+test3 = ->
 if Meteor.isClient
   smite eval(s), 'starting number 3'
   pre = WI.find({}).count()
   cl = clearClientGroundDbs()
   smite 'did we flush the groundlings out?', pre, cl(), 'if pre > 0 cl yes', eval s
   Meteor.call 'dummyInsert', (res,err) ->
-    
     smite eval(s), 'returned from dummyinsert'
     Tinytest.addAsync 'update -  recommend leads to w leads to inbox', (test, next) ->
       smite eval(s), 'added'
@@ -101,7 +127,7 @@ if Meteor.isClient
       smite eval(s), 'connected'
       #when client update synced to server, hook inserts w and w is synced to client tracker reruns
       inbox = Tracker.autorun (computation) ->
-        #TODO Exception from Tracker recompute function: Error: Can't call Tracker.flush while flushing
+        #TODO this test returns multiple times
         # this doesn't affect the test but looks bad
         inboxed = WI.findOne({inbox:{ $exists: true}})
         smite eval(s), 'ran tracker inbox', inboxed
@@ -110,8 +136,9 @@ if Meteor.isClient
           smite eval(s), 'got hit'
           smite WI.findOne({inbox:{ $exists: true }}).inbox , eval s
           test.equal WI.findOne({inbox:{ $exists: true }}).inbox[0].from , recFrom
+          this.stop()
           next()
-          #computation.stop() # APPEARS not necessary
+           # APPEARS not necessary
 
 
 ###
