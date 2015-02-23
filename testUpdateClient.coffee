@@ -34,27 +34,18 @@ Meteor.methods
 
 ConsoleMe.enabled = true
 
-
-
-
-#if WI.find({inbox:  { $exists : true } }, {_id: 1}).limit(1) #apparently faster by many times
 @recFrom = 'picture'
 @recommendation =
   to: 'elias'
   from: recFrom
 
-
-
-
 Meteor.startup ->
   if Meteor.isClient
     smite flushGroundlings(), eval s
-    Meteor.call 'dummyInsert', (res,err) ->
-      smite eval(s), 'returned'
-
-
-      Tinytest.addAsync 'update - 0 sequential connect first clientside update of WI should trigger insert into W', (test, next) ->
-        smite 'added', eval s
+    Tinytest.addAsync 'update - 0 sequential connect first clientside update of WI should trigger insert into W', (test, next) ->
+      smite 'added', eval s
+      Meteor.call 'dummyInsert', (res,err) ->
+        smite eval(s), 'returned'
         connect(recommendation)
         smite eval(s), 'connected afer test callback'
         picd = Tracker.autorun (computation) ->
@@ -62,15 +53,12 @@ Meteor.startup ->
           unless !W.findOne({to:'elias'})
             smite eval(s), 'got hit'
             test.equal W.findOne({to:'elias'}).from , recFrom
-            next()  
-
-Meteor.startup ->
-  if Meteor.isClient
+            next()
     smite flushGroundlings(), eval s
-    Meteor.call 'dummyInsert', (res,err) ->
-      smite eval(s), 'returned from dummies'
-      Tinytest.addAsync 'update - clientside update of WI should trigger insert into W', (test, next) ->
-        smite 'added cl', eval s
+    Tinytest.addAsync 'update - clientside update of WI should trigger insert into W', (test, next) ->
+      smite 'added cl', eval s
+      Meteor.call 'dummyInsert', (res,err) ->
+        smite 'returned from dummies in insert w', eval s
         connect(recommendation)
         smite eval(s), 'connected afer test callback'
         picd = Tracker.autorun (computation) ->
@@ -78,17 +66,15 @@ Meteor.startup ->
           unless !W.findOne({to:'elias'})
             smite eval(s), 'got hit'
             test.equal W.findOne({to:'elias'}).from , recFrom
-            next()  
-
-
-Meteor.startup ->
-  if Meteor.isClient
+            next()    
     smite eval(s), 'starting test 1'
     smite flushGroundlings(), eval s
-    Meteor.call 'dummyInsert', (res,err) ->
-      smite eval(s), 'returned from dummies'
-      Tinytest.addAsync 'update - 3 recommend leads to w leads to inbox', (test, next) ->
-        smite 'added cl', eval s
+    
+    Tinytest.addAsync 'update - 3 recommend leads to w leads to inbox', (test, next) ->
+      smite 'added cl', eval s
+      Meteor.call 'dummyInsert', (res,err) ->
+        smite eval(s), 'returned from dummies'
+        
         connect(recommendation)
         smite eval(s), 'connected afer test callback'
         inbox = Tracker.autorun (computation) ->
