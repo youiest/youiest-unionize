@@ -1,5 +1,6 @@
 @s = 'L()'
 
+# TODO should be called with start and end time parameter for exact timings
 #nuff said
 @smite = do ->
   context = 's' #dif[-1..][0] # - ti #'' #can be dynamic ?

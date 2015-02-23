@@ -39,10 +39,16 @@ ConsoleMe.enabled = true
   to: 'elias'
   from: recFrom
 
+for i in '123'
+  @recommendation =
+    to: 'elias'+i
+    from: recFrom+i
+  smite recFrom[i], recommendation, 'counting to three recommendations'
+
+
 Meteor.startup ->
   if Meteor.isClient
-    smite flushGroundlings(), eval s
-    Tinytest.addAsync 'update - 0 sequential connect first clientside update of WI should trigger insert into W', (test, next) ->
+    Tinytest.addAsync 'update - 01 clientside update of WI should trigger insert into W', (test, next) ->
       smite 'added', eval s
       Meteor.call 'dummyInsert', (res,err) ->
         smite eval(s), 'returned'
@@ -69,12 +75,10 @@ Meteor.startup ->
             next()    
     smite eval(s), 'starting test 1'
     smite flushGroundlings(), eval s
-    
     Tinytest.addAsync 'update - 3 recommend leads to w leads to inbox', (test, next) ->
       smite 'added cl', eval s
       Meteor.call 'dummyInsert', (res,err) ->
         smite eval(s), 'returned from dummies'
-        
         connect(recommendation)
         smite eval(s), 'connected afer test callback'
         inbox = Tracker.autorun (computation) ->
