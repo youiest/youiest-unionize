@@ -14,56 +14,83 @@ W.after.insert (userId, doc) ->
 
 Meteor.methods
   # called dynamically if outbox is the changed fieldname on update WI
-  "outbox" : (doc, userId) ->
-    unless userId == Meteor.userId 
+  "outbox" : (duserId, doc, fieldNames, modifier, options) ->
+    smite doc, modifier, 'going for outbox loop?', eval s
+    ###
+    unless userId == 'wiber' or Meteor.userId() 
       smite eval(s), 'userId did not match'
+    smite 'or did it?'
+    ###
 
-    if typeof doc.journey #TODO why is this acting inverted? == null
+    smite typeof doc.journey, 'journey?', eval s #TODO why is this acting inverted? == null
+
+    if !doc.journey
       doc.journey = []
 
     doc.journey.push
-      'insertedW': new Date().getTime()
-    for i in doc.outbox
-      smite eval(s), i, 'outbox document'
+      'serverOutbox': new Date().getTime()
+    old_key = 'outbox'
+    new_key = 'sent'
+    if old_key != new_key
+      smite modifier, 'needs a new agenda', eval s
+      smite eval Object.defineProperty modifier.$push, 'sent', Object.getOwnPropertyDescriptor(modifier.$push, old_key)
+      smite eval delete modifier.$push[old_key]
+    smite modifier, modifier.$push,modifier.$push.sent, 'has a new agenda', eval s
+
+    #for i in modifier.$push.sent # not an array? never an array? 
+    if modifier.$push.sent
+      # there might be many new items pushed while offline so let's go through them
+      i = modifier.$push.sent
+      smite i , typeof i, 'not looping modifiers', eval s
+
       intruder = W.insert
         to: i.to
         from: i.from
-        w:'now'
-        journey: doc.journey
+      smite intruder, eval s
+      
+      updatedWISent = WI.update
+        _id: doc._id
+      ,
+        '$push':
+          sent: intruder #don't need entire thing here? thinking yes no need for optimizing
+          #better to get the whole thing later since db won't be ready fast enough
+      
+      smite eval(s), i, 'outbox document redirected to sent and w intruder', intruder, updatedWISent#, intruderDoc
 
       smite 'scout targets!', eval s
-      found = WI.find
-        _id: i.to
-      ,
-        limit: 1
-
-      smite 'do we have target?', found.count(), W.findOne({_id: intruder}), eval s 
+      
+      smite eval (didwefindWI = WIFound(i.to)), eval s
+      smite 'do we have target?'
+      , didwefindWI
+      #, W.findOne {_id: intruder}
+      #, WI.findOne {'_id': i.to }
+      , eval s 
       # this smite action found a kickass way to poll the db without returning actual documents
-      if found.count() > .5
-        WI.update
+      if didwefindWI == 1 #> .5
+        updated = WI.update
           _id: i.to
         ,
           '$push': 
-            'inbox': W.findOne {_id: intruder}
-      
-
+            'inbox': intruder
+        smite updated, 'updated' , eval s
+      return updated
 
 
 # end this task if conditions dictate that we shouldn't touch it
 # if recently updated or user hasn't logged in recently postpone writes
 WI.before.update (userId, doc, fieldNames, modifier, options) ->
-  smite eval(s),  fieldNames, 'before update fieldNames'
- 
-
-WIAfterUpdate = WI.after.update (userId, doc, fieldNames, modifier, options) ->
-  #console.log arguments.callee, arguments
   for i in fieldNames
-    smite eval(s), i
-    Meteor.call i, doc, userId, (res,err) ->
-      smite eval(s), res, err
+    smite i,modifier, doc, 'fieldname calling method', eval s
+    Meteor.call i, userId, doc, fieldNames, modifier, options, (res,err) ->
+      smite 'called a possible nonexistent call', i, res, err, eval s #eval(s), res, err
   return
 
   smite eval(s), doc, doc.outbox, 'got after updated WI! on server!' 
+ 
+
+WIAfterUpdate = WI.after.update (userId, doc, fieldNames, modifier, options) ->
+  smite eval(s),  fieldNames, 'after update fieldNames'
+  
   
 
 Meteor.publish(null,()->

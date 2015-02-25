@@ -46,10 +46,10 @@ Meteor.startup ->
 
       Meteor.call 'dummyInsert'
       recommendation =
-        to: 'elias'
+        to: user
         from: 'picture'
       recommendation2 =
-        to: 'elias'
+        to: user
         from: 'picture2'
       l a()
       , recommendation, recommendation.from 
@@ -64,10 +64,10 @@ Meteor.startup ->
 
       # since the sync hasn't gone to server and back (hooks!) we test once the data is here
       picd = Tracker.autorun (computation) ->
-        l a(), 'checking if ready for test pictured' , W.findOne({to:'elias'})
+        l a(), 'checking if ready for test pictured' , W.findOne({to:user})
         # only run the test if we have a candidate
-        unless !W.findOne({to:'elias'})
-          test.equal recommendation.from , W.findOne {to:'elias'}.from
+        unless !W.findOne({to:user})
+          test.equal recommendation.from , W.findOne {to:user}.from
         next()
 
 

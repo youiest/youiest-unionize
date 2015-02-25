@@ -29,7 +29,7 @@ if Meteor.isClient
 
   @recFrom = 'picture'
   recommendation =
-      to: 'elias'
+      to: user
       from: recFrom
   Tinytest.addAsync 'update - from client outbox to client inbox', (test, next) ->
     # update outbox serverside with minimal information.  
@@ -37,8 +37,8 @@ if Meteor.isClient
     #when client update synced to server, hook inserts w and w is synced to client tracker reruns
     inbox = Tracker.autorun (computation) ->
       # since the sync hasn't gone to server and back (hooks!) we test once the data is here
-      unless !W.findOne({to:'elias'})
-        test.equal recFrom , W.findOne({to:'elias'}).from
+      unless !W.findOne({to:user})
+        test.equal recFrom , W.findOne({to:user}).from
         next()
         # computation.stop() # APPEARS not necessary
         return

@@ -1,13 +1,9 @@
 #client.coffee has code for creating connections
 
-smite eval(s)
+smite eval s
 
 ConsoleMe.subscribe()
 formatUpdate = (args) ->
-    up = {} 
-    upd = {} 
-    upda = {}
-    #_id = args.from+'-'+args.to+'-'+new Date().getTime()
     up = 
         #_id: _id
         from: args.from
@@ -17,22 +13,24 @@ formatUpdate = (args) ->
     return up
 
 @connect =  (args) ->
-    smite eval(s), 'hi from connect'
+    smite eval(s), 'hi from connect', args
+
     if !args.from
-        l 'not from anywhere! run!'
+        smite 'not from anywhere! run!', eval s
+    
+    unless WI.findOne {_id:'elias'} or !WI.findOne {_id: Meteor.userId}
+        smite 'we have no target! connect in what outbox?', eval s
+
     ups = formatUpdate args
+    myWI = 'wiber' unless Meteor.userId() #this () killed
 
-
-    y = WI.update
-        _id:'nicolson'
+    return WI.update
+        _id: myWI
     ,
-    '$push': 
-        'outbox': ups
+        '$push': 
+            'outbox': ups            
+    smite 'we have an outbox', findOne({ _id: myWI }), eval s
 
-    x = WI.findOne
-        _id:'nicolson'
-
-            
 
         
     
