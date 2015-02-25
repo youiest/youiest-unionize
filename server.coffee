@@ -33,8 +33,9 @@ Meteor.methods
     new_key = 'sent'
     if old_key != new_key
       smite modifier, 'needs a new agenda', eval s
-      smite eval Object.defineProperty modifier.$push, 'sent', Object.getOwnPropertyDescriptor(modifier.$push, old_key)
+      smite eval Object.defineProperty modifier.$push, new_key, Object.getOwnPropertyDescriptor(modifier.$push, old_key)
       smite eval delete modifier.$push[old_key]
+
     smite modifier, modifier.$push,modifier.$push.sent, 'has a new agenda', eval s
 
     #for i in modifier.$push.sent # not an array? never an array? 
@@ -48,15 +49,6 @@ Meteor.methods
         from: i.from
       smite intruder, eval s
       
-      updatedWISent = WI.update
-        _id: doc._id
-      ,
-        '$push':
-          sent: intruder #don't need entire thing here? thinking yes no need for optimizing
-          #better to get the whole thing later since db won't be ready fast enough
-      
-      smite eval(s), i, 'outbox document redirected to sent and w intruder', intruder, updatedWISent#, intruderDoc
-
       smite 'scout targets!', eval s
       
       smite eval (didwefindWI = WIFound(i.to)), eval s

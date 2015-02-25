@@ -38,19 +38,19 @@ Meteor.methods
     
     #W.insert insert
     Meteor.call 'clearDb', (res,err) ->
-      e = W.insert
+      e = WI.insert
         _id: 'wiber0'
-      e = W.insert
+      e = WI.insert
         _id: 'wiber1'
-      e = W.insert
+      e = WI.insert
         _id: 'wiber2'
-      e = W.insert
+      e = WI.insert
         _id: 'wiber3'
-      e = W.insert
+      e = WI.insert
         _id: 'wiber4'
-      e = W.insert
+      e = WI.insert
         _id: 'wiber5'
-      n = W.insert
+      n = WI.insert
         _id: 'nicolson'
       p = W.insert
         _id: 'picture'
