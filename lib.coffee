@@ -1,5 +1,16 @@
 @s = 'L()'
 
+@WIFound = (id) ->
+  smite id, 'scouting nemo' , eval s
+  found = WI.find(
+    _id: id
+  ,
+    limit: 1
+  ).count()
+  smite id, found, 'finding nemo' , eval s
+  return found
+
+# TODO should be called with start and end time parameter for exact timings
 #nuff said
 @smite = do ->
   context = 's' #dif[-1..][0] # - ti #'' #can be dynamic ?
