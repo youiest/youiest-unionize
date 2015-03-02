@@ -5,15 +5,12 @@ smite eval s
 ConsoleMe.subscribe()
 formatUpdate = (args) ->
     up = 
-        #_id: _id
         from: args.from
         to: args.to or false
-    #upd[_id]=up
-    #upda['outbox']=upd
     return up
 
 @connect =  (args) ->
-    smite eval(s), 'hi from connect', args, WI.findOne {_id:'wiber'}
+    #smite eval(s), 'hi from connect', args, WI.findOne {_id:'wiber'}
 
     if !args.from
         smite 'not from anywhere! run!', eval s
@@ -29,7 +26,7 @@ formatUpdate = (args) ->
     ,
         '$push': 
             'outbox': ups            
-    smite 'we have an outbox', WI.findOne({ _id: myWI }), eval s
+    #smite 'we have an outbox', WI.findOne({ _id: myWI }), eval s
     return wi
 
 
