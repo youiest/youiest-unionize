@@ -13,23 +13,24 @@ formatUpdate = (args) ->
     return up
 
 @connect =  (args) ->
-    smite eval(s), 'hi from connect', args
+    smite eval(s), 'hi from connect', args, WI.findOne {_id:'wiber'}
 
     if !args.from
         smite 'not from anywhere! run!', eval s
     
-    unless WI.findOne {_id:'elias'} or !WI.findOne {_id: Meteor.userId}
+    unless WI.findOne {_id:'wiber'} or !WI.findOne {_id: Meteor.userId}
         smite 'we have no target! connect in what outbox?', eval s
 
     ups = formatUpdate args
     myWI = 'wiber' unless Meteor.userId() #this () killed
 
-    return WI.update
+    wi = WI.update
         _id: myWI
     ,
         '$push': 
             'outbox': ups            
-    smite 'we have an outbox', findOne({ _id: myWI }), eval s
+    smite 'we have an outbox', WI.findOne({ _id: myWI }), eval s
+    return wi
 
 
         

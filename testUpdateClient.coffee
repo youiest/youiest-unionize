@@ -36,7 +36,7 @@ for i in '012345'
 Meteor.methods
   "dummyInsert" : (insert) ->
     
-    #W.insert insert
+    #always clear db before inserting
     Meteor.call 'clearDb', (res,err) ->
       e = WI.insert
         _id: 'wiber0'
@@ -60,6 +60,7 @@ Meteor.methods
         _id: 'elias'
       WI.insert
         _id: 'nicolson'
+      #attempt to clear client ground db
       return clearClientGroundDbs
   "clearDb": () ->
     smite eval(s), 'clearDb'
@@ -72,21 +73,26 @@ Meteor.call 'dummyInsert', (res,err) ->
   smite res, err, 'returned from dummyinsert', eval s
 
 Meteor.startup ->
+
   if Meteor.isClient
+
     Tinytest.addAsync 'update - 1 clientside update of WI should trigger insert into W', (test, next) ->
+
       recNum = 0
-      smite 'connected afer test callback', recNum
+      smite 'connecting after test add', recNum
       , recommendationArray[recNum].to
       , recommendationArray[recNum].from
       , eval s
       c = connect(recommendationArray[recNum])
       smite c , 'returned from connect', eval s
+
       picd = Tracker.autorun (computation) ->
-        smite eval(s), 'ran tracker one'
         recNum = 0
+        smite recNum, 'ran tracker one', recommendationArray[recNum], eval s
+        smite W.findOne({to:recommendationArray[recNum].to}) , recommendationArray[recNum].to, 'ran tracker one', eval s
         unless !W.findOne({to:recommendationArray[recNum].to})
-          smite eval(s), 'got hit'
-          test.equal W.findOne({to:recommendationArray[recNum].to}).from , recommendationArray[recNum].from
+          smite eval(s), 'got hit tracker one'
+          test.equal recommendationArray[recNum].from, W.findOne({to:recommendationArray[recNum].to}).from
           next()
     Tinytest.addAsync 'update - 2 clientside update of WI should trigger insert into W', (test, next) ->
       recNum = 2
@@ -104,15 +110,18 @@ Meteor.startup ->
     Tinytest.addAsync 'update - 3 client WI.outbox -> W -> WI.inbox', (test, next) ->
       recNum = 3
       c = connect(recommendationArray[recNum])
-      smite c , 'returned from connect', eval s
+      smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
       picd = Tracker.autorun (computation) ->
         recNum = 3
 
-        inboxed = WI.findOne({inbox:{ $exists: true}})
-        smite 'ran tracker three', !inboxed , eval s
-        unless !inboxed
+
+        #WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from
+        smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
+
+        unless !WI.findOne({_id: recommendationArray[recNum].to}).inbox
+
           smite eval(s), 'got hit 3'
-          test.equal WI.findOne({inbox:{ $exists: true }}).inbox[0].from , recommendationArray[recNum].from
+          test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
           this.stop()
           next()
     
