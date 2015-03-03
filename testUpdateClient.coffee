@@ -25,7 +25,7 @@ ConsoleMe.enabled = true
   to: user
   from: recFrom
 @recommendationArray = []
-for i in '012345'
+for i in '0123456789'
   r =
     to: user+i
     from: recFrom+i
@@ -50,6 +50,16 @@ Meteor.methods
         _id: 'wiber4'
       e = WI.insert
         _id: 'wiber5'
+      e = WI.insert
+        _id: 'wiber6'
+      e = WI.insert
+        _id: 'wiber7'
+      e = WI.insert
+        _id: 'wiber8'
+      e = WI.insert
+        _id: 'wiber9'
+      e = WI.insert
+        _id: 'wiber10'
       n = WI.insert
         _id: 'nicolson'
       p = W.insert
@@ -61,7 +71,8 @@ Meteor.methods
       WI.insert
         _id: 'nicolson'
       #attempt to clear client ground db
-      return clearClientGroundDbs
+      return WI.find
+      .count()
   "clearDb": () ->
     smite eval(s), 'clearDb'
     W.remove {}
@@ -94,7 +105,9 @@ Meteor.startup ->
           smite eval(s), 'got hit tracker one'
           test.equal recommendationArray[recNum].from, W.findOne({to:recommendationArray[recNum].to}).from
           next()
+
     Tinytest.addAsync 'update - 2 clientside update of WI should trigger insert into W', (test, next) ->
+
       recNum = 2
       c = connect(recommendationArray[recNum])
       smite c , 'returned from connect in 2', eval s
@@ -109,6 +122,7 @@ Meteor.startup ->
           next()
     # this test requires update on client, two update triggered on server and sync data back to client
     Tinytest.addAsync 'update - 3 client WI.outbox -> server W -> client WI.inbox', (test, next) ->
+
       recNum = 3
       c = connect(recommendationArray[recNum])
       smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
@@ -121,13 +135,14 @@ Meteor.startup ->
           test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
           this.stop()
           next()
-    #TODO keep a feed fresh so findOne get's enough to start the app
+    #TODO keep a feed fresh so WI.findOne get's enough to start an app
     Tinytest.addAsync 'update - 4 client WI.outbox -> W -> WI.inbox', (test, next) ->
-      recNum = 3
+      
+      recNum = 4
       c = connect(recommendationArray[recNum])
       smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
       picd = Tracker.autorun (computation) ->
-        recNum = 3
+        recNum = 4
         smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
         # don't test untill data arrives from server inbox
         unless !WI.findOne({_id: recommendationArray[recNum].to}).inbox
@@ -135,13 +150,15 @@ Meteor.startup ->
           test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
           this.stop()
           next()
+    
     #TODO test that groundb syncs back to server correctly even if new items exist server - conflicts?
     Tinytest.addAsync 'update - 5 client WI.outbox -> W -> WI.inbox', (test, next) ->
-      recNum = 3
+      
+      recNum = 5
       c = connect(recommendationArray[recNum])
       smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
       picd = Tracker.autorun (computation) ->
-        recNum = 3
+        recNum = 5
         smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
         # don't test untill data arrives from server inbox
         unless !WI.findOne({_id: recommendationArray[recNum].to}).inbox
@@ -149,13 +166,15 @@ Meteor.startup ->
           test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
           this.stop()
           next()
+
     #TODO moved from sending to sent when done, or have another collection with unfinished jobs from inserts if necessary
     Tinytest.addAsync 'update - 6 client WI.outbox -> W -> WI.inbox', (test, next) ->
-      recNum = 3
+      
+      recNum = 6
       c = connect(recommendationArray[recNum])
       smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
       picd = Tracker.autorun (computation) ->
-        recNum = 3
+        recNum = 6
         smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
         # don't test untill data arrives from server inbox
         unless !WI.findOne({_id: recommendationArray[recNum].to}).inbox
@@ -165,12 +184,12 @@ Meteor.startup ->
           next()
 
     #TODO test Logged in security of WI
-    Tinytest.addAsync 'update - 6 client WI.outbox -> W -> WI.inbox', (test, next) ->
-      recNum = 3
+    Tinytest.addAsync 'update - 7 client WI.outbox -> W -> WI.inbox', (test, next) ->
+      recNum = 7
       c = connect(recommendationArray[recNum])
       smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
       picd = Tracker.autorun (computation) ->
-        recNum = 3
+        recNum = 7
         smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
         # don't test untill data arrives from server inbox
         unless !WI.findOne({_id: recommendationArray[recNum].to}).inbox
