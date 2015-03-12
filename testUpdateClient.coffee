@@ -102,7 +102,7 @@ Meteor.startup ->
         smite recNum, 'ran tracker one', recommendationArray[recNum], eval s
         smite W.findOne({to:recommendationArray[recNum].to}) , recommendationArray[recNum].to, 'ran tracker one', eval s
         unless !W.findOne({to:recommendationArray[recNum].to})
-          smite eval(s), 'got hit tracker one'
+          smite 'got hit tracker one', eval s
           test.equal recommendationArray[recNum].from, W.findOne({to:recommendationArray[recNum].to}).from
           next()
 
@@ -135,7 +135,14 @@ Meteor.startup ->
           test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
           this.stop()
           next()
-    #TODO keep a feed fresh so WI.findOne get's enough to start an app
+
+
+    # feed function adds a w to the feed cache, queries process best fits
+    # for in loop generates feed items from specific function that generates styled react..
+    # react pieces need to be a separate package?
+    #TODO keep a feed fresh so WI.findOne get's enough to start an app, uses feed function? seeks to maintain a varying number of items
+    # array with max 50 items, feed, 
+
     Tinytest.addAsync 'update - 4 client WI.outbox -> W -> WI.inbox', (test, next) ->
       
       recNum = 4
@@ -197,6 +204,31 @@ Meteor.startup ->
           test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
           this.stop()
           next()
-
+    Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
+      @feedItems = React.createClass
+        "getInitialState": ()->
+          {feeds: WI.findOne 
+            "_id": myWI}
+        "componentDidMount": ()->
+          self = @
+          Tracker.autorun ()->
+            feed = WI.findOne({"_id": myWI})   
+            self.setState({"feeds": feed})
+        "render": ()->
+          # console.error(this.state.feeds)
+          feedsList = []
+          if(this.state.feeds and this.state.feeds.sending)
+            sending = this.state.feeds.sending
+            # console.error(sending)
+            # for feed in sending
+            #   # console.error(feed)
+            #   if(feed.from) ==   
+            feedsList = sending.map (feed)->
+                React.DOM.div(null)
+            # console.error(this.state.feeds.sending.length,feedsList.length)
+            test.equal(this.state.feeds.sending.length,feedsList.length)
+            next()
+          return React.DOM.div(null,feedsList)
+      React.renderComponentToString(@feedItems(null))
 # TODO
 
