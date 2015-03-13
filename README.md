@@ -4,6 +4,8 @@ curl https://install.meteor.com/ | sh
 
 cd path/to/yourpackage
 
+meteor test-packages ./ --port $IP:$PORT
+(on c9.io)
 meteor test-packages ./
 
 Go to http://localhost:3000/ in private mode since junk can stick around in mem and throw off test times

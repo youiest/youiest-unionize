@@ -100,9 +100,13 @@ Meteor.startup ->
         recNum = 0
         smite recNum, 'ran tracker one', recommendationArray[recNum], eval s
         smite W.findOne({to:recommendationArray[recNum].to}) , recommendationArray[recNum].to, 'ran tracker one', eval s
+        unless !recommendationArray[recNum]
+          one = recommendationArray[recNum].from
         unless !W.findOne({to:recommendationArray[recNum].to})
+          two = W.findOne({to:recommendationArray[recNum].to}).from
+        unless !one and !two
           smite 'got hit tracker one', eval s
-          test.equal recommendationArray[recNum].from, W.findOne({to:recommendationArray[recNum].to}).from
+          test.equal one, two
           next()
 
     Tinytest.addAsync 'update - 2 clientside update of WI should trigger insert into W', (test, next) ->
@@ -229,10 +233,8 @@ Meteor.startup ->
             next()
           return React.DOM.div(null,feedsList)
       React.renderComponentToString(@feedItems(null))
-
-
-# TODO 
-  # Unionize as discussed
+    # TODO 
+    # Unionize as discussed
     Tinytest.addAsync "reactjs - check the last data entered is in the dom for another1", (test, next) ->
       testingRecommend = { from: 'another1', to: 'wiber6' }
       connect(testingRecommend)
@@ -264,8 +266,8 @@ Meteor.startup ->
           return React.DOM.div(null,feedsList)
       React.renderComponentToString(@secondReact(null))
 
-#TODO
-  #move from inbox to seeing
+    #TODO
+    #move from inbox to seeing
     Tinytest.addAsync "move - Move the data from inbox to seeing", (test, next) ->
       testingRecommend = { from: 'move1', to: 'wiber6' }
       for i in "0...9"
