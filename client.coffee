@@ -32,7 +32,17 @@ formatUpdate = (args) ->
     return wi
 # setTimeout(()->
 
+WIAfterUpdate = WI.after.update (userId, doc, fieldNames, modifier, options) ->
+    # WI.update 
+    #     "_id": doc._id
+    # ,
+    #     $push: 
+    #         "journey": 
+    #             'clientInbox': new Date().getTime()
+        
+      
 
+  
     
 # ,500)
 # smite(, 
