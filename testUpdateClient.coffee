@@ -156,7 +156,92 @@ Meteor.startup ->
     #TODO keep a feed fresh so WI.findOne get's enough to start an app, uses feed function? seeks to maintain a varying number of items
     # array with max 50 items, feed, 
 
-    Tinytest.addAsync 'update - 4 client WI.outbox -> W -> WI.inbox', (test, next) ->
+   
+    Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
+      @feedItems = React.createClass
+        "getInitialState": ()->
+          {feeds: WI.findOne 
+            "_id": myWI}
+        "componentDidMount": ()->
+          self = @
+          Tracker.autorun ()->
+            feed = WI.findOne({"_id": myWI})   
+            self.setState({"feeds": feed})
+        "render": ()->
+          # console.error(this.state.feeds)
+          feedsList = []
+          if(this.state.feeds and this.state.feeds.sending)
+            sending = this.state.feeds.sending
+            # console.error(sending)
+            # for feed in sending
+            #   # console.error(feed)
+            #   if(feed.from) ==   
+            feedsList = sending.map (feed)->
+                React.DOM.div(null)
+            # console.error(this.state.feeds.sending.length,feedsList.length)
+            # React.unmountComponentAtNode(document.getElementById('container'));
+            test.equal(this.state.feeds.sending.length,feedsList.length)
+            next()
+          return React.DOM.div(null,feedsList)
+      React.renderComponentToString(@feedItems(null))
+    # TODO 
+    # Unionize as discussed
+    Tinytest.addAsync "reactjs - check the last data entered is in the dom for another1", (test, next) ->
+      #testingRecommend = { from: 'another1', to: 'wiber6' }
+      #connect(testingRecommend)
+      recNum = 9
+      testingRecommend = connect(recommendationArray[recNum])
+      smite testingRecommend , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
+      
+      picd = Tracker.autorun (computation) ->
+        recNum = 9
+        unless !recommendationArray[recNum].from
+          one = recommendationArray[recNum].from
+        unless !WI.findOne({_id: recommendationArray[recNum].to}).inbox
+          two = WI.findOne({_id: recommendationArray[recNum].to}).inbox[0].from
+        smite 'ran tracker three' #, WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
+        # don't test untill data arrives from server inbox
+        unless !two
+          smite eval(s), 'got hit 9'
+          @secondReact = React.createClass
+            "getInitialState": ()->
+              {feeds: WI.findOne 
+                "_id": myWI}
+            "componentDidMount": ()->
+              self = @
+              Tracker.autorun ()->
+                feed = WI.findOne({"_id": myWI})   
+                self.setState({"feeds": feed})
+            "render": ()->
+              # console.error(this.state.feeds)
+              feedsList = []
+              if(this.state.feeds and this.state.feeds.outbox)
+                outbox = this.state.feeds.outbox
+                # console.error(outbox)
+                for feed in outbox
+                  console.error(feed)
+                  if(feed.from ==  'another1')
+                    test.equal(true,true)
+                    next()
+                feedsList = outbox.map (feed)->
+                    React.DOM.div(null)
+                # console.error(this.state.feeds.outbox.length,feedsList.length)
+                test.equal(this.state.feeds.outbox.length,feedsList.length)
+                
+              return React.DOM.div(null,feedsList)
+          React.renderComponentToString(@secondReact(null))
+
+    #TODO
+    #move from inbox to seeing
+    Tinytest.addAsync "move - Move the data from inbox to seeing", (test, next) ->
+      testingRecommend = { from: 'move1', to: 'wiber6' }
+      for i in "0...9"
+        connect(testingRecommend)
+
+
+###
+
+ Tinytest.addAsync 'update - 4 client WI.outbox -> W -> WI.inbox', (test, next) ->
       
       recNum = 4
       c = connect(recommendationArray[recNum])
@@ -223,69 +308,4 @@ Meteor.startup ->
           next()
           this.stop()
           # next()
-    Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
-      @feedItems = React.createClass
-        "getInitialState": ()->
-          {feeds: WI.findOne 
-            "_id": myWI}
-        "componentDidMount": ()->
-          self = @
-          Tracker.autorun ()->
-            feed = WI.findOne({"_id": myWI})   
-            self.setState({"feeds": feed})
-        "render": ()->
-          # console.error(this.state.feeds)
-          feedsList = []
-          if(this.state.feeds and this.state.feeds.sending)
-            sending = this.state.feeds.sending
-            # console.error(sending)
-            # for feed in sending
-            #   # console.error(feed)
-            #   if(feed.from) ==   
-            feedsList = sending.map (feed)->
-                React.DOM.div(null)
-            # console.error(this.state.feeds.sending.length,feedsList.length)
-            # React.unmountComponentAtNode(document.getElementById('container'));
-            test.equal(this.state.feeds.sending.length,feedsList.length)
-            next()
-          return React.DOM.div(null,feedsList)
-      React.renderComponentToString(@feedItems(null))
-    # TODO 
-    # Unionize as discussed
-    Tinytest.addAsync "reactjs - check the last data entered is in the dom for another1", (test, next) ->
-      testingRecommend = { from: 'another1', to: 'wiber6' }
-      connect(testingRecommend)
-      @secondReact = React.createClass
-        "getInitialState": ()->
-          {feeds: WI.findOne 
-            "_id": myWI}
-        "componentDidMount": ()->
-          self = @
-          Tracker.autorun ()->
-            feed = WI.findOne({"_id": myWI})   
-            self.setState({"feeds": feed})
-        "render": ()->
-          # console.error(this.state.feeds)
-          feedsList = []
-          if(this.state.feeds and this.state.feeds.outbox)
-            outbox = this.state.feeds.outbox
-            # console.error(outbox)
-            for feed in outbox
-              console.error(feed)
-              if(feed.from ==  'another1')
-                test.equal(true,true)
-                next()
-            feedsList = outbox.map (feed)->
-                React.DOM.div(null)
-            # console.error(this.state.feeds.outbox.length,feedsList.length)
-            test.equal(this.state.feeds.outbox.length,feedsList.length)
-            
-          return React.DOM.div(null,feedsList)
-      React.renderComponentToString(@secondReact(null))
-
-    #TODO
-    #move from inbox to seeing
-    Tinytest.addAsync "move - Move the data from inbox to seeing", (test, next) ->
-      testingRecommend = { from: 'move1', to: 'wiber6' }
-      for i in "0...9"
-        connect(testingRecommend)
+###
