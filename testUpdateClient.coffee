@@ -31,7 +31,6 @@ for i in '0123456789'
     from: recFrom+i
   @recommendationArray.push r
   smite recommendationArray[i], 'counting to recommendations',recommendationArray
-  
 
 Meteor.methods
   "dummyInsert" : (insert) ->
@@ -230,5 +229,37 @@ Meteor.startup ->
             next()
           return React.DOM.div(null,feedsList)
       React.renderComponentToString(@feedItems(null))
-# TODO
 
+
+# TODO 
+  # Unionize as discussed
+    Tinytest.addAsync "reactjs - check the last data entered is in the dom for another1", (test, next) ->
+      testingRecommend = { from: 'another1', to: 'wiber6' }
+      connect(testingRecommend)
+      @secondReact = React.createClass
+        "getInitialState": ()->
+          {feeds: WI.findOne 
+            "_id": myWI}
+        "componentDidMount": ()->
+          self = @
+          Tracker.autorun ()->
+            feed = WI.findOne({"_id": myWI})   
+            self.setState({"feeds": feed})
+        "render": ()->
+          # console.error(this.state.feeds)
+          feedsList = []
+          if(this.state.feeds and this.state.feeds.outbox)
+            outbox = this.state.feeds.outbox
+            # console.error(outbox)
+            for feed in outbox
+              console.error(feed)
+              if(feed.from ==  'another1')
+                test.equal(true,true)
+                next()
+            feedsList = outbox.map (feed)->
+                React.DOM.div(null)
+            # console.error(this.state.feeds.outbox.length,feedsList.length)
+            test.equal(this.state.feeds.outbox.length,feedsList.length)
+            
+          return React.DOM.div(null,feedsList)
+      React.renderComponentToString(@secondReact(null))
