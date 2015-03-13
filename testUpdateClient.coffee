@@ -263,3 +263,12 @@ Meteor.startup ->
             
           return React.DOM.div(null,feedsList)
       React.renderComponentToString(@secondReact(null))
+
+#TODO
+  #move from inbox to seeing
+    Tinytest.addAsync "move - Move the data from inbox to seeing", (test, next) ->
+      testingRecommend = { from: 'move1', to: 'wiber6' }
+      for i in "0...9"
+        connect(testingRecommend)
+
+      
