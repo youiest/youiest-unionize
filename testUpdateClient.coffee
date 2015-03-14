@@ -37,12 +37,14 @@ Meteor.methods
     
     #always clear db before inserting
     Meteor.call 'clearDb', (res,err) ->
+      ###
       WI.insert 
         _id: 'wiber'
       WI.insert 
         _id: 'elias'
       WI.insert
         _id: 'nicolson'
+        ###
       #attempt to clear client ground db
       return WI.find
       .count()
