@@ -18,6 +18,8 @@ Package.on_use(function (api) {
 
   // like Document W will be an extended coll..
   api.export('W');
+  api.export('WI');
+  api.export('connect');
 
   api.add_files([
     'lib.coffee','ground:db'
