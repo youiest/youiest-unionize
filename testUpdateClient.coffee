@@ -205,32 +205,33 @@ Meteor.startup ->
           this.stop()
           # next()
     Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
-      @feedItems = React.createClass
-        "getInitialState": ()->
-          {feeds: WI.findOne 
-            "_id": myWI}
-        "componentDidMount": ()->
-          self = @
-          Tracker.autorun ()->
-            feed = WI.findOne({"_id": myWI})   
-            self.setState({"feeds": feed})
-        "render": ()->
-          # console.error(this.state.feeds)
-          feedsList = []
-          if(this.state.feeds and this.state.feeds.sending)
-            sending = this.state.feeds.sending
-            # console.error(sending)
-            # for feed in sending
-            #   # console.error(feed)
-            #   if(feed.from) ==   
-            feedsList = sending.map (feed)->
-                React.DOM.div(null)
-            # console.error(this.state.feeds.sending.length,feedsList.length)
-            # React.unmountComponentAtNode(document.getElementById('container'));
-            test.equal(this.state.feeds.sending.length,feedsList.length)
-            next()
-          return React.DOM.div(null,feedsList)
-      React.renderComponentToString(@feedItems(null))
+      domString = React.renderComponentToString(@feedItems(null))
+      # @feedItems = React.createClass
+      #   "getInitialState": ()->
+      #     {feeds: WI.findOne 
+      #       "_id": myWI}
+      #   "componentDidMount": ()->
+      #     self = @
+      #     Tracker.autorun ()->
+      #       feed = WI.findOne({"_id": myWI})   
+      #       self.setState({"feeds": feed})
+      #   "render": ()->
+      #     # console.error(this.state.feeds)
+      #     feedsList = []
+      #     if(this.state.feeds and this.state.feeds.sending)
+      #       sending = this.state.feeds.sending
+      #       # console.error(sending)
+      #       # for feed in sending
+      #       #   # console.error(feed)
+      #       #   if(feed.from) ==   
+      #       feedsList = sending.map (feed)->
+      #           React.DOM.div(null)
+      #       # console.error(this.state.feeds.sending.length,feedsList.length)
+      #       # React.unmountComponentAtNode(document.getElementById('container'));
+      #       test.equal(this.state.feeds.sending.length,feedsList.length)
+      #       next()
+      #     return React.DOM.div(null,feedsList)
+      # React.renderComponentToString(@feedItems(null))
 
 
 # TODO 
