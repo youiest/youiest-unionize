@@ -206,6 +206,9 @@ Meteor.startup ->
           # next()
     Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
       domString = React.renderComponentToString(@feedItems(null))
+      domString.match("div")
+      test.equal(true,true)
+      next()
       # @feedItems = React.createClass
       #   "getInitialState": ()->
       #     {feeds: WI.findOne 

@@ -51,18 +51,18 @@ WIAfterUpdate = WI.after.update (userId, doc, fieldNames, modifier, options) ->
 
 
 @feedItems = React.createClass
-"getInitialState": ()->
-  {feeds: WI.findOne 
-    "_id": myWI}
-"componentDidMount": ()->
-  self = @
-  Tracker.autorun ()->
-    feed = WI.findOne({"_id": myWI})   
-    self.setState({"feeds": feed})
-"render": ()->
-  feedsList = []
-  if(this.state.feeds and this.state.feeds.sending)
-    sending = this.state.feeds.sending
-    feedsList = sending.map (feed)->
-        React.DOM.div(null)
-  return React.DOM.div(null,feedsList)
+    "getInitialState": ()->
+      {feeds: WI.findOne 
+        "_id": myWI}
+    "componentDidMount": ()->
+      self = @
+      Tracker.autorun ()->
+        feed = WI.findOne({"_id": myWI})   
+        self.setState({"feeds": feed})
+    "render": ()->
+      feedsList = []
+      if(this.state.feeds and this.state.feeds.sending)
+        sending = this.state.feeds.sending
+        feedsList = sending.map (feed)->
+            React.DOM.div(null)
+      return React.DOM.div(null,feedsList)
