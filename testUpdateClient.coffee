@@ -37,32 +37,6 @@ Meteor.methods
     
     #always clear db before inserting
     Meteor.call 'clearDb', (res,err) ->
-      e = WI.insert
-        _id: 'wiber0'
-      e = WI.insert
-        _id: 'wiber1'
-      e = WI.insert
-        _id: 'wiber2'
-      e = WI.insert
-        _id: 'wiber3'
-      e = WI.insert
-        _id: 'wiber4'
-      e = WI.insert
-        _id: 'wiber5'
-      e = WI.insert
-        _id: 'wiber6'
-      e = WI.insert
-        _id: 'wiber7'
-      e = WI.insert
-        _id: 'wiber8'
-      e = WI.insert
-        _id: 'wiber9'
-      e = WI.insert
-        _id: 'wiber10'
-      n = WI.insert
-        _id: 'nicolson'
-      p = W.insert
-        _id: 'picture'
       WI.insert 
         _id: 'wiber'
       WI.insert 
@@ -78,13 +52,29 @@ Meteor.methods
     WI.remove {}
 
 
-flushGroundlings()
-Meteor.call 'dummyInsert', (res,err) ->
-  smite res, err, 'returned from dummyinsert', eval s
+
 
 Meteor.startup ->
 
   if Meteor.isClient
+    Tinytest.addAsync 'clear - 0 call clearDb server clears db and client goes to 0 items', (test, next) ->
+      smite WI.find({}).count(), 'items in WI before', eval s
+      flushGroundlings()
+      Meteor.call 'dummyInsert', (res,err) ->
+        smite res, err, 'returned from dummyinsert', eval s
+      recNum = 0
+
+      picd = Tracker.autorun (computation) ->
+        recNum = 0
+        smite WI.find({}).count(), 'items after tracker started', eval s
+        one = WI.find({}).count()
+        #smite one, two, eval s
+        # search the console for 107 and instantly find this as the line number is here..
+        eval smiter
+        unless one
+          smite 'got hit tracker zero', eval s
+          test.equal one, 0
+          next()
 
     Tinytest.addAsync 'update - 1 clientside update of WI should trigger insert into W', (test, next) ->
 
@@ -214,34 +204,7 @@ Meteor.startup ->
           next()
           this.stop()
           # next()
-    Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
-      @feedItems = React.createClass
-        "getInitialState": ()->
-          {feeds: WI.findOne 
-            "_id": myWI}
-        "componentDidMount": ()->
-          self = @
-          Tracker.autorun ()->
-            feed = WI.findOne({"_id": myWI})   
-            self.setState({"feeds": feed})
-        "render": ()->
-          # console.error(this.state.feeds)
-          feedsList = []
-          if(this.state.feeds and this.state.feeds.sending)
-            sending = this.state.feeds.sending
-            # console.error(sending)
-            # for feed in sending
-            #   # console.error(feed)
-            #   if(feed.from) ==   
-            feedsList = sending.map (feed)->
-                React.DOM.div(null)
-            # console.error(this.state.feeds.sending.length,feedsList.length)
-            # React.unmountComponentAtNode(document.getElementById('container'));
-            test.equal(this.state.feeds.sending.length,feedsList.length)
-            next()
-          return React.DOM.div(null,feedsList)
-      React.renderComponentToString(@feedItems(null))
-
+    
 
 # TODO 
   # Unionize as discussed
