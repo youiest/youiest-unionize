@@ -117,15 +117,21 @@ Meteor.startup ->
       recNum = 3
       c = connect(recommendationArray[recNum])
       smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
+      
       picd = Tracker.autorun (computation) ->
         recNum = 3
-        smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
-        # don't test untill data arrives from server inbox
-        unless !WI.findOne({_id: recommendationArray[recNum].to}).inbox
-          smite eval(s), 'got hit 3'
-          test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
-          this.stop()
-          next()
+        unless !recommendationArray[recNum].from
+          ingoing = recommendationArray[recNum].from
+        unless !WI.findOne(_id: recommendationArray[recNum].to) 
+          unless WI.findOne(_id: recommendationArray[recNum].to).inbox
+              out =  WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from
+            smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
+            # don't test untill data arrives from server inbox
+            unless !WI.findOne({_id: recommendationArray[recNum].to})
+              smite eval(s), 'got hit 3'
+              test.equal out , ingoing
+              this.stop()
+              next()
 
 
     # feed function adds a w to the feed cache, queries process best fits
@@ -141,11 +147,15 @@ Meteor.startup ->
       smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
       picd = Tracker.autorun (computation) ->
         recNum = 4
+        unless !recommendationArray[recNum].from
+          ingoing = recommendationArray[recNum].from
+        unless !WI.findOne(_id: recommendationArray[recNum].to)
+          out =  WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from
         smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
         # don't test untill data arrives from server inbox
-        unless !WI.findOne({_id: recommendationArray[recNum].to}).inbox
+        unless !ingoing
           smite eval(s), 'got hit 3'
-          test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
+          test.equal ingoing , out
           this.stop()
           next()
     
@@ -159,7 +169,7 @@ Meteor.startup ->
         recNum = 5
         smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
         # don't test untill data arrives from server inbox
-        unless !WI.findOne({_id: recommendationArray[recNum].to}).inbox
+        if WI.findOne({_id: recommendationArray[recNum].to})?.inbox
           smite eval(s), 'got hit 3'
           test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
           this.stop()
@@ -175,7 +185,7 @@ Meteor.startup ->
         recNum = 6
         smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
         # don't test untill data arrives from server inbox
-        unless !WI.findOne({_id: recommendationArray[recNum].to}).inbox
+        if WI.findOne({_id: recommendationArray[recNum].to})?.inbox
           smite eval(s), 'got hit 3'
           test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
           this.stop()
@@ -190,38 +200,13 @@ Meteor.startup ->
         recNum = 7
         smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
         # don't test untill data arrives from server inbox
-        unless !WI.findOne({_id: recommendationArray[recNum].to}).inbox
+        if WI.findOne({_id: recommendationArray[recNum].to})?.inbox
           smite eval(s), 'got hit 3'
           test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
-          this.stop()
           next()
-    Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
-      @feedItems = React.createClass
-        "getInitialState": ()->
-          {feeds: WI.findOne 
-            "_id": myWI}
-        "componentDidMount": ()->
-          self = @
-          Tracker.autorun ()->
-            feed = WI.findOne({"_id": myWI})   
-            self.setState({"feeds": feed})
-        "render": ()->
-          # console.error(this.state.feeds)
-          feedsList = []
-          if(this.state.feeds and this.state.feeds.sending)
-            sending = this.state.feeds.sending
-            # console.error(sending)
-            # for feed in sending
-            #   # console.error(feed)
-            #   if(feed.from) ==   
-            feedsList = sending.map (feed)->
-                React.DOM.div(null)
-            # console.error(this.state.feeds.sending.length,feedsList.length)
-            test.equal(this.state.feeds.sending.length,feedsList.length)
-            next()
-          return React.DOM.div(null,feedsList)
-      React.renderComponentToString(@feedItems(null))
-
+          this.stop()
+          # next()
+    
 
 # TODO 
   # Unionize as discussed
@@ -257,10 +242,11 @@ Meteor.startup ->
       React.renderComponentToString(@secondReact(null))
 
 #TODO
-  #move from inbox to seeing
-    Tinytest.addAsync "move - Move the data from inbox to seeing", (test, next) ->
-      testingRecommend = { from: 'move1', to: 'wiber6' }
-      for i in "0...9"
-        connect(testingRecommend)
+  #move from inbox to seen
+    # Tinytest.addAsync "move - Move the data from inbox to seeing", (test, next) ->
+    #   testingRecommend = { from: 'move1', to: 'wiber' }
+    #   for i in "0...9"
+    #     connect(testingRecommend)
 
       
+    #   smite WI.findOne({"_id": myWI}), "data on WI", eval s
