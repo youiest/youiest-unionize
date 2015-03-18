@@ -100,5 +100,5 @@ for i in '123'
 
 @W = new Meteor.Collection 'W'
 @WI = new Meteor.Collection 'WI'
-@WI = Ground.Collection(WI)
+# @WI = Ground.Collection(WI)
 
