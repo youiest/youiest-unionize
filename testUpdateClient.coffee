@@ -37,31 +37,31 @@ Meteor.methods
   "dummyInsert" : (insert) ->
     
     #always clear db before inserting
-    Meteor.call 'clearDb', (res,err) ->
-      e = WI.insert
-        _id: 'wiber0'
-      e = WI.insert
-        _id: 'wiber1'
-      e = WI.insert
-        _id: 'wiber2'
-      e = WI.insert
-        _id: 'wiber3'
-      e = WI.insert
-        _id: 'wiber4'
-      e = WI.insert
-        _id: 'wiber5'
-      n = WI.insert
-        _id: 'nicolson'
-      p = W.insert
-        _id: 'picture'
-      WI.insert 
-        _id: 'wiber'
-      WI.insert 
-        _id: 'elias'
-      WI.insert
-        _id: 'nicolson'
-      #attempt to clear client ground db
-      return clearClientGroundDbs
+    Meteor.call 'clearDb'
+    e = WI.insert
+      _id: 'wiber0'
+    e = WI.insert
+      _id: 'wiber1'
+    e = WI.insert
+      _id: 'wiber2'
+    e = WI.insert
+      _id: 'wiber3'
+    e = WI.insert
+      _id: 'wiber4'
+    e = WI.insert
+      _id: 'wiber5'
+    n = WI.insert
+      _id: 'nicolson'
+    p = W.insert
+      _id: 'picture'
+    WI.insert 
+      _id: 'wiber'
+    WI.insert 
+      _id: 'elias'
+    WI.insert
+      _id: 'nicolson'
+    #attempt to clear client ground db
+    return clearClientGroundDbs
   "clearDb": () ->
     smite eval(s), 'clearDb'
     W.remove {}
