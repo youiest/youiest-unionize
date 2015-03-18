@@ -44,12 +44,12 @@ Meteor.methods
       WI.insert
         _id: 'nicolson'
       #attempt to clear client ground db
-      return WI.find
-      .count()
+      return WI.find({}).count()
   "clearDb": () ->
-    smite eval(s), 'clearDb'
+    # smite eval(s), 'clearDb'
     W.remove {}
     WI.remove {}
+    return null
 
 
 
@@ -57,6 +57,9 @@ Meteor.methods
 Meteor.startup ->
 
   if Meteor.isClient
+    for recommend in recommendationArray
+      console.error(recommend)
+      connect(recommend)
     Tinytest.addAsync 'clear - 0 call clearDb server clears db and client goes to 0 items', (test, next) ->
       smite WI.find({}).count(), 'items in WI before', eval s
       flushGroundlings()
