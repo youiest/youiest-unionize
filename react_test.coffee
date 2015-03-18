@@ -12,8 +12,8 @@ Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
   intervalId = null
   intervalId = setInterval(()->
     domString = React.renderComponentToString(FeedList(null))
-    console.error(domString)
-    if domString.match(testingRecommend.from + testingRecommend.to)
+    # console.error(domString)
+    if domString.match(testingRecommend.from)
       test.equal(true,true)
       next()
       clearInterval(intervalId)

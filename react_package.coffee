@@ -16,14 +16,21 @@
       sending = this.state.feeds.sending
       feedsList = sending.map (feed)->
         # React.DOM.div(null,"Something is returned")
-        Feed(null ,null,null ,{"feed": feed})
-    console.error(feedsList)
+        Feed({"feed": feed})
+    # console.error(feedsList)
     return React.DOM.div(null,"",feedsList)
 
 @Feed = React.createClass({
   "render": ()->
-    console.error(this.state)
-    # feed = this.state.feed
-    # React.DOM.div(null,{},feed.from + feed.to)
-    React.DOM.div(null,"Something is returning")
+    # console.error(this.props.feed)
+    feed = this.props.feed
+    
+    React.DOM.div(null,{},
+      feed.from
+      # [
+      #   React.DOM.div(null,{},feed.from),
+      #   React.DOM.div(null,{},feed.to)    
+      # ]
+    )
+    # React.DOM.div(null,"Something is returning")
 })
