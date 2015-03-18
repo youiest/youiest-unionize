@@ -1,7 +1,7 @@
 #client.coffee has code for creating connections
 
 smite eval s
-@myWI = 'wiber' unless Meteor.userId() #this () killed
+
 ConsoleMe.subscribe()
 formatUpdate = (args) ->
     up = 
@@ -10,7 +10,7 @@ formatUpdate = (args) ->
     return up
 
 @connect =  (args) ->
-    #smite eval(s), 'hi from connect', args, WI.findOne {_id:'wiber'}
+    smite eval(s), 'hi from connect', args, WI.findOne {_id:'wiber'}
     eval smiter
     smite 'smiter!', eval s
 
@@ -24,11 +24,11 @@ formatUpdate = (args) ->
     
 
     wi = WI.update
-        _id: myWI
+        _id: user
     ,
         '$push': 
             'outbox': ups            
-    #smite 'we have an outbox', WI.findOne({ _id: myWI }), eval s
+    smite 'we have an outbox', WI.findOne({ _id: user }), eval s
     return wi
 # setTimeout(()->
 
@@ -55,11 +55,11 @@ WIAfterUpdate = WI.after.update (userId, doc, fieldNames, modifier, options) ->
 @feedItems = React.createClass
   "getInitialState": ()->
     {feeds: WI.findOne 
-      "_id": myWI}
+      "_id": user}
   "componentDidMount": ()->
     self = @
     Tracker.autorun ()->
-      feed = WI.findOne({"_id": myWI})   
+      feed = WI.findOne({"_id": user})   
       self.setState({"feeds": feed})
   "render": ()->
     feedsList = []

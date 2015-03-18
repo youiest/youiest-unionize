@@ -1,57 +1,27 @@
-# emulate a logged in user, this is user
+# emulate a logged in user, this is user, later use real user
 @user = 'wiber'
-
-@clearClientGroundDbs = ->
-  WI.remove
-    _id: user
-  WI.remove
-    _id: 'nicolson'
-  WI.remove
-    _id: 'elias'
-  -> WI.find({}).count()
-
-@flushGroundlings = ->
-  pre = WI.find({}).count()
-  cl = clearClientGroundDbs()
-  smite 'did we flush the groundlings out?', pre, cl(), 'if 0 yes', eval s
-  -> cl
+@recFrom = 'picture'
 
 ConsoleMe.enabled = true
 
-@recFrom = 'picture'
 @recNum = 0
 
-@recommendation =
-  to: user
-  from: recFrom
-@recommendationArray = []
-for i in '0123456789'
-  r =
-    to: user+i
-    from: recFrom+i
-  @recommendationArray.push r
-  smite recommendationArray[i], 'counting to recommendations',recommendationArray
+
 
 Meteor.methods
-  "dummyInsert" : (insert) ->
-    
-    #always clear db before inserting
-    Meteor.call 'clearDb', (res,err) ->
-      ###
-      WI.insert 
-        _id: 'wiber'
-      WI.insert 
-        _id: 'elias'
-      WI.insert
-        _id: 'nicolson'
-        ###
-      #attempt to clear client ground db
-      return WI.find
-      .count()
+  "dummyInsert" : (id) ->
+    WI.insert 
+      _id: id
+    return WI.find({}).count() 
   "clearDb": () ->
-    smite eval(s), 'clearDb'
+    #smite eval(s), 'clearDb'
     W.remove {}
     WI.remove {}
+
+@generateRecommend = (i) ->
+    to: user+i
+    from: recFrom+i
+
 
 
 
@@ -59,54 +29,47 @@ Meteor.methods
 Meteor.startup ->
 
   if Meteor.isClient
-    Tinytest.addAsync 'clear - 0 call clearDb server clears db and client goes to 0 items', (test, next) ->
-      smite WI.find({}).count(), 'items in WI before', eval s
-      flushGroundlings()
-      Meteor.call 'dummyInsert', (res,err) ->
-        smite res, err, 'returned from dummyinsert', eval s
-      recNum = 0
 
-      picd = Tracker.autorun (computation) ->
-        recNum = 0
-        smite WI.find({}).count(), 'items after tracker started', eval s
+    testing = 0 
+    Tinytest.addAsync 'clear - '+testing+' call clearDb server clears db and client goes to 0 items', (test, next) ->
+      
+      #smite WI.find({}).count(), 'items in WI before', eval s
+      Meteor.call 'clearDb', (res,err) ->
+        #smite res, err, 'returned from clearDb', eval s
+        smite WI.find({}).count(), 'WI items after tracker started', eval s
         one = WI.find({}).count()
-        #smite one, two, eval s
-        # search the console for 107 and instantly find this as the line number is here..
-        eval smiter
-        unless one
-          smite 'got hit tracker zero', eval s
-          test.equal one, 0
-          next()
+        # test async that there are no items in db, returns only one time
+        test.equal one, 0
+        next()
+          
+    testing++
+    Tinytest.addAsync 'update - '+testing+' clientside update of WI should trigger insert into W', (test, next) ->
 
-    Tinytest.addAsync 'update - 1 clientside update of WI should trigger insert into W', (test, next) ->
-
-      recNum = 0
-      smite 'connecting after test add', recNum
-      , recommendationArray[recNum].to
-      , recommendationArray[recNum].from
-      , eval s
-      c = connect(recommendationArray[recNum])
-      smite c , 'returned from connect', eval s
-
-      picd = Tracker.autorun (computation) ->
-        recNum = 0
-        smite recNum, 'ran tracker one', recommendationArray[recNum], eval s
-        smite W.findOne({to:recommendationArray[recNum].to}) , recommendationArray[recNum].to, 'ran tracker one', eval s
-        unless !W.findOne({to:recommendationArray[recNum].to})
-          smite 'got hit tracker one', eval s
-          test.equal recommendationArray[recNum].from, W.findOne({to:recommendationArray[recNum].to}).from
-          next()
-
+      # generate all test data with function to guarantee consistency and empty db
+    Meteor.call 'dummyInsert', user, (res,err) ->
+      rec = generateRecommend testing
+    
+      connect(rec)
+      one = W.findOne
+        from: rec.from
+        to: rec.to
+      two = WI.findOne
+        _id: user
+      .fetch().inbox[0]
+      smite one, two, 'one two', rec.from, 'rec', res, err, eval s
+      test.equal one, rec
+      next()
+###
     Tinytest.addAsync 'update - 2 clientside update of WI should trigger insert into W', (test, next) ->
 
       recNum = 2
       c = connect(recommendationArray[recNum])
-      smite c , 'returned from connect in 2', eval s
+      #smite c , 'returned from connect in 2', eval s
       picd = Tracker.autorun (computation) ->
-        smite eval(s), 'ran tracker one'
+        #smite eval(s), 'ran tracker one'
         recNum = 2
         unless !W.findOne({to:recommendationArray[recNum].to})
-          smite eval(s), 'got hit'
+          #smite eval(s), 'got hit'
           db = W.findOne({to:recommendationArray[recNum].to}).from
           input = recommendationArray[recNum].from
           test.equal  input, db 
@@ -116,7 +79,7 @@ Meteor.startup ->
 
       recNum = 3
       c = connect(recommendationArray[recNum])
-      smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
+      #smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
       
       picd = Tracker.autorun (computation) ->
         recNum = 3
@@ -125,10 +88,10 @@ Meteor.startup ->
         unless !WI.findOne(_id: recommendationArray[recNum].to) 
           unless WI.findOne(_id: recommendationArray[recNum].to).inbox
               out =  WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from
-            smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
+            #smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
             # don't test untill data arrives from server inbox
             unless !WI.findOne({_id: recommendationArray[recNum].to})
-              smite eval(s), 'got hit 3'
+              #smite eval(s), 'got hit 3'
               test.equal out , ingoing
               this.stop()
               next()
@@ -144,17 +107,17 @@ Meteor.startup ->
       
       recNum = 4
       c = connect(recommendationArray[recNum])
-      smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
+      #smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
       picd = Tracker.autorun (computation) ->
         recNum = 4
         unless !recommendationArray[recNum].from
           ingoing = recommendationArray[recNum].from
         unless !WI.findOne(_id: recommendationArray[recNum].to)
           out =  WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from
-        smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
+        #smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
         # don't test untill data arrives from server inbox
         unless !ingoing
-          smite eval(s), 'got hit 3'
+          #smite eval(s), 'got hit 3'
           test.equal ingoing , out
           this.stop()
           next()
@@ -164,13 +127,13 @@ Meteor.startup ->
       
       recNum = 5
       c = connect(recommendationArray[recNum])
-      smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
+      #smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
       picd = Tracker.autorun (computation) ->
         recNum = 5
-        smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
+        #smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
         # don't test untill data arrives from server inbox
         if WI.findOne({_id: recommendationArray[recNum].to})?.inbox
-          smite eval(s), 'got hit 3'
+          #smite eval(s), 'got hit 3'
           test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
           this.stop()
           next()
@@ -180,13 +143,13 @@ Meteor.startup ->
       
       recNum = 6
       c = connect(recommendationArray[recNum])
-      smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
+      #smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
       picd = Tracker.autorun (computation) ->
         recNum = 6
-        smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
+        #smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
         # don't test untill data arrives from server inbox
         if WI.findOne({_id: recommendationArray[recNum].to})?.inbox
-          smite eval(s), 'got hit 3'
+          #smite eval(s), 'got hit 3'
           test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
           this.stop()
           next()
@@ -195,18 +158,45 @@ Meteor.startup ->
     Tinytest.addAsync 'update - 7 client WI.outbox -> W -> WI.inbox', (test, next) ->
       recNum = 7
       c = connect(recommendationArray[recNum])
-      smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
+      #smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
       picd = Tracker.autorun (computation) ->
         recNum = 7
-        smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
+        #smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
         # don't test untill data arrives from server inbox
         if WI.findOne({_id: recommendationArray[recNum].to})?.inbox
-          smite eval(s), 'got hit 3'
+          #smite eval(s), 'got hit 3'
           test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
           next()
           this.stop()
           # next()
-    
+    Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
+      @feedItems = React.createClass
+        "getInitialState": ()->
+          {feeds: WI.findOne 
+            "_id": user}
+        "componentDidMount": ()->
+          self = @
+          Tracker.autorun ()->
+            feed = WI.findOne({"_id": user})   
+            self.setState({"feeds": feed})
+        "render": ()->
+          # console.error(this.state.feeds)
+          feedsList = []
+          if(this.state.feeds and this.state.feeds.sending)
+            sending = this.state.feeds.sending
+            # console.error(sending)
+            # for feed in sending
+            #   # console.error(feed)
+            #   if(feed.from) ==   
+            feedsList = sending.map (feed)->
+                React.DOM.div(null)
+            # console.error(this.state.feeds.sending.length,feedsList.length)
+            # React.unmountComponentAtNode(document.getElementById('container'));
+            test.equal(this.state.feeds.sending.length,feedsList.length)
+            next()
+          return React.DOM.div(null,feedsList)
+      React.renderComponentToString(@feedItems(null))
+
 
 # TODO 
   # Unionize as discussed
@@ -216,11 +206,11 @@ Meteor.startup ->
       @secondReact = React.createClass
         "getInitialState": ()->
           {feeds: WI.findOne 
-            "_id": myWI}
+            "_id": user}
         "componentDidMount": ()->
           self = @
           Tracker.autorun ()->
-            feed = WI.findOne({"_id": myWI})   
+            feed = WI.findOne({"_id": user})   
             self.setState({"feeds": feed})
         "render": ()->
           # console.error(this.state.feeds)
@@ -228,6 +218,7 @@ Meteor.startup ->
           if(this.state.feeds and this.state.feeds.outbox)
             outbox = this.state.feeds.outbox
             # console.error(outbox)
+
             for feed in outbox
               console.error(feed)
               if(feed.from ==  'another1')
@@ -240,7 +231,7 @@ Meteor.startup ->
             
           return React.DOM.div(null,feedsList)
       React.renderComponentToString(@secondReact(null))
-
+###
 #TODO
   #move from inbox to seen
     # Tinytest.addAsync "move - Move the data from inbox to seeing", (test, next) ->
@@ -249,4 +240,4 @@ Meteor.startup ->
     #     connect(testingRecommend)
 
       
-    #   smite WI.findOne({"_id": myWI}), "data on WI", eval s
+    #   #smite WI.findOne({"_id": user}), "data on WI", eval s

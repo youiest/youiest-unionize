@@ -1,5 +1,5 @@
 @s = 'L()'
-
+@user = 'wiber' # unless Meteor.user() #this () killed
 @WIFound = (id) ->
   smite id, 'scouting nemo' , eval s
   found = WI.find(
