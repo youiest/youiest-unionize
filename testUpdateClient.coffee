@@ -164,20 +164,20 @@ Meteor.startup ->
           this.stop()
           next()
 
-    #TODO test Logged in security of WI
-    Tinytest.addAsync 'update - 6 client WI.outbox -> W -> WI.inbox', (test, next) ->
-      recNum = 3
-      c = connect(recommendationArray[recNum])
-      smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
-      picd = Tracker.autorun (computation) ->
-        recNum = 3
-        smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
-        # don't test untill data arrives from server inbox
-        unless !WI.findOne({_id: recommendationArray[recNum].to}).inbox
-          smite eval(s), 'got hit 3'
-          test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
-          this.stop()
-          next()
+    # #TODO test Logged in security of WI
+    # Tinytest.addAsync 'update - 6 client WI.outbox -> W -> WI.inbox', (test, next) ->
+    #   recNum = 3
+    #   c = connect(recommendationArray[recNum])
+    #   smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
+    #   picd = Tracker.autorun (computation) ->
+    #     recNum = 3
+    #     smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
+    #     # don't test untill data arrives from server inbox
+    #     unless !WI.findOne({_id: recommendationArray[recNum].to}).inbox
+    #       smite eval(s), 'got hit 3'
+    #       test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
+    #       this.stop()
+    #       next()
 
 # TODO
 
