@@ -4,19 +4,22 @@
 
 ConsoleMe.enabled = true
 
-@recNum = 0
-
 
 
 Meteor.methods
   "dummyInsert" : (id) ->
-    WI.insert 
+    one = WI.insert 
       _id: id
-    return WI.find({}).count() 
+    two = W.insert 
+      _id: id
+    smite one, two, 'buckle my shoe'
+    , eval s
   "clearDb": () ->
     #smite eval(s), 'clearDb'
-    W.remove {}
-    WI.remove {}
+    one = W.remove {}
+    two = WI.remove {}
+    smite one, two, 'buckle my boots', WI.find({}).count() , eval s
+    return WI.find({}).count() 
 
 @generateRecommend = (i) ->
     to: user+i
@@ -46,18 +49,20 @@ Meteor.startup ->
     Tinytest.addAsync 'update - '+testing+' clientside update of WI should trigger insert into W', (test, next) ->
 
       # generate all test data with function to guarantee consistency and empty db
-    Meteor.call 'dummyInsert', user, (res,err) ->
+    Meteor.call 'dummyInsert', user, (res, err) ->
       rec = generateRecommend testing
     
-      connect(rec)
+      connect rec
+
       one = W.findOne
         from: rec.from
         to: rec.to
       two = WI.findOne
         _id: user
       .fetch().inbox[0]
+
       smite one, two, 'one two', rec.from, 'rec', res, err, eval s
-      test.equal one, rec
+      test.equals one, rec
       next()
 ###
     Tinytest.addAsync 'update - 2 clientside update of WI should trigger insert into W', (test, next) ->

@@ -25,7 +25,7 @@ l a(), 'hi from testUpdateClient.coffee'
 
 
 if Meteor.isClient
-  Meteor.call 'dummyInsert'
+  #Meteor.call 'dummyInsert'
 
   @recFrom = 'picture'
   recommendation =
