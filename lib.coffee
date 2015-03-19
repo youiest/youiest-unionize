@@ -102,3 +102,6 @@ for i in '123'
 @WI = new Meteor.Collection 'WI'
 @WI = Ground.Collection(WI)
 
+eval 'smiter("lives")'
+smite 'smiter liv!', eval s
+

@@ -31,24 +31,47 @@ for i in '0123456789'
     from: recFrom+i
   @recommendationArray.push r
   smite recommendationArray[i], 'counting to recommendations',recommendationArray
-  
 
 Meteor.methods
   "dummyInsert" : (insert) ->
     
     #always clear db before inserting
     Meteor.call 'clearDb'
+<<<<<<< HEAD
+    e = WI.insert
+      _id: 'wiber0'
+    e = WI.insert
+      _id: 'wiber1'
+    e = WI.insert
+      _id: 'wiber2'
+    e = WI.insert
+      _id: 'wiber3'
+    e = WI.insert
+      _id: 'wiber4'
+    e = WI.insert
+      _id: 'wiber5'
+    n = WI.insert
+      _id: 'nicolson'
+    p = W.insert
+      _id: 'picture'
+=======
     
+>>>>>>> 2ab1c39f86f44282bec9b48d88ab5f7cdfd99494
     WI.insert 
       _id: 'wiber'
     WI.insert 
       _id: 'elias'
     WI.insert
       _id: 'nicolson'
+<<<<<<< HEAD
+    #attempt to clear client ground db
+    return clearClientGroundDbs
+=======
 
 
     #attempt to clear client ground db
     return WI.find({}).count()
+>>>>>>> 2ab1c39f86f44282bec9b48d88ab5f7cdfd99494
   "clearDb": () ->
     # smite eval(s), 'clearDb'
     W.remove {}
@@ -209,7 +232,6 @@ Meteor.startup ->
         if WI.findOne({_id: recommendationArray[recNum].to})?.inbox
           smite eval(s), 'got hit 3'
           test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
-          this.stop()
           next()
           this.stop()
           # next()
