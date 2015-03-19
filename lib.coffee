@@ -103,5 +103,5 @@ for i in '123'
 #@WI = Ground.Collection(WI)
 
 eval 'smiter("lives")'
-smite 'smiter liv!', eval s
+smite 'smiter live!', eval s
 

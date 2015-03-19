@@ -7,18 +7,19 @@ ConsoleMe.enabled = true
 
 
 Meteor.methods
-  "dummyInsert" : (id) ->
+  "dummyInsert" : () ->
     one = WI.insert 
-      _id: id
+      _id: arguments[0]
     two = W.insert 
-      _id: id
-    smite one, two, 'buckle my shoe'
+      _id: arguments[0]
+    smite one, two, 'dummyInsert buckle my shoe'
     , eval s
+    return
   "clearDb": () ->
     #smite eval(s), 'clearDb'
     one = W.remove {}
     two = WI.remove {}
-    smite one, two, 'buckle my boots', WI.find({}).count() , eval s
+    smite one, two, 'clearDb buckle my boots', WI.find({}).count() , eval s
     return WI.find({}).count() 
 
 @generateRecommend = (i) ->
@@ -35,7 +36,6 @@ Meteor.startup ->
 
     testing = 0 
     Tinytest.addAsync 'clear - '+testing+' call clearDb server clears db and client goes to 0 items', (test, next) ->
-      
       #smite WI.find({}).count(), 'items in WI before', eval s
       Meteor.call 'clearDb', (res,err) ->
         #smite res, err, 'returned from clearDb', eval s
@@ -43,13 +43,17 @@ Meteor.startup ->
         one = WI.find({}).count()
         # test async that there are no items in db, returns only one time
         test.equal one, 0
+        Meteor.call 'dummyInsert', user
         next()
           
     testing++
     Tinytest.addAsync 'update - '+testing+' clientside update of WI should trigger insert into W', (test, next) ->
 
       # generate all test data with function to guarantee consistency and empty db
-    Meteor.call 'dummyInsert', user, (res, err) ->
+    
+      smite WI.findOne
+        _id: user
+      , eval s
       rec = generateRecommend testing
     
       connect rec
