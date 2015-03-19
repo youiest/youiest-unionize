@@ -38,17 +38,41 @@ Meteor.methods
     
     #always clear db before inserting
     Meteor.call 'clearDb'
+<<<<<<< HEAD
+    e = WI.insert
+      _id: 'wiber0'
+    e = WI.insert
+      _id: 'wiber1'
+    e = WI.insert
+      _id: 'wiber2'
+    e = WI.insert
+      _id: 'wiber3'
+    e = WI.insert
+      _id: 'wiber4'
+    e = WI.insert
+      _id: 'wiber5'
+    n = WI.insert
+      _id: 'nicolson'
+    p = W.insert
+      _id: 'picture'
+=======
     
+>>>>>>> trinisoft/inbox
     WI.insert 
       _id: 'wiber'
     WI.insert 
       _id: 'elias'
     WI.insert
       _id: 'nicolson'
+<<<<<<< HEAD
+    #attempt to clear client ground db
+    return clearClientGroundDbs
+=======
 
 
     #attempt to clear client ground db
-    return clearClientGroundDbs
+    return WI.find({}).count()
+>>>>>>> trinisoft/inbox
   "clearDb": () ->
     # smite eval(s), 'clearDb'
     W.remove {}

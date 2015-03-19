@@ -31,6 +31,7 @@ for i in '0123456789'
     from: recFrom+i
   @recommendationArray.push r
   smite recommendationArray[i], 'counting to recommendations',recommendationArray
+  
 
 Meteor.methods
   "dummyInsert" : (insert) ->
@@ -56,7 +57,6 @@ Meteor.methods
       _id: 'picture'
 =======
     
->>>>>>> trinisoft/react
     WI.insert 
       _id: 'wiber'
     WI.insert 
@@ -71,7 +71,6 @@ Meteor.methods
 
     #attempt to clear client ground db
     return WI.find({}).count()
->>>>>>> trinisoft/react
   "clearDb": () ->
     # smite eval(s), 'clearDb'
     W.remove {}
@@ -220,22 +219,6 @@ Meteor.startup ->
           this.stop()
           next()
 
-<<<<<<< HEAD
-    # #TODO test Logged in security of WI
-    # Tinytest.addAsync 'update - 6 client WI.outbox -> W -> WI.inbox', (test, next) ->
-    #   recNum = 3
-    #   c = connect(recommendationArray[recNum])
-    #   smite c , 'returned from connect in tracker 3', recommendationArray[recNum].to, eval s
-    #   picd = Tracker.autorun (computation) ->
-    #     recNum = 3
-    #     smite 'ran tracker three' , WI.findOne({inbox:{ $exists: true }}) , recommendationArray[recNum].from, eval s
-    #     # don't test untill data arrives from server inbox
-    #     unless !WI.findOne({_id: recommendationArray[recNum].to}).inbox
-    #       smite eval(s), 'got hit 3'
-    #       test.equal WI.findOne(_id: recommendationArray[recNum].to).inbox[0].from , recommendationArray[recNum].from
-    #       this.stop()
-    #       next()
-=======
     #TODO test Logged in security of WI
     Tinytest.addAsync 'update - 7 client WI.outbox -> W -> WI.inbox', (test, next) ->
       recNum = 7
@@ -285,7 +268,6 @@ Meteor.startup ->
             
           return React.DOM.div(null,feedsList)
       React.renderComponentToString(@secondReact(null))
->>>>>>> trinisoft/react
 
 #TODO
   #move from inbox to seen
