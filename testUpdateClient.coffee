@@ -27,9 +27,6 @@ Meteor.methods
     from: recFrom+i
 
 
-
-
-
 Meteor.startup ->
 
   if Meteor.isClient
@@ -43,19 +40,26 @@ Meteor.startup ->
         one = WI.find({}).count()
         # test async that there are no items in db, returns only one time
         test.equal one, 0
-        Meteor.call 'dummyInsert', user
+        
         next()
-          
     testing++
-    Tinytest.addAsync 'update - '+testing+' clientside update of WI should trigger insert into W', (test, next) ->
+    Tinytest.add 'insert - '+testing+' dummyInsert creates user object', (test, next) ->
+      Meteor.call 'dummyInsert', user, (res,err) ->
+        test.equal WI.find({}).count() , 1
+        smite one = WI.find({}).fetch()
+        next()
+      
+      ###
+      Tracker.autorun (computation) ->
+        test.equal W.find({}).count(), 1
+        next()
 
+    testing++
+    
+    Tinytest.addAsync 'update - '+testing+' clientside update of WI should trigger insert into W', (test, next) ->
       # generate all test data with function to guarantee consistency and empty db
-    
-      smite WI.findOne
-        _id: user
-      , eval s
+      
       rec = generateRecommend testing
-    
       connect rec
 
       one = W.findOne
@@ -63,12 +67,12 @@ Meteor.startup ->
         to: rec.to
       two = WI.findOne
         _id: user
-      .fetch().inbox[0]
+      .fetch().outbox[0]
 
-      smite one, two, 'one two', rec.from, 'rec', res, err, eval s
-      test.equals one, rec
+      smite one, two, 'one two in testing',testing, rec.from, 'rec', res, err, eval s
+      test.equals one.from, rec.from
       next()
-###
+
     Tinytest.addAsync 'update - 2 clientside update of WI should trigger insert into W', (test, next) ->
 
       recNum = 2
