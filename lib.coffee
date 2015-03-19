@@ -21,11 +21,11 @@ console.time 'elapsed'
 console.warn = -> #this kills the warns from prior
 # The main collection. Only inserts allowed. Unless by cron or hook.
 @W = new Meteor.Collection 'W'
-Ground.Collection(W);
+# Ground.Collection(W);
 # Each user / profile gets a 'bucket' of pre-joined data kept up to date
 # only enough to load the app with only one findOne query
 @WI = new Meteor.Collection 'WI'
-Ground.Collection(WI);
+# Ground.Collection(WI);
 #Client and server..
 
 # need a shared function that validates w objects
@@ -76,8 +76,8 @@ Meteor.methods
 #console.log.apply(console, [Array.prototype.join.call(arguments, " ")]);
 
 @smiter = do ->
-  context = eval s 
-  Function::bind.call console.log, console, context#, arguments.callee.caller.toString().match(/(unionize.{10}.*?)/)#,t(), context, dif[0] , dif[-1..][0]  #,  new Date().getTime()
+  context = eval "" 
+  # Function::bind.call console.log, console, context#, arguments.callee.caller.toString().match(/(unionize.{10}.*?)/)#,t(), context, dif[0] , dif[-1..][0]  #,  new Date().getTime()
 
 
 #console.log('starting lib.coffee at', diff() );
@@ -88,5 +88,5 @@ for i in '123'
 
 
 eval 'smiter("lives")'
-smite 'smiter liv!', eval s
+# smite 'smiter liv!', eval s
 
