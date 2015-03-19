@@ -39,7 +39,7 @@ Package.on_test(function (api) {
   api.add_files([
     'lib.coffee',
     'testUpdateClient.coffee',
-    'tests.coffee'
+    'tests.coffee',
   ], ['client', 'server']);
 
   api.add_files([ 
@@ -48,7 +48,11 @@ Package.on_test(function (api) {
   ], ['server']);
 
   api.add_files([
-    'client.coffee' 
+    'client.coffee'
+  ], ['client']);
+  
+  api.add_files([
+    'client_test.coffee'
   ], ['client']);
 
   api.add_files([

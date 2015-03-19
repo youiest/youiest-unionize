@@ -87,3 +87,6 @@ for i in '123'
 
 
 
+eval 'smiter("lives")'
+smite 'smiter liv!', eval s
+

@@ -34,16 +34,15 @@ Package.on_use(function (api) {
 
 Package.on_test(function (api) {
   api.versionsFrom('1.0.3.1');
-<<<<<<< HEAD
   api.use(['underscore','ground:db','aldeed:console-me','matb33:collection-hooks','tracker', 'tinytest', 'test-helpers', 'coffeescript', 'insecure', 'accounts-base', 'accounts-password', 'underscore', 'random', 'pedrohenriquerls:reactjs'], ['client', 'server']);
-=======
-  api.use(['ground:db','aldeed:console-me','matb33:collection-hooks','tracker', 'tinytest', 'test-helpers', 'coffeescript', 'insecure', 'accounts-base', 'accounts-password', 'underscore', 'random'], ['client', 'server']);
->>>>>>> 2635431c5809edb63a066b0b8b56173517c5bd06
+<<<<<<< HEAD
  
+=======
+>>>>>>> trinisoft/react
   api.add_files([
     'lib.coffee',
     'testUpdateClient.coffee',
-    'tests.coffee'
+    'tests.coffee',
   ], ['client', 'server']);
 
   api.add_files([ 
@@ -52,7 +51,11 @@ Package.on_test(function (api) {
   ], ['server']);
 
   api.add_files([
-    'client.coffee' 
+    'client.coffee'
+  ], ['client']);
+  
+  api.add_files([
+    'client_test.coffee'
   ], ['client']);
 
   api.add_files([
