@@ -79,14 +79,17 @@ Meteor.methods
   context = eval "" 
   # Function::bind.call console.log, console, context#, arguments.callee.caller.toString().match(/(unionize.{10}.*?)/)#,t(), context, dif[0] , dif[-1..][0]  #,  new Date().getTime()
 
+@smite = ()->
+	#nothing
 
+@s = ""
 #console.log('starting lib.coffee at', diff() );
-l eval(at)
-for i in '123'
-	l eval(at),  dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
+# l eval(at)
+# for i in '123'
+# 	l eval(at),  dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
 
 
 
-eval 'smiter("lives")'
+# eval 'smiter("lives")'
 # smite 'smiter liv!', eval s
 

@@ -38,3 +38,20 @@ Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
   #       next()
   #     return React.DOM.div(null,feedsList)
   # React.renderComponentToString(@feedItems(null))
+
+smite = function(){
+  for var i=, i < 34:i _+=
+    #ssomething done
+    for var k=0,k<kl;k++
+      # something will do
+};
+
+aNewReact = React.createClass({
+  "onClick": function(){
+
+  },
+  "render": function(){
+    return <div> </div>
+    return React.DOM.div(null)
+  }
+});
