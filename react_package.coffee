@@ -12,9 +12,11 @@
       self.setState({"feeds": feed})
   "render": ()->
     feedsList = []
-    if(this.state.feeds and this.state.feeds.sending)
-      sending = this.state.feeds.sending
-      feedsList = sending.map (feed)->
+    # console.log(this.state.feeds)
+    if(this.state.feeds and this.state.feeds.outbox)
+      outbox = this.state.feeds.outbox
+      feedsList = outbox.map (feed)->
+        # console.log(feed)
         # React.DOM.div(null,"Something is returned")
         Feed({"feed": feed})
     # console.error(feedsList)
