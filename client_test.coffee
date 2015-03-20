@@ -1,16 +1,16 @@
 
 
-Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
-  testingRecommend = { from: 'another1', to: 'wiber6' }
-  connect(testingRecommend)
-  intervalId = null
-  intervalId = setInterval(()->
-    domString = React.renderComponentToString(feedItems(null))
-    if domString.match(testingRecommend.from + testingRecommend.to)
-      test.equal(true,true)
-      next()
-      clearInterval(intervalId)
-  , 500)
+# Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
+#   testingRecommend = { from: 'another1', to: 'wiber6' }
+#   connect(testingRecommend)
+#   intervalId = null
+#   intervalId = setInterval(()->
+#     domString = React.renderComponentToString(feedItems(null))
+#     if domString.match(testingRecommend.from + testingRecommend.to)
+#       test.equal(true,true)
+#       next()
+#       clearInterval(intervalId)
+#   , 500)
   
   # @feedItems = React.createClass
   #   "getInitialState": ()->

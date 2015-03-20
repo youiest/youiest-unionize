@@ -64,7 +64,7 @@ Meteor.startup ->
     Meteor.call 'dummyInsert', (res,err) ->
       smite res, err, 'returned from dummyinsert', eval s
       for recommend in recommendationArray
-        console.error(recommend)
+        # console.error(recommend)
         connect(recommend)
     Tinytest.addAsync 'clear - 0 call clearDb server clears db and client goes to 0 items', (test, next) ->
       smite WI.find({}).count(), 'items in WI before', eval s
