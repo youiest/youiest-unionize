@@ -14,7 +14,7 @@ W.before.insert (userId, doc) ->
 
 W.after.insert (userId, doc) ->
   #smite eval(s),  arguments , 'arguments after insert'
-  if WIFound doc.to
+  if doc.to
     #smite 'found a target WI', eval s
     WI.update
       _id: doc.to

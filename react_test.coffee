@@ -1,4 +1,4 @@
-Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
+Tinytest.add 'reactjs - dom element equals to data', (test, next) -> #addAsync
   testingRecommend = { from: 'another1', to: 'wiber' }
   connect(testingRecommend)
   testingRecommend = { from: 'another2', to: 'wiber' }
@@ -16,6 +16,6 @@ Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
   if domString.match(testingRecommend.from)
     alert("newdata")
     test.equal(true,true)
-    next()
+    # next()
     clearInterval(intervalId)
   # , 1000)
