@@ -14,15 +14,22 @@ W.before.insert (userId, doc) ->
 
 W.after.insert (userId, doc) ->
   #smite eval(s),  arguments , 'arguments after insert'
-  if WIFound doc.to
-    #smite 'found a target WI', eval s
-    WI.update
+  unless WIFound doc.to
+    smite 'no target nemo found', eval s
+    WI.insert
       _id: doc.to
-    ,
-      '$push':
-        inbox: 
-          from: doc.from
-          to: doc.to
+
+  WI.update
+    _id: doc.to
+  ,
+    '$push':
+      inbox: 
+        from: doc.from
+        to: doc.to
+
+    
+
+
   smite WI.findOne , 'found this one in WI'
 
   return
