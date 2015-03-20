@@ -64,7 +64,7 @@ Meteor.startup ->
         one = W.findOne
           from: rec.from
           to: rec.to
-        smite one,
+        smite one
         , one.from
         , rec.from
         , 'testing from '
