@@ -60,19 +60,15 @@ Meteor.startup ->
       rec = generateRecommend testing
       connect rec
       Tracker.autorun (computation) ->
-
         one = W.findOne
           from: rec.from
           to: rec.to
-        smite one
-        , one.from
-        , rec.from
-        , 'testing from '
-        , testing
-        , eval s
+        smite rec, one, testing, 'testing inserted', eval s
         unless !one
-          test.equals one.from, rec.from
+          test.equal one.from, rec.from
+          this.stop()
           next()
+
         #smite one, two, 'one two in testing',testing, rec.from, 'rec', err, eval s
 ###
     Tinytest.addAsync 'update - 2 clientside update of WI should trigger insert into W', (test, next) ->
