@@ -7,20 +7,22 @@ ConsoleMe.enabled = true
 
 
 Meteor.methods
-  "dummyInsert" : () ->
-    one = WI.insert 
-      _id: arguments[0]
-    two = W.insert 
-      _id: arguments[0]
-    smite one, two, 'dummyInsert buckle my shoe'
-    , eval s
+  "dummyInsert" : (args) ->
     return
+    unless args
+      args = user
+    one = WI.insert
+      '_id': args
+    two = W.insert 
+      '_id': args
+    #smite one, two, 'dummyInsert buckle my shoe'
+    return one
   "clearDb": () ->
     #smite eval(s), 'clearDb'
     one = W.remove {}
     two = WI.remove {}
     smite one, two, 'clearDb buckle my boots', WI.find({}).count() , eval s
-    return WI.find({}).count() 
+    return WI.findOne({})
 
 @generateRecommend = (i) ->
     to: user+i
@@ -40,39 +42,32 @@ Meteor.startup ->
         one = WI.find({}).count()
         # test async that there are no items in db, returns only one time
         test.equal one, 0
-        
         next()
     testing++
-    Tinytest.add 'insert - '+testing+' dummyInsert creates user object', (test, next) ->
-      Meteor.call 'dummyInsert', user, (res,err) ->
+    Tinytest.add 'insert - '+testing+' dummyInsert creates user object synced to client', (test, next) ->
+
+      Meteor.call 'dummyInsert', user, (res, err) ->
         test.equal WI.find({}).count() , 1
         smite one = WI.find({}).fetch()
         next()
-      
-      ###
-      Tracker.autorun (computation) ->
-        test.equal W.find({}).count(), 1
-        next()
-
     testing++
-    
-    Tinytest.addAsync 'update - '+testing+' clientside update of WI should trigger insert into W', (test, next) ->
-      # generate all test data with function to guarantee consistency and empty db
+
+    Tinytest.addAsync 'update - '+testing+' clientside update of WI should hook same inserted into W', (test, next) ->
       
+      # generate all test data with function to guarantee consistency and empty db
+      # each test uses unique test data...
       rec = generateRecommend testing
       connect rec
-
-      one = W.findOne
-        from: rec.from
-        to: rec.to
-      two = WI.findOne
-        _id: user
-      .fetch().outbox[0]
-
-      smite one, two, 'one two in testing',testing, rec.from, 'rec', res, err, eval s
-      test.equals one.from, rec.from
-      next()
-
+      Tracker.autorun (computation) ->
+        rec = rec
+        one = W.findOne
+          from: rec.from
+          to: rec.to
+        unless !one
+          test.equals one.from, rec.from
+          next()
+        #smite one, two, 'one two in testing',testing, rec.from, 'rec', err, eval s
+###
     Tinytest.addAsync 'update - 2 clientside update of WI should trigger insert into W', (test, next) ->
 
       recNum = 2
