@@ -14,8 +14,11 @@ Tinytest.add 'reactjs - dom element equals to data', (test, next) -> #addAsync
   domString = React.renderComponentToString(FeedList(null))
   # console.error(domString)
   if domString.match(testingRecommend.from)
+  # if domString.match("failingtest")
     alert("newdata")
-    test.equal(true,true)
+    test.equal(true,true, "found match for "+testingRecommend.from)
     # next()
-    clearInterval(intervalId)
+  else
+    test.equal(false,true, "match failed for failingtest")
+    # clearInterval(intervalId)
   # , 1000)
