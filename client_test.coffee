@@ -40,7 +40,7 @@ Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
   # React.renderComponentToString(@feedItems(null))
 
 smite = ()->
-
+  #nothing here yet.
 
 
 
@@ -48,9 +48,12 @@ aNewReact = React.createClass({
   "onClick": ()->
   ,
   "render": ()->
-    return <div> </div>
-    return React.DOM.div(null)
+    # return <div> </div>
+    return React.DOM.div(null,{
+      "onClick": this.onClick
+    })
   ,
   "event": ()->
     #changes
-});
+})
+
