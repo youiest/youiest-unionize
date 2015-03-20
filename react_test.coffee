@@ -10,11 +10,12 @@ Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
   testingRecommend = { from: 'another5', to: 'wiber' }
   connect(testingRecommend)
   intervalId = null
-  intervalId = setInterval(()->
-    domString = React.renderComponentToString(FeedList(null))
-    # console.error(domString)
-    if domString.match(testingRecommend.from)
-      test.equal(true,true)
-      next()
-      clearInterval(intervalId)
-  , 1000)
+  # intervalId = setInterval(()->
+  domString = React.renderComponentToString(FeedList(null))
+  # console.error(domString)
+  if domString.match(testingRecommend.from)
+    alert("newdata")
+    test.equal(true,true)
+    next()
+    clearInterval(intervalId)
+  # , 1000)
