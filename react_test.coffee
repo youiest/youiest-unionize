@@ -1,6 +1,7 @@
 
+# doesn't need to be asyn
 
-Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
+Tinytest.add 'reactjs - 5 dom element equals to data', (test, next) ->
   testingRecommend = { from: 'another1', to: 'wiber6' }
   connect(testingRecommend)
   intervalId = null
@@ -11,15 +12,15 @@ Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
       next()
       clearInterval(intervalId)
   , 500)
-  
+
   # @feedItems = React.createClass
   #   "getInitialState": ()->
   #     {feeds: WI.findOne 
-  #       "_id": myWI}
+  #       "_id": user}
   #   "componentDidMount": ()->
   #     self = @
   #     Tracker.autorun ()->
-  #       feed = WI.findOne({"_id": myWI})   
+  #       feed = WI.findOne({"_id": user})   
   #       self.setState({"feeds": feed})
   #   "render": ()->
   #     # console.error(this.state.feeds)

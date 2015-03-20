@@ -1,5 +1,5 @@
 @s = 'L()'
-
+@user = 'wiber' # unless Meteor.user() #this () killed
 @WIFound = (id) ->
   smite id, 'scouting nemo' , eval s
   found = WI.find(
@@ -100,8 +100,8 @@ for i in '123'
 
 @W = new Meteor.Collection 'W'
 @WI = new Meteor.Collection 'WI'
-@WI = Ground.Collection(WI)
+#@WI = Ground.Collection(WI)
 
 eval 'smiter("lives")'
-smite 'smiter liv!', eval s
+smite 'smiter live!', eval s
 

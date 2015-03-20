@@ -51,7 +51,7 @@ Package.on_test(function (api) {
   ], ['client']);
   
   api.add_files([
-    'client_test.coffee'
+    'react_test.coffee'
   ], ['client']);
 });
 
