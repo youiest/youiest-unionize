@@ -8,7 +8,6 @@ ConsoleMe.enabled = true
 
 Meteor.methods
   "dummyInsert" : (args) ->
-    return
     unless args
       args = user
     one = WI.insert
@@ -34,35 +33,43 @@ Meteor.startup ->
   if Meteor.isClient
 
     testing = 0 
-    Tinytest.addAsync 'clear - '+testing+' call clearDb server clears db and client goes to 0 items', (test, next) ->
-      #smite WI.find({}).count(), 'items in WI before', eval s
+    Tinytest.addAsync 'clear - '+testing+' call clearDb server clears db and W goes to 0 items', (test, next) ->
+
       Meteor.call 'clearDb', (res,err) ->
-        #smite res, err, 'returned from clearDb', eval s
-        smite WI.find({}).count(), 'WI items after tracker started', eval s
         one = WI.find({}).count()
         # test async that there are no items in db, returns only one time
         test.equal one, 0
         next()
-    testing++
-    Tinytest.add 'insert - '+testing+' dummyInsert creates user object synced to client', (test, next) ->
 
+    testing++
+    Tinytest.addAsync 'clear - '+testing+' call clearDb server clears db and WI goes to 0 items', (test, next) ->
+      two = WI.find({}).count()
+      test.equal two, 0
+      next()
+
+    testing++
+    Tinytest.add 'insert - '+testing+' dummyInsert creates WI user object synced to client', (test, next) ->
       Meteor.call 'dummyInsert', user, (res, err) ->
-        test.equal WI.find({}).count() , 1
-        smite one = WI.find({}).fetch()
-        next()
+        userCreated = WI.findOne
+          '_id': user
+        smite userCreated, user
+        test.equal userCreated._id, user
+    
     testing++
-
     Tinytest.addAsync 'update - '+testing+' clientside update of WI should hook same inserted into W', (test, next) ->
-      
-      # generate all test data with function to guarantee consistency and empty db
-      # each test uses unique test data...
       rec = generateRecommend testing
       connect rec
       Tracker.autorun (computation) ->
-        rec = rec
+
         one = W.findOne
           from: rec.from
           to: rec.to
+        smite one,
+        , one.from
+        , rec.from
+        , 'testing from '
+        , testing
+        , eval s
         unless !one
           test.equals one.from, rec.from
           next()
