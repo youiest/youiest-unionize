@@ -77,7 +77,7 @@ Meteor.startup ->
         two = WI.findOne
           _id: rec.to
         smite rec, two, testing, 'testing update outbox to inbox', eval s
-        unless !two
+        unless !two.inbox
           test.equal two.inbox[0].from, rec.from
           next()
 

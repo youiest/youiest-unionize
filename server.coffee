@@ -26,12 +26,7 @@ W.after.insert (userId, doc) ->
       inbox: 
         from: doc.from
         to: doc.to
-
-    
-
-
   smite WI.findOne , 'found this one in WI'
-
   return
 
 

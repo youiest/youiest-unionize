@@ -9,6 +9,15 @@
   ).count()
   smite id, found, 'finding nemo' , eval s
   return found
+@WFound = (id) ->
+  smite id, 'scouting nemo' , eval s
+  found = W.find(
+    _id: id
+  ,
+    limit: 1
+  ).count()
+  smite id, found, 'finding nemo' , eval s
+  return foun
 
 # TODO should be called with start and end time parameter for exact timings
 #nuff said
