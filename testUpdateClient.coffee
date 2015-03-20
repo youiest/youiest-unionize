@@ -54,6 +54,7 @@ Meteor.startup ->
           '_id': user
         smite userCreated, user
         test.equal userCreated._id, user
+        next()
     
     testing++
     Tinytest.addAsync 'update - '+testing+' clientside update of WI should hook same inserted into W', (test, next) ->
@@ -66,26 +67,24 @@ Meteor.startup ->
         smite rec, one, testing, 'testing inserted', eval s
         unless !one
           test.equal one.from, rec.from
-          this.stop()
+          next()
+
+    testing++
+    Tinytest.addAsync 'update - '+testing+' client WI.outbox -> server W -> client WI.inbox', (test, next) ->
+      rec = generateRecommend testing
+      connect rec
+      Tracker.autorun (computation) ->
+        two = WI.findOne
+          _id: rec.to
+        smite rec, two, testing, 'testing update outbox to inbox', eval s
+        unless !two.inbox
+          test.equal two.inbox[0].from, rec.from
           next()
 
         #smite one, two, 'one two in testing',testing, rec.from, 'rec', err, eval s
 ###
-    Tinytest.addAsync 'update - 2 clientside update of WI should trigger insert into W', (test, next) ->
+   
 
-      recNum = 2
-      c = connect(recommendationArray[recNum])
-      #smite c , 'returned from connect in 2', eval s
-      picd = Tracker.autorun (computation) ->
-        #smite eval(s), 'ran tracker one'
-        recNum = 2
-        unless !W.findOne({to:recommendationArray[recNum].to})
-          #smite eval(s), 'got hit'
-          db = W.findOne({to:recommendationArray[recNum].to}).from
-          input = recommendationArray[recNum].from
-          test.equal  input, db 
-          next()
-    # this test requires update on client, two update triggered on server and sync data back to client
     Tinytest.addAsync 'update - 3 client WI.outbox -> server W -> client WI.inbox', (test, next) ->
 
       recNum = 3
