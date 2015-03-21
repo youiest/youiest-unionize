@@ -81,6 +81,19 @@ Meteor.startup ->
           test.equal two.inbox[0].from, rec.from
           next()
 
+    testing++
+    Tinytest.addAsync 'feed - '+testing+' client WI.feed has ten dummy items hooked in after server sees feed field', (test, next) ->
+      WI.update
+        _id: user
+      ,
+        feed: 'nothing'
+      Tracker.autorun (computation) ->
+        two = WI.findOne
+          _id: user
+        unless !two.feed
+          # the feed function will add feed to the journey of the object
+          test.equal two.feed[9].journey[0].keys()[0], 'feed'
+        #next()
         #smite one, two, 'one two in testing',testing, rec.from, 'rec', err, eval s
 ###
    
