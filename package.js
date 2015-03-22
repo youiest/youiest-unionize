@@ -42,8 +42,44 @@ Package.on_use(function (api) {
 
 Package.on_test(function (api) {
   // api.versionsFrom('1.0.3.1');
-  api.use(['underscore','ground:db','aldeed:console-me','matb33:collection-hooks','tracker', 'tinytest', 'test-helpers', 'coffeescript', 'insecure', 'accounts-base', 'accounts-password', 'underscore', 'random', 'pedrohenriquerls:reactjs'], ['client', 'server']);
- 
+  api.use(
+    [
+      'underscore',
+      'ground:db',
+      'aldeed:console-me',
+      'matb33:collection-hooks',
+      'tracker', 
+      'tinytest', 
+      'test-helpers', 
+      'coffeescript', 
+      'insecure', 
+      'accounts-base', 
+      'accounts-password', 
+      'underscore', 
+      'random', 
+      'pedrohenriquerls:reactjs',
+      'mongo'
+    ], 
+    [
+      'client', 
+      'server'
+    ]);
+
+  api.add_files([
+    'lib.js'
+  ], ['client','server']);
+
+  api.add_files([
+    'client.js'
+  ], ['client']);
+
+  api.add_files([
+    'server.js'
+  ], ['server']);
+
+  api.add_files([
+    'test.js'
+  ], ['client','server']);   
   // api.add_files([
   //   'lib.coffee',
   //   'testUpdateClient.coffee',

@@ -1,3 +1,3 @@
 Unionize = {};
 WI = Meteor.users;
-W = new Meteor.Collection("w");
+W = new Mongo.Collection("w");
