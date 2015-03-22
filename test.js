@@ -17,14 +17,7 @@ var unknowUser = {
 }
 
 if(Meteor.isServer){
-	// empty DB on each test;
-	Meteor.users.remove({});
-	W.remove({});
-
-	// create user for test
-	Meteor.users.insert(fromUser);
-	Meteor.users.insert(toUser);
-	Meteor.users.insert(unknowUser);
+	
 
 	//test publish
 	Meteor.publish(null,function(){
@@ -53,9 +46,66 @@ var nicolsonData2 = {
 
 // TinyTest
 
+if(Meteor.isServer){
+	Tinytest.add("init - clear DB",function(test){
+		// empty DB on each test;
+		Meteor.users.remove({});
+		W.remove({});
+
+		// create user for test
+		Meteor.users.insert(fromUser);
+		Meteor.users.insert(toUser);
+		Meteor.users.insert(unknowUser);
+		test.equal(0,W.find().count())
+	});
+}
+
 if(Meteor.isClient){
-	Tinytest.add("insert - on W",function(test){
+	Tinytest.addAsync("insert - from_user WI",function(test, next){
+		var testFlag = true;
 		W.insert(nicolsonData1);
-	  // test.equal(true,true);
+	  Tracker.autorun(function(computation){
+	  	var count = WI.find({
+				"_id": nicolsonData1.from_user, 
+				"outbox": {$elemMatch: {"_id": nicolsonData1._id}}
+			}).count();
+			if(count && !testFlag){
+				testFlag = false;
+				test.equal(true,true);	
+				next();
+				computation.stop();
+			}
+			
+		});
+		Meteor.setTimeout(function(){
+			if(testFlag){
+				test.equal(true,false,"timeout after 2 sec");
+				next();
+			}	
+		},2000);
+	});
+
+	Tinytest.addAsync("insert - to_user WI",function(test, next){
+		var testFlag = true;
+		// W.insert(nicolsonData1);
+	  Tracker.autorun(function(computation){
+	  	var count = WI.find({
+				"_id": nicolsonData1.to_user, 
+				"inbox": {$elemMatch: {"_id": nicolsonData1._id}}
+			}).count();
+			if(count && !testFlag){
+				testFlag = false;
+				test.equal(true,true);
+				next();	
+				computation.stop();
+			}
+			
+		});
+		Meteor.setTimeout(function(){
+			if(testFlag){
+				test.equal(true,false,"timeout after 2 sec");
+				next();
+			}	
+		},2000);
 	});
 }
