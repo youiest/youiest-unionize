@@ -65,6 +65,8 @@ Package.on_test(function (api) {
       'server'
     ]);
 
+  api.export(["W","WI","Unionize"], ['client','server']);
+
   api.add_files([
     'lib.js'
   ], ['client','server']);
