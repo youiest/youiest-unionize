@@ -69,7 +69,7 @@ if(Meteor.isClient){
 				"_id": nicolsonData1.from_user, 
 				"outbox": {$elemMatch: {"_id": nicolsonData1._id}}
 			}).count();
-			if(count && !testFlag){
+			if(count){
 				testFlag = false;
 				test.equal(true,true);	
 				next();
@@ -93,7 +93,7 @@ if(Meteor.isClient){
 				"_id": nicolsonData1.to_user, 
 				"inbox": {$elemMatch: {"_id": nicolsonData1._id}}
 			}).count();
-			if(count && !testFlag){
+			if(count){
 				testFlag = false;
 				test.equal(true,true);
 				next();	
