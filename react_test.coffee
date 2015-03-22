@@ -1,26 +1,25 @@
 
-# doesn't need to be asyn
 
-Tinytest.add 'reactjs - 5 dom element equals to data', (test, next) ->
-  testingRecommend = { from: 'another1', to: 'wiber6' }
-  connect(testingRecommend)
-  intervalId = null
-  intervalId = setInterval(()->
-    domString = React.renderComponentToString(feedItems(null))
-    if domString.match(testingRecommend.from + testingRecommend.to)
-      test.equal(true,true)
-      next()
-      clearInterval(intervalId)
-  , 500)
-
+# Tinytest.addAsync 'reactjs - dom element equals to data', (test, next) ->
+#   testingRecommend = { from: 'another1', to: 'wiber6' }
+#   connect(testingRecommend)
+#   intervalId = null
+#   intervalId = setInterval(()->
+#     domString = React.renderComponentToString(feedItems(null))
+#     if domString.match(testingRecommend.from + testingRecommend.to)
+#       test.equal(true,true)
+#       next()
+#       clearInterval(intervalId)
+#   , 500)
+  
   # @feedItems = React.createClass
   #   "getInitialState": ()->
   #     {feeds: WI.findOne 
-  #       "_id": user}
+  #       "_id": myWI}
   #   "componentDidMount": ()->
   #     self = @
   #     Tracker.autorun ()->
-  #       feed = WI.findOne({"_id": user})   
+  #       feed = WI.findOne({"_id": myWI})   
   #       self.setState({"feeds": feed})
   #   "render": ()->
   #     # console.error(this.state.feeds)
@@ -39,3 +38,22 @@ Tinytest.add 'reactjs - 5 dom element equals to data', (test, next) ->
   #       next()
   #     return React.DOM.div(null,feedsList)
   # React.renderComponentToString(@feedItems(null))
+
+smite = ()->
+  #nothing here yet.
+
+
+
+aNewReact = React.createClass({
+  "onClick": ()->
+  ,
+  "render": ()->
+    # return <div> </div>
+    return React.DOM.div(null,{
+      "onClick": this.onClick
+    })
+  ,
+  "event": ()->
+    #changes
+})
+
