@@ -14,6 +14,19 @@ Package.on_use(function (api) {
   // like Document W will be an extended coll..
   // api.export('W');
 
+  api.add_files([
+    'lib.js'
+  ], ['client','server']);
+
+  api.add_files([
+    'client.js'
+  ], ['client']);
+
+  api.add_files([
+    'server.js'
+  ], ['server']);
+
+
   // api.add_files([
   //   'lib.coffee','ground:db'
   // ], ['client','server']);
