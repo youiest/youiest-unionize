@@ -92,7 +92,7 @@ Meteor.startup ->
           _id: user
         unless !two.feed
           # the feed function will add feed to the journey of the object
-          test.equal two.feed[9].journey[0].keys()[0], 'feed'
+          test.equal Object.keys(two.feed[9].journey[0])[0], 'feed'
         #next()
         #smite one, two, 'one two in testing',testing, rec.from, 'rec', err, eval s
 ###
