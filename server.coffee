@@ -29,12 +29,8 @@ W.after.insert (userId, doc) ->
   smite WI.findOne , 'found this one in WI'
   return
 
-
-
-
-
 @modModifier = {}
-modModifier.outbox = (modifier,userId)->
+modModifier.outbox = (modifier,userId) ->
   #smite 'hit outbox in', modifier, eval s
   old_key = 'outbox'
   new_key = 'sending'
@@ -64,6 +60,45 @@ modModifier.outbox = (modifier,userId)->
   # "server.coffee:39:48), <anonymous> 1422"
   return modifier
 
+@generateRecommend = (i) ->
+  to: user+i
+  from: recFrom+i
+  journey: [
+    feed: new Date().getTime()
+  ]
+
+#TODO remove test feed function
+@feedMe = (userId) ->
+  fed = []
+  for i in 'abcdefghiklmo'
+    fed.push(generateRecommend i)
+
+  return fed
+modModifier.feed = (modifier, userId, doc) ->
+  unless modifier.feed instanceof Array
+    smite modifier, doc, 'modifier, userId', eval s
+    # "s" {"feed":"nothing"} {"_id":"wiber","sending":[{"from":"picture5","to":"wiber5"},{"from":"picture5","to":"wiber5"}]} "modifier, userId" "server.coffee:83:59)
+    modifier.feed = []
+afterModifier = {}
+# feed balancing etc happens after the original update hits the db to let the db work
+afterModifier.feed = (modifier, doc, userId) ->
+  smite doc, 'doc afterModifier', eval s
+  if !stackSize 
+    stackSize = 10
+  userObject = WI.find 
+    _id: doc._id
+  unless userObject.feed.length >= stackSize
+    query = feedMe userId
+    userObject.update
+      '$push':
+        feed: query
+    doc.journey.push
+      'feed': new Date().getTime()
+    smite query, stackSize, userObject, 'feed afterModifier', eval s 
+  # continue with the feed update call to db and go call the method async while waiting  
+  #Meteor.call 'stackBalance', userId, doc, (res, err) ->
+  smite modifier, userId, res, err, 'userId returned from stackBalance', eval s
+    # {"feed":"nothing"} null "modifier, userId" "server.coffee:68:52)
 
 WI.before.update (userId, doc, fieldNames, modifier, options) ->
   for fieldName in fieldNames
@@ -71,7 +106,7 @@ WI.before.update (userId, doc, fieldNames, modifier, options) ->
     if _.has(modModifier, fieldName) 
       smite fieldName, 'spinning modModifier', eval s
       # modify the modifier so the update is redirected before hitting db
-      modifier = modModifier[fieldName] modifier,userId
+      modifier = modModifier[fieldName] modifier, doc, userId
   for i in arguments
     smite i,'arguments', eval s
 
@@ -86,6 +121,12 @@ WIAfterUpdate = WI.after.update (userId, doc, fieldNames, modifier, options) ->
 
     doc.journey.push
       'serverOutbox': new Date().getTime()
+  for fieldName in fieldNames
+    # do we have a function for this fieldname? 
+    if _.has(afterModifier, fieldName) 
+      smite fieldName, doc, 'spinning afterModifier', eval s
+      # modify the modifier so the update is redirected before hitting db
+      modifier = afterModifier[fieldName] modifier, doc, userId
   for i in arguments
     smite  arguments, 'after update arguments', eval s
 

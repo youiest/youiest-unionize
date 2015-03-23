@@ -90,10 +90,10 @@ Meteor.startup ->
       Tracker.autorun (computation) ->
         two = WI.findOne
           _id: user
-        unless !two.feed
+        unless !two.feed.journey
           # the feed function will add feed to the journey of the object
           test.equal Object.keys(two.feed[9].journey[0])[0], 'feed'
-        #next()
+          next()
         #smite one, two, 'one two in testing',testing, rec.from, 'rec', err, eval s
 ###
    
