@@ -31,6 +31,7 @@ formatUpdate = (args) ->
     smite 'we have an outbox', WI.findOne({ _id: user }), eval s
     return wi
 # setTimeout(()->
+Unionize.connect = connect
 
 WIAfterUpdate = WI.after.update (userId, doc, fieldNames, modifier, options) ->
     # WI.update 

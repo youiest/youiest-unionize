@@ -110,6 +110,8 @@ for i in '123'
 @W = new Meteor.Collection 'W'
 @WI = new Meteor.Collection 'WI'
 #@WI = Ground.Collection(WI)
+@Unionize.W = W
+@Unionize.WI = WI
 
 eval 'smiter("lives")'
 smite 'smiter live!', eval s

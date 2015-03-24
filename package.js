@@ -17,10 +17,8 @@ Package.on_use(function (api) {
   api.use(['matb33:collection-hooks@0.7.11','coffeescript'], ['client', 'server']);
 
   // like Document W will be an extended coll..
-  api.export('W');
-  api.export('connect');
-  api.export('WI');
-
+  api.export('Unionize');
+  
   api.add_files([
     'lib.coffee'
   ], ['client','server']);

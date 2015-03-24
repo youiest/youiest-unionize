@@ -16,9 +16,13 @@ ejson@1.0.6
 email@1.0.6
 fastclick@1.0.3
 geojson-utils@1.0.3
-ground:db@0.0.0
-ground:dictionary@0.0.0
-ground:minimax@0.0.0
+ground:db@0.3.6
+ground:dictionary@0.2.0
+ground:localstorage@0.1.7
+ground:minimax@1.1.2
+ground:servertime@0.0.3
+ground:store@0.1.1
+ground:util@0.1.13
 html-tools@1.0.4
 htmljs@1.0.4
 http@1.1.0
@@ -31,7 +35,7 @@ livedata@1.0.13
 local-test:youiest:unionize@0.0.4
 localstorage@1.0.3
 logging@1.0.7
-matb33:collection-hooks@0.7.5
+matb33:collection-hooks@0.7.11
 meteor@1.1.5
 meteor-platform@1.2.2
 minifiers@1.1.4
@@ -43,6 +47,9 @@ npm-bcrypt@0.7.8_1
 observe-sequence@1.0.5
 ordered-dict@1.0.3
 pedrohenriquerls:reactjs@0.10.0
+raix:eventemitter@0.1.1
+raix:onetimeout@1.0.3
+raix:stubfence@1.0.1
 random@1.0.3
 reactive-dict@1.1.0
 reactive-var@1.0.5
