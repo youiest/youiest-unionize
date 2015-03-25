@@ -1,3 +1,4 @@
+@Unionize = {}
 @s = 'L()'
 @user = 'wiber' # unless Meteor.user() #this () killed
 @WIFound = (id) ->
