@@ -1,0 +1,73 @@
+// publication
+Meteor.publish("users",function(userId){
+  return Meteor.users.find(userId);
+});
+
+// hooks
+
+<<<<<<< HEAD
+Unionize.onWUpdateHook = function(userId, docs){
+  // log("Unionize.onWInsertHook");
+  // log(docs)
+  docs.journey.push({"onWUpdateHook": Unionize.getUTC()- docs.startTime});
+
+  W.insert(docs);
+
+  docs.journey.push({"onInsertW": Unionize.getUTC()- docs.startTime});
+
+  if(WI.find(docs.to_user).count()){
+    WI.update(docs.to_user,{$push: {"inbox": docs}});
+    docs.journey.push({"onInsertWIInbox": Unionize.getUTC()- docs.startTime});
+    // log("to_user updated");
+  }
+  return docs;
+  
+  // replicated on W collection
+=======
+Unionize.onWInsertHook = function(userId, docs){
+  // log("Unionize.onWInsertHook");
+  // log(docs)
+  if(WI.find(docs.from_user).count()){
+  	WI.update(docs.from_user,{$push: {"outbox": docs}});
+  	// log("from_user updated");
+  }
+  if(WI.find(docs.to_user).count()){
+  	WI.update(docs.to_user,{$push: {"inbox": docs}});
+  	// log("to_user updated");
+  }
+  // WI.insert();
+>>>>>>> 05a649d044cf02be11e77b834e6d2a3c19595201
+}
+
+// Meteor.users.insert.before(function(docs){
+  
+// });
+
+// Meteor.users.insert.after(function(docs){
+  
+// });
+
+// log(W.before.insert())
+W.before.insert(function(userId, docs){
+<<<<<<< HEAD
+  // Unionize.onWInsertHook(userId, docs);
+});
+
+WI.before.update(function(userId, doc, fieldNames, modifier, options){
+  // log(fieldNames[0])
+  if(fieldNames[0] == "outbox"){
+    modifier["$push"].outbox = Unionize.onWUpdateHook(userId, modifier["$push"].outbox);
+    var docs = modifier["$push"].outbox
+    docs.journey.push({"onInsertWIInbox": Unionize.getUTC()- docs.startTime});
+    // log(userId, doc, fieldNames, modifier, options)    
+  }
+});
+=======
+  Unionize.onWInsertHook(userId, docs);
+});
+
+>>>>>>> 05a649d044cf02be11e77b834e6d2a3c19595201
+// W.after.update(function(){
+  
+// });
+
