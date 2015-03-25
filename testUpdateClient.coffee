@@ -98,3 +98,52 @@ Meteor.startup ->
           next()
         #smite one, two, 'one two in testing',testing, rec.from, 'rec', err, eval s
 
+    Tinytest.addAsync 'update - '+testing+' client WI.outbox -> server W -> client WI.inbox', (test, next) ->
+
+      rec = generateRecommend testing
+      connect rec
+      Tracker.autorun (computation) ->
+        two = WI.findOne
+          _id: rec.to
+        smite rec, two, testing, 'testing update outbox to inbox', eval s
+        unless !two.inbox
+          test.equal two.inbox[0].from, rec.from
+          next()
+
+
+    testing++
+    Tinytest.addAsync 'session - '+testing+' assure us that dot notation does not rerun tracker', (test, next) ->
+      # when server sees a feed attribute, it fills it called by a hook
+      sending = WI.findOne({_id: user}).sending
+      #sending0 = WI.findOne({_id: user}).sending[0]
+      Session.set 'sending', sending
+      smite sending, 'should be undefined', eval s
+      sessionTracker = 0
+      connect generateRecommend testing++
+      rec = generateRecommend testing++
+      connect rec
+      smite sending, 'should be undefined', eval s
+      setTimeout (->
+        rec = generateRecommend testing++
+        connect rec
+        ), 500
+      setTimeout (->
+        rec = generateRecommend testing++
+        connect rec
+        ), 250
+
+      Tracker.autorun (computation) ->
+        smite inbox = WI.findOne({_id: user}).inbox, 'should INBOX', eval s
+        smite sending = WI.findOne({_id: user}).sending, 'should sending', eval s
+
+        sessionTracker++
+        smite sending, eval s
+        smite sessionTracker, 'did this run multiple times?', inbox, eval s
+        #smite feed = WI.find({_id:'wiber'}).fetch()[0].feed, eval s
+        # does third feed item have a journey?
+        unless sessionTracker = 1
+          # the feed function will add feed to the journey of the object
+          # has this feed item been created by journey?
+          test.equal WI.find({_id:'wiber'}).fetch()[0].sending[0], Session.get 'sending'
+          next()
+
