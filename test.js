@@ -1,10 +1,10 @@
-var fromUser = {
+var toUser = {
   "_id": "nicolsondsouza",
   "inbox": [],
   "outbox": []
 };
 
-var toUser = {
+var fromUser = {
   "_id": "eliasmoosman",
   "inbox": [],
   "outbox": []
@@ -47,6 +47,17 @@ var nicolsonData2 = {
 // TinyTest
 
 if(Meteor.isServer){
+	Meteor.users.allow({
+	  insert: function (userId, post) {
+	    return true;
+	  },
+	  remove: function (userId, post) {
+	    return true;
+	  },
+	  update: function(userId, post){
+	  	return true;
+	  }
+	});
 	Tinytest.add("init - clear DB",function(test){
 		// empty DB on each test;
 		Meteor.users.remove({});
@@ -63,7 +74,8 @@ if(Meteor.isServer){
 if(Meteor.isClient){
 	Tinytest.addAsync("insert - from_user WI",function(test, next){
 		var testFlag = true;
-		W.insert(nicolsonData1);
+		Unionize.connect(nicolsonData1);
+		// W.insert(nicolsonData1);
 	  Tracker.autorun(function(computation){
 	  	var count = WI.find({
 				"_id": nicolsonData1.from_user, 
@@ -85,25 +97,30 @@ if(Meteor.isClient){
 		},2000);
 	});
 
-	Tinytest.add("insert - to_user WI",function(test, next){
+	Tinytest.addAsync("insert - to_user WI",function(test, next){
 		var testFlag = true;
 		// W.insert(nicolsonData1);
-	  // Tracker.autorun(function(computation){
+	  Tracker.autorun(function(computation){
 	  	var count = WI.find({
 				"_id": nicolsonData1.to_user, 
 				"inbox": {$elemMatch: {"_id": nicolsonData1._id}}
 			}).count();
+			
 			if(count){
-				// computation.stop();
+				test.equal(count,1,"Data requested not found");
 				testFlag = false;
-				test.equal(true,true);
-				// next();	
+				// test.equal(true,true);
+				if(next)
+					next();
+
+				computation.stop();
 			}
-		// });
+		});
 		Meteor.setTimeout(function(){
 			if(testFlag){
 				test.equal(true,false,"timeout after 2 sec");
-				// next();
+				if(next)
+					next();
 			}	
 		},2000);
 	});

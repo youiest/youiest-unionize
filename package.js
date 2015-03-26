@@ -35,18 +35,6 @@ Package.on_use(function (api) {
     'server.js'
   ], ['server']);
 
-
-  // api.add_files([
-  //   'lib.coffee','ground:db'
-  // ], ['client','server']);
-
-  // api.add_files([
-  //   'client.coffee'
-  // ], 'client');
-
-  // api.add_files([
-  //   'server.coffee', 'publish.coffee'
-  // ], 'server');
 });
 
 Package.on_test(function (api) {
@@ -90,29 +78,7 @@ Package.on_test(function (api) {
 
   api.add_files([
     'test.js'
-  ], ['client','server']);   
-  // api.add_files([
-  //   'lib.coffee',
-  //   'testUpdateClient.coffee',
-  //   'tests.coffee',
-  // ], ['client', 'server']);
+  ], ['client','server']);
 
-  // api.add_files([ 
-  //   'server.coffee',
-  //   'publish.coffee'
-  // ], ['server']);
-
-  // api.add_files([
-  //   'client.coffee'
-  // ], ['client']);
-  
-  // api.add_files([
-  //   'react_test.coffee'
-  // ], ['client']);
-
-  // api.add_files([
-  //   'react_package.coffee',
-  //   'react_test.coffee'
-  // ], ['client']);
 
 });
