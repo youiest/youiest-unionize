@@ -106,9 +106,9 @@ if(Meteor.isClient){
 				"inbox": {$elemMatch: {"_id": nicolsonData1._id}}
 			}).count();
 			
-			if(count){
-				test.equal(count,1,"Data requested not found");
+			if(count && testFlag){
 				testFlag = false;
+				test.equal(count,1,"Data requested not found");
 				// test.equal(true,true);
 				if(next)
 					next();

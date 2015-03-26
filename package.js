@@ -18,7 +18,8 @@ Package.on_use(function (api) {
     'matb33:collection-hooks',
     'coffeescript',
     'mongo',
-    'accounts-base'
+    'accounts-base',
+    'session',
     ], ['client', 'server']);
 
   api.export(["W","WI","Unionize"], ['client','server']);
