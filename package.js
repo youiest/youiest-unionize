@@ -33,7 +33,10 @@ Package.on_use(function (api) {
   ], ['client']);
 
   api.add_files([
-    'server.js'
+    'server.js',
+    'rules.js',
+    'methods.js',
+    'publish.js'
   ], ['server']);
 
 });

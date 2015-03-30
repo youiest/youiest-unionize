@@ -15,13 +15,13 @@ WI.find({}).observe({
 Session.setDefault("inbox", []);
 Session.setDefault("outbox", []);
 Session.setDefault("follow", []);
-
+Session.setDefault("big", []);
 Unionize.onChangeClient = function(doc){
 	if(userId == doc._id){
-		log("here");
 		Session.set("inbox",doc.inbox);
 		Session.set("outbox",doc.outbox);
 		Session.set("follow",doc.follow);
+		Session.set("big",doc.big);
 	}
 }
 
