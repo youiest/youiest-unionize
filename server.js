@@ -16,9 +16,8 @@ Unionize.onWUpdateHook = function(userId, docs){
 
   docs.journey.push({"onInsertW": Unionize.getUTC()- docs.startTime});
 
-  if(Unionize.exists(docs.to_user) == 0){
-    Unionize.prepare(docs.to_user);
-  }
+  Unionize.prepare(docs.to_user);
+  
   WI.update(docs.to_user,{$push: {"inbox": docs}});
   docs.journey.push({"onInsertWIInbox": Unionize.getUTC()- docs.startTime});
   // if(WI.find(docs.to_user).count()){
