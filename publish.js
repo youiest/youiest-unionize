@@ -1,5 +1,5 @@
 Meteor.publish(null,function(){
-	return Meteor.users.find({});
+	return WI.find({});
 });
 Meteor.publish(null,function(){
 	return W.find({});

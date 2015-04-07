@@ -1,6 +1,6 @@
 // publication
 Meteor.publish("users",function(userId){
-  return Meteor.users.find(userId);
+  return WI.find(userId);
 });
 
 
@@ -26,11 +26,11 @@ Unionize.onWUpdateHook = function(userId, docs){
   // replicated on W collection
 }
 
-// Meteor.users.insert.before(function(docs){
+// WI.insert.before(function(docs){
   
 // });
 
-// Meteor.users.insert.after(function(docs){
+// WI.insert.after(function(docs){
   
 // });
 

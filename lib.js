@@ -1,5 +1,5 @@
 Unionize = {};
-WI = Meteor.users;
+WI = new Mongo.Collection("wi");
 W = new Mongo.Collection("w");
 log = console.log.bind(console);
 
@@ -15,9 +15,7 @@ Unionize.connect = function(docs){
 		throw new new Meteor.Error("Target is not defined to_user", "404");
 	if(WI.find(docs.from_user).count()){
 		docs.startTime = Unionize.getUTC();
-		// var startTime{}
 		docs.journey = [{"onConnect": Unionize.getUTC()- docs.startTime}];
   	WI.update(docs.from_user,{$push: {"outbox": docs}});
-  	// log("from_user updated");
   }
 }

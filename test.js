@@ -24,7 +24,7 @@ if(Meteor.isServer){
 		return W.find({});
 	});
 	Meteor.publish(null,function(){
-		return Meteor.users.find({});
+		return WI.find({});
 	});
 
 }
@@ -60,13 +60,13 @@ if(Meteor.isServer){
 	});
 	Tinytest.add("init - clear DB",function(test){
 		// empty DB on each test;
-		Meteor.users.remove({});
+		WI.remove({});
 		W.remove({});
 
 		// create user for test
-		Meteor.users.insert(fromUser);
-		Meteor.users.insert(toUser);
-		Meteor.users.insert(unknowUser);
+		WI.insert(fromUser);
+		WI.insert(toUser);
+		WI.insert(unknowUser);
 		test.equal(0,W.find().count())
 	});
 }
