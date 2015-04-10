@@ -1,17 +1,20 @@
 // publication
 Meteor.publish("users",function(userId){
-  return Meteor.users.find(userId);
+  return WI.find(userId);
 });
 
-// hooks
 
+<<<<<<< HEAD
+=======
 Unionize.onWUpdateHook = function(userId, docs){
   // log("Unionize.onWInsertHook");
   // log(docs)
   docs.journey.push({"onWUpdateHook": Unionize.getUTC()- docs.startTime});
+>>>>>>> b9f103d14b27b3b49db2be006b76532f52f8e083
 
-  W.insert(docs);
 
+<<<<<<< HEAD
+=======
   docs.journey.push({"onInsertW": Unionize.getUTC()- docs.startTime});
 
   if(WI.find(docs.to_user).count()){
@@ -49,4 +52,5 @@ WI.before.update(function(userId, doc, fieldNames, modifier, options){
 // W.after.update(function(){
   
 // });
+>>>>>>> b9f103d14b27b3b49db2be006b76532f52f8e083
 
