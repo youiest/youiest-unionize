@@ -97,6 +97,7 @@ Unionize.onWUpdateHook = function(userId, docs){
 //   // Unionize.onWInsertHook(userId, docs);
 // });
 
+
 WI.before.update(function(userId, doc, fieldNames, modifier, options){
   // log(Meteor.isClient,Meteor.isServer)
   if(fieldNames[0] == "outbox"){
