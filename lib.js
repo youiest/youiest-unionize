@@ -60,12 +60,14 @@ Unionize.onWUpdateHook = function(userId, docs){
   if(Meteor.isClient){
     if(!Unionize.exists(docs.to_user))
       return docs;
+    docs.clientUpdate = true;
   }
   
   Unionize.prepare(docs.to_user);
   
   docs.journey.push({"onWUpdateHook": Unionize.getUTC()- docs.startTime});
 
+  // console.log(docs._id,Meteor.isClient,Meteor.isServer)
   W.insert(docs);
 
   docs.journey.push({"onInsertW": Unionize.getUTC()- docs.startTime});
@@ -91,9 +93,9 @@ Unionize.onWUpdateHook = function(userId, docs){
 // });
 
 // log(W.before.insert())
-W.before.insert(function(userId, docs){
-  // Unionize.onWInsertHook(userId, docs);
-});
+// W.before.insert(function(userId, docs){
+//   // Unionize.onWInsertHook(userId, docs);
+// });
 
 WI.before.update(function(userId, doc, fieldNames, modifier, options){
   // log(Meteor.isClient,Meteor.isServer)
