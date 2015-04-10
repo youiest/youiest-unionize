@@ -95,7 +95,7 @@ WI.before.update(function(userId, doc, fieldNames, modifier, options){
   if(fieldNames[0] == "outbox"){
     modifier["$push"].outbox = Unionize.onWUpdateHook(userId, modifier["$push"].outbox);
     var docs = modifier["$push"].outbox
-    docs.journey.push({"onInsertWIInbox": Unionize.getUTC()- docs.startTime});
+    docs.journey.push({"onInsertWIInbox": Unionize.getUTC() - docs.startTime});
     // log(userId, doc, fieldNames, modifier, options)    
   }
 });
