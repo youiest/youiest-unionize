@@ -57,17 +57,20 @@ Unionize.onWUpdateHook = function(userId, docs){
   if(docs.clientUpdate && Meteor.isServer)
    return docs;
 
+  if(Meteor.isClient){
+    if(!Unionize.exists(docs.to_user))
+      return docs;
+  }
+  
+  Unionize.prepare(docs.to_user);
+  
   docs.journey.push({"onWUpdateHook": Unionize.getUTC()- docs.startTime});
 
   W.insert(docs);
 
   docs.journey.push({"onInsertW": Unionize.getUTC()- docs.startTime});
 
-  if(Meteor.isClient && !Unionize.exists(docs.to_user)){
-    docs.clientUpdate = true;
-  }
-  else{
-  }
+  
   
   WI.update(docs.to_user,{$push: {"inbox": docs}});
   docs.journey.push({"onInsertWIInbox": Unionize.getUTC()- docs.startTime});
@@ -93,7 +96,7 @@ W.before.insert(function(userId, docs){
 });
 
 WI.before.update(function(userId, doc, fieldNames, modifier, options){
-  log(Meteor.isClient,Meteor.isServer)
+  // log(Meteor.isClient,Meteor.isServer)
   if(fieldNames[0] == "outbox"){
     modifier["$push"].outbox = Unionize.onWUpdateHook(userId, modifier["$push"].outbox);
     var docs = modifier["$push"].outbox
