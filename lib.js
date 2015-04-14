@@ -19,7 +19,7 @@ W = new Mongo.Collection("w");
 log = console.log.bind(console);
 var keys = {};
 keys.outbox = "inbox";
-keys.follow = "follow";
+keys.follow = "follower";
 Unionize.keys = keys;
 
 Unionize.getUTC = function(){
