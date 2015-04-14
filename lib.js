@@ -21,9 +21,39 @@ var keys = {};
 keys.outbox = "inbox";
 keys.follow = "follower";
 Unionize.keys = keys;
-Feed.limit = 30;
-Feed.keys = "feed";
-Feed.skip = 10;
+
+@modModifier = {}
+modModifier.outbox = (modifier,userId) ->
+  #smite 'hit outbox in', modifier, eval s
+  old_key = 'outbox'
+  new_key = 'sending'
+  if old_key != new_key
+    smite modifier, 'needs a new agenda', eval s
+    smite eval Object.defineProperty modifier.$push, new_key, Object.getOwnPropertyDescriptor(modifier.$push, old_key)
+    smite eval delete modifier.$push[old_key], 'deleted key', eval s
+  # hand off the inserts to an async function, process to update db without waiting
+
+  
+  # always copy in outputs when tricky..
+  #  {"$push":{"sending":{"from":"picture1","to":"wiber1"}}}
+  smite 'did we insert into W?'
+  , modifier
+  , modifier.$push
+  , from = modifier.$push.sending.from
+  , to = modifier.$push.sending.to
+  , eval s
+  inserted = W.insert
+    to: to #modifier.$push.sending.to
+    from: from #modifier.$push.sending.from
+  smite inserted, 'how long did the insert hook take? usually 30ms', eval s
+  # "s" "fwDjXokYCLDkG2w9J" "did we insert into W?" 
+  # {"$push":{"sending":{"from":"picture1","to":"wiber1"}}} 
+  # null # this is the issue, wht is push undefined?
+  # "wiber1" 
+  # "server.coffee:39:48), <anonymous> 1422"
+  return modifier
+
+
 
 Unionize.getUTC = function(){
 	return new Date().getTime();
@@ -123,18 +153,24 @@ Unionize.onWUpdateHook = function(userId, docs, key){
 
 
 WI.before.update(function(userId, doc, fieldNames, modifier, options){
-  // log(Meteor.isClient,Meteor.isServer)
-  var key = fieldNames[0];
-  // if(key == "follow")
-  if(keys[key] && modifier["$push"] && modifier["$push"][key]){
-    var docs = modifier["$push"][key];
-    if(docs.cycleComplete)
-      return;
-    modifier["$push"][key] = Unionize.onWUpdateHook(userId, docs, keys[key]);
-    docs = modifier["$push"][key];
-    docs.journey.push({"onInsertWIInbox": Unionize.getUTC() - docs.startTime});
-  }
-  return docs;
+  for fieldName in fieldNames
+    # do we have a function for this fieldname? 
+    if _.has(modModifier, fieldName) 
+      smite fieldName, doc, 'spinning modModifier', eval s
+      # modify the modifier so the update is redirected before hitting db
+      smite modifier = modModifier[fieldName] modifier, doc, userId
+  // // log(Meteor.isClient,Meteor.isServer)
+  // var key = fieldNames[0];
+  // // if(key == "follow")
+  // if(keys[key] && modifier["$push"] && modifier["$push"][key]){
+  //   var docs = modifier["$push"][key];
+  //   if(docs.cycleComplete)
+  //     return;
+  //   modifier["$push"][key] = Unionize.onWUpdateHook(userId, docs, keys[key]);
+  //   docs = modifier["$push"][key];
+  //   docs.journey.push({"onInsertWIInbox": Unionize.getUTC() - docs.startTime});
+  // }
+  // return docs;
   // else if(fieldNames[0] == "follow"){
   //   modifier["$push"].follow = Unionize.onWUpdateHookFollow(userId, modifier["$push"].follow);
   //   var docs = modifier["$push"].follow;
