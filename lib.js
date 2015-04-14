@@ -17,6 +17,10 @@ Unionize = {};
 WI = new Mongo.Collection("wi");
 W = new Mongo.Collection("w");
 log = console.log.bind(console);
+var keys = {};
+keys.outbox = "inbox";
+keys.follow = "follow";
+Unionize.keys = keys;
 
 Unionize.getUTC = function(){
 	return new Date().getTime();
@@ -34,12 +38,12 @@ Unionize.prepare = function(userId){
 }
 Unionize.validateDocs = function(docs){
   if(!docs)
-    throw new new Meteor.Error("Please check information provided undefined", "404");
+    throw new Meteor.Error("Please check information provided undefined", "404");
   if(!docs.from_user){
-    throw new new Meteor.Error("Source is not defined from_user", "404");   
+    throw new Meteor.Error("Source is not defined from_user", "404");   
   }
   if(!docs.to_user)
-    throw new new Meteor.Error("Target is not defined to_user", "404");
+    throw new Meteor.Error("Target is not defined to_user", "404");
 }
 Unionize.connect = function(docs){
 	Unionize.validateDocs(docs);
@@ -51,10 +55,18 @@ Unionize.connect = function(docs){
 	WI.update(docs.from_user,{$push: {"outbox": docs}});
 }
 
-
+Unionize.connectF = function(docs){
+  Unionize.validateDocs(docs);
+  
+  Unionize.prepare(docs.from_user);
+  
+  docs.startTime = Unionize.getUTC();
+  docs.journey = [{"onConnect": Unionize.getUTC()- docs.startTime}];
+  WI.update(docs.from_user,{$push: {"follow": docs}});
+}
 // hooks
 
-Unionize.onWUpdateHook = function(userId, docs){
+Unionize.onWUpdateHook = function(userId, docs, key){
   // log("Unionize.onWInsertHook");
   // log(docs.clientUpdate,Meteor.isServer)
   if(docs.clientUpdate && Meteor.isServer)
@@ -71,13 +83,16 @@ Unionize.onWUpdateHook = function(userId, docs){
   docs.journey.push({"onWUpdateHook": Unionize.getUTC()- docs.startTime});
 
   // console.log(docs._id,Meteor.isClient,Meteor.isServer)
+  docs.key = key;
+  docs.cycleComplete = true;
   W.insert(docs);
 
   docs.journey.push({"onInsertW": Unionize.getUTC()- docs.startTime});
 
   
-  
-  WI.update(docs.to_user,{$push: {"inbox": docs}});
+  var update = {};
+  update[key] = docs;
+  WI.update(docs.to_user,{$push: update});
   docs.journey.push({"onInsertWIInbox": Unionize.getUTC()- docs.startTime});
   // if(WI.find(docs.to_user).count()){
   //   // log("to_user updated");
@@ -87,6 +102,9 @@ Unionize.onWUpdateHook = function(userId, docs){
   // replicated on W collection
 }
 
+// Unionize.onWUpdateHookFollow = function(userId, docs){
+
+// }
 // WI.insert.before(function(docs){
   
 // });
@@ -103,12 +121,21 @@ Unionize.onWUpdateHook = function(userId, docs){
 
 WI.before.update(function(userId, doc, fieldNames, modifier, options){
   // log(Meteor.isClient,Meteor.isServer)
-  if(fieldNames[0] == "outbox"){
-    modifier["$push"].outbox = Unionize.onWUpdateHook(userId, modifier["$push"].outbox);
-    var docs = modifier["$push"].outbox
+  var key = fieldNames[0];
+  // if(key == "follow")
+  if(keys[key] && modifier["$push"] && modifier["$push"][key]){
+    var docs = modifier["$push"][key];
+    if(docs.cycleComplete)
+      return;
+    modifier["$push"][key] = Unionize.onWUpdateHook(userId, docs, keys[key]);
+    docs = modifier["$push"][key];
     docs.journey.push({"onInsertWIInbox": Unionize.getUTC() - docs.startTime});
-    // log(userId, doc, fieldNames, modifier, options)    
   }
+  return docs;
+  // else if(fieldNames[0] == "follow"){
+  //   modifier["$push"].follow = Unionize.onWUpdateHookFollow(userId, modifier["$push"].follow);
+  //   var docs = modifier["$push"].follow;
+  // }
 });
 // W.after.update(function(){
   
