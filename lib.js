@@ -147,7 +147,7 @@ WI.before.update(function(userId, doc, fieldNames, modifier, options){
   for (_i = 0, _len = fieldNames.length; _i < _len; _i++) {
     fieldName = fieldNames[_i];
     if (_.has(afterModifier, fieldName)) {
-      smite(fieldName, 'spinning afterModifier', eval(s));
+      // smite(fieldName, 'spinning afterModifier', eval(s));
       modifier = afterModifier[fieldName](modifier, doc, userId);
     }
   }
