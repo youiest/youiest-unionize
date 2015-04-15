@@ -143,30 +143,35 @@ Unionize.onWUpdateHook = function(userId, docs, key){
 
 
 WI.before.update(function(userId, doc, fieldNames, modifier, options){
-  var fieldName, modifier, _i, _len;
-  for (_i = 0, _len = fieldNames.length; _i < _len; _i++) {
-    fieldName = fieldNames[_i];
-    if (_.has(afterModifier, fieldName)) {
-      // smite(fieldName, 'spinning afterModifier', eval(s));
-      modifier = afterModifier[fieldName](modifier, doc, userId);
+  try{
+    var fieldName, modifier, _i, _len;
+    for (_i = 0, _len = fieldNames.length; _i < _len; _i++) {
+      fieldName = fieldNames[_i];
+      if (_.has(afterModifier, fieldName)) {
+        // smite(fieldName, 'spinning afterModifier', eval(s));
+        modifier = afterModifier[fieldName](modifier, doc, userId);
+      }
     }
+    // // log(Meteor.isClient,Meteor.isServer)
+    // var key = fieldNames[0];
+    // // if(key == "follow")
+    // if(keys[key] && modifier["$push"] && modifier["$push"][key]){
+    //   var docs = modifier["$push"][key];
+    //   if(docs.cycleComplete)
+    //     return;
+    //   modifier["$push"][key] = Unionize.onWUpdateHook(userId, docs, keys[key]);
+    //   docs = modifier["$push"][key];
+    //   docs.journey.push({"onInsertWIInbox": Unionize.getUTC() - docs.startTime});
+    // }
+    // return docs;
+    // else if(fieldNames[0] == "follow"){
+    //   modifier["$push"].follow = Unionize.onWUpdateHookFollow(userId, modifier["$push"].follow);
+    //   var docs = modifier["$push"].follow;
+    // }
   }
-  // // log(Meteor.isClient,Meteor.isServer)
-  // var key = fieldNames[0];
-  // // if(key == "follow")
-  // if(keys[key] && modifier["$push"] && modifier["$push"][key]){
-  //   var docs = modifier["$push"][key];
-  //   if(docs.cycleComplete)
-  //     return;
-  //   modifier["$push"][key] = Unionize.onWUpdateHook(userId, docs, keys[key]);
-  //   docs = modifier["$push"][key];
-  //   docs.journey.push({"onInsertWIInbox": Unionize.getUTC() - docs.startTime});
-  // }
-  // return docs;
-  // else if(fieldNames[0] == "follow"){
-  //   modifier["$push"].follow = Unionize.onWUpdateHookFollow(userId, modifier["$push"].follow);
-  //   var docs = modifier["$push"].follow;
-  // }
+  catch(error){
+    console.error(error);
+  }
 });
 // W.after.update(function(){
   
