@@ -22,25 +22,25 @@ keys.outbox = "inbox";
 keys.follow = "follower";
 Unionize.keys = keys;
 
-this.modModifier = {};
+// this.modModifier = {};
 
-modModifier.outbox = function(modifier, userId) {
-  var from, inserted, new_key, old_key, to;
-  old_key = 'outbox';
-  new_key = 'sending';
-  if (old_key !== new_key) {
-    smite(modifier, 'needs a new agenda', eval(s));
-    smite(eval(Object.defineProperty(modifier.$push, new_key, Object.getOwnPropertyDescriptor(modifier.$push, old_key))));
-    smite(eval(delete modifier.$push[old_key], 'deleted key', eval(s)));
-  }
-  smite('did we insert into W?', modifier, modifier.$push, from = modifier.$push.sending.from, to = modifier.$push.sending.to, eval(s));
-  inserted = W.insert({
-    to: to,
-    from: from
-  });
-  smite(inserted, 'how long did the insert hook take? usually 30ms', eval(s));
-  return modifier;
-};
+// modModifier.outbox = function(modifier, userId) {
+//   var from, inserted, new_key, old_key, to;
+//   old_key = 'outbox';
+//   new_key = 'sending';
+//   if (old_key !== new_key) {
+//     smite(modifier, 'needs a new agenda', eval(s));
+//     smite(eval(Object.defineProperty(modifier.$push, new_key, Object.getOwnPropertyDescriptor(modifier.$push, old_key))));
+//     smite(eval(delete modifier.$push[old_key], 'deleted key', eval(s)));
+//   }
+//   smite('did we insert into W?', modifier, modifier.$push, from = modifier.$push.sending.from, to = modifier.$push.sending.to, eval(s));
+//   inserted = W.insert({
+//     to: to,
+//     from: from
+//   });
+//   smite(inserted, 'how long did the insert hook take? usually 30ms', eval(s));
+//   return modifier;
+// };
 
 
 
@@ -106,7 +106,7 @@ Unionize.onWUpdateHook = function(userId, docs, key){
   docs.journey.push({"onWUpdateHook": Unionize.getUTC()- docs.startTime});
 
   // console.log(docs._id,Meteor.isClient,Meteor.isServer)
-  docs.key = Feed.keys;
+  docs.key = key;
   docs.cycleComplete = true;
   W.insert(docs);
 
@@ -114,7 +114,7 @@ Unionize.onWUpdateHook = function(userId, docs, key){
 
   
   var update = {};
-  update[Feed.keys] = docs;
+  update[key] = docs;
   WI.update(docs.to_user,{$push: update});
   docs.journey.push({"onInsertWIInbox": Unionize.getUTC()- docs.startTime});
   // if(WI.find(docs.to_user).count()){
@@ -144,26 +144,26 @@ Unionize.onWUpdateHook = function(userId, docs, key){
 
 WI.before.update(function(userId, doc, fieldNames, modifier, options){
   try{
-    var fieldName, modifier, _i, _len;
-    for (_i = 0, _len = fieldNames.length; _i < _len; _i++) {
-      fieldName = fieldNames[_i];
-      if (_.has(afterModifier, fieldName)) {
-        // smite(fieldName, 'spinning afterModifier', eval(s));
-        modifier = afterModifier[fieldName](modifier, doc, userId);
-      }
-    }
-    // // log(Meteor.isClient,Meteor.isServer)
-    // var key = fieldNames[0];
-    // // if(key == "follow")
-    // if(keys[key] && modifier["$push"] && modifier["$push"][key]){
-    //   var docs = modifier["$push"][key];
-    //   if(docs.cycleComplete)
-    //     return;
-    //   modifier["$push"][key] = Unionize.onWUpdateHook(userId, docs, keys[key]);
-    //   docs = modifier["$push"][key];
-    //   docs.journey.push({"onInsertWIInbox": Unionize.getUTC() - docs.startTime});
+    // var fieldName, modifier, _i, _len;
+    // for (_i = 0, _len = fieldNames.length; _i < _len; _i++) {
+    //   fieldName = fieldNames[_i];
+    //   if (_.has(afterModifier, fieldName)) {
+    //     // smite(fieldName, 'spinning afterModifier', eval(s));
+    //     modifier = afterModifier[fieldName](modifier, doc, userId);
+    //   }
     // }
-    // return docs;
+    // log(Meteor.isClient,Meteor.isServer)
+    var key = fieldNames[0];
+    // console.log(keys[key], key)
+    if(key && keys[key] && modifier["$push"] && modifier["$push"][key]){
+      var docs = modifier["$push"][key];
+      if(docs.cycleComplete)
+        return;
+      modifier["$push"][key] = Unionize.onWUpdateHook(userId, docs, keys[key]);
+      docs = modifier["$push"][key];
+      docs.journey.push({"onInsertWIInbox": Unionize.getUTC() - docs.startTime});
+    }
+    return docs;
     // else if(fieldNames[0] == "follow"){
     //   modifier["$push"].follow = Unionize.onWUpdateHookFollow(userId, modifier["$push"].follow);
     //   var docs = modifier["$push"].follow;
