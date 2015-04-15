@@ -29,9 +29,38 @@ W.after.insert (userId, doc) ->
         to: doc.to
   smite WI.findOne , 'found this one in WI'
   return
+@Unionize.field = {}
+# are we voting on a known type that requires special treatment? like a follow? add it here
+@unionize.field.from = {}
+@Unionize.field.from.User = (modifier, userId, doc, inserted) ->
+    # create a follow by $push the inserted #
+    # the target.from would be 
+    insertedW =  W.findOne 
+      _id: inserted
+      
+    WI.update
+      _id: userId
+    ,
+      follows: 
+        '$push': insertedW
 
+# when wiber votes on nicolson
+# from:wiber to:nicolson owner:wiber
+# on _id:nicolson there is an attribute from:user because when nicolson was created he was a user
+# nicolson is from:user
+# the hook sees that here above
+# the hook adds your W to  wiber.follows (because wiber follows nicolson)
+# then add $push wiber to nicolson.follows
+# when change is synced back to client I can see you in those I follow
+# next time i open the client i get my whole WI object, and the previous state of W.nicolson is in follows 
+# this incluses src of profile image, from:user, etc etc so app doesn't need to check right away
+# enough info is there to see face etc
+# WI has arrays of W, or ids in some future cases
+  
 @modModifier = {}
-modModifier.outbox = (modifier,userId) ->
+modModifier.outbox = (modifier, userId, doc) ->
+
+  
   #smite 'hit outbox in', modifier, eval s
   old_key = 'outbox'
   new_key = 'sending'
@@ -54,6 +83,27 @@ modModifier.outbox = (modifier,userId) ->
     to: to #modifier.$push.sending.to
     from: from #modifier.$push.sending.from
   smite inserted, 'how long did the insert hook take? usually 30ms', eval s
+  # did we just vote on a facebook user? they are from:Facebook
+  # does target of this connection have from:facebook
+  
+  # so if we have a Unionize.field.from.Facebook and this outbox target is from outbox
+  # we have voted on a Facebook user
+  target = W.findOne _id: to
+  # let's get where the target is from, with a query, 
+  #which can be optimized later by gathering this info when connect is called on client
+  targetFrom = target.from
+  
+  if _.has(Unionize.field.from, targetFrom ) 
+    # do we have a function for this type of connection? 
+    # it would be in Unionize.field.from.Facebook = Function() if we do
+    # Hashrepublic would be the default case, where user was created by this app
+    # A different function is run in each case because this _.has calls the function with same name as
+    # target is from, and therefore what 'type' it is.
+    
+    smite from, doc, 'spinning Unionize.field.from', eval s
+    # modify the modifier so the update is redirected before hitting db
+    smite modifier = Unionize.field.from[targetFrom] modifier, doc, userId , inserted
+  
   # "s" "fwDjXokYCLDkG2w9J" "did we insert into W?" 
   # {"$push":{"sending":{"from":"picture1","to":"wiber1"}}} 
   # null # this is the issue, wht is push undefined?
@@ -120,7 +170,7 @@ WI.before.update (userId, doc, fieldNames, modifier, options) ->
 
   for fieldName in fieldNames
     # do we have a function for this fieldname? 
-    if _.has(modModifier, fieldName) 
+    if _.has(modModifier, fieldName, doc) 
       smite fieldName, doc, 'spinning modModifier', eval s
       # modify the modifier so the update is redirected before hitting db
       smite modifier = modModifier[fieldName] modifier, doc, userId
