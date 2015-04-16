@@ -171,7 +171,7 @@ WI.before.update(function(userId, doc, fieldNames, modifier, options){
       var docs = modifier["$push"][key];
       if(docs.cycleComplete)
         return;
-      Unionize.hooks[key](userId, docs, keys[key]);
+      Unionize.hooks[key](userId, docs);
       // modifier["$push"][key] = Unionize.onWUpdateHook(userId, docs, keys[key]);
       docs = modifier["$push"][key];
       // docs.journey.push({"onInsertWIInbox": Unionize.getUTC() - docs.startTime});
