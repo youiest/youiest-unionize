@@ -85,7 +85,7 @@ Unionize.connect = function(docs){
   docs.startTime = Unionize.getUTC();
 	docs.journey = [{"onConnect": Unionize.getUTC()- docs.startTime}];
   var update = {};
-  update["inbox"] = docs;
+  update["outbox"] = docs;
 	WI.update(docs.from_user,{$push: update});
 }
 
@@ -101,7 +101,7 @@ Unionize.connect = function(docs){
 // }
 // hooks
 
-Unionize.onWUpdateHook = function(userId, docs, key){
+Unionize.hooks.outbox = Unionize.onWUpdateHook = function(userId, docs, key){
   // log("Unionize.onWInsertHook");
   // log(docs.clientUpdate,Meteor.isServer)
   if(docs.clientUpdate && Meteor.isServer)
@@ -126,7 +126,7 @@ Unionize.onWUpdateHook = function(userId, docs, key){
 
   
   var update = {};
-  update[docs.to_key] = docs;
+  update["inbox"] = docs;
   WI.update(docs.to_user,{$push: update});
   docs.journey.push({"onInsertWIInbox": Unionize.getUTC()- docs.startTime});
   // if(WI.find(docs.to_user).count()){
@@ -171,7 +171,8 @@ WI.before.update(function(userId, doc, fieldNames, modifier, options){
       var docs = modifier["$push"][key];
       if(docs.cycleComplete)
         return;
-      modifier["$push"][key] = Unionize.onWUpdateHook(userId, docs, keys[key]);
+      Unionize.hooks[key](userId, docs, keys[key]);
+      // modifier["$push"][key] = Unionize.onWUpdateHook(userId, docs, keys[key]);
       docs = modifier["$push"][key];
       docs.journey.push({"onInsertWIInbox": Unionize.getUTC() - docs.startTime});
     }
