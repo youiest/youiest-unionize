@@ -17,10 +17,10 @@ Unionize = {};
 WI = new Mongo.Collection("wi");
 W = new Mongo.Collection("w");
 log = console.log.bind(console);
-var keys = {};
-keys.outbox = "inbox";
-keys.follow = "follower";
-Unionize.keys = keys;
+// var keys = {};
+// keys.outbox = "inbox";
+// keys.follow = "follower";
+// Unionize.keys = keys;
 
 
 Unionize.hooks = {};
@@ -115,20 +115,20 @@ Unionize.hooks.outbox = Unionize.onWUpdateHook = function(userId, docs, key){
   
   Unionize.prepare(docs.to_user);
   
-  docs.journey.push({"onWUpdateHook": Unionize.getUTC()- docs.startTime});
+  // docs.journey.push({"onWUpdateHook": Unionize.getUTC()- docs.startTime});
 
   // console.log(docs._id,Meteor.isClient,Meteor.isServer)
   docs.key = key;
   docs.cycleComplete = true;
   W.insert(docs);
 
-  docs.journey.push({"onInsertW": Unionize.getUTC()- docs.startTime});
+  // docs.journey.push({"onInsertW": Unionize.getUTC()- docs.startTime});
 
   
   var update = {};
   update["inbox"] = docs;
   WI.update(docs.to_user,{$push: update});
-  docs.journey.push({"onInsertWIInbox": Unionize.getUTC()- docs.startTime});
+  // docs.journey.push({"onInsertWIInbox": Unionize.getUTC()- docs.startTime});
   // if(WI.find(docs.to_user).count()){
   //   // log("to_user updated");
   // }
@@ -167,14 +167,14 @@ WI.before.update(function(userId, doc, fieldNames, modifier, options){
     // log(Meteor.isClient,Meteor.isServer)
     var key = fieldNames[0];
     // console.log(keys[key], key)
-    if(key && keys[key] && modifier["$push"] && modifier["$push"][key]){
+    if(key && Unionize.hooks[key] && modifier["$push"]){ // && modifier["$push"][key]
       var docs = modifier["$push"][key];
       if(docs.cycleComplete)
         return;
       Unionize.hooks[key](userId, docs, keys[key]);
       // modifier["$push"][key] = Unionize.onWUpdateHook(userId, docs, keys[key]);
       docs = modifier["$push"][key];
-      docs.journey.push({"onInsertWIInbox": Unionize.getUTC() - docs.startTime});
+      // docs.journey.push({"onInsertWIInbox": Unionize.getUTC() - docs.startTime});
     }
     return docs;
     // else if(fieldNames[0] == "follow"){
