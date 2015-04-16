@@ -22,19 +22,14 @@ keys.outbox = "inbox";
 keys.follow = "follower";
 Unionize.keys = keys;
 
-var beforeHooks = {};
-var afterHooks = {};
 
 Unionize.hooks = {};
-Unionize.hooks.before = beforeHooks;
-Unionize.hooks.after = afterHooks;
 
-beforeHooks.outbox = function(){
+Unionize.hooks.outbox = function(){
 
 }
-afterHooks.outbox = function(){
-  
-}
+
+
 
 // this.modModifier = {};
 
@@ -90,7 +85,7 @@ Unionize.connect = function(docs){
   docs.startTime = Unionize.getUTC();
 	docs.journey = [{"onConnect": Unionize.getUTC()- docs.startTime}];
   var update = {};
-  update[docs.from_key] = docs;
+  update["inbox"] = docs;
 	WI.update(docs.from_user,{$push: update});
 }
 
