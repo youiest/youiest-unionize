@@ -22,6 +22,20 @@ keys.outbox = "inbox";
 keys.follow = "follower";
 Unionize.keys = keys;
 
+var beforeHooks = {};
+var afterHooks = {};
+
+Unionize.hooks = {};
+Unionize.hooks.before = beforeHooks;
+Unionize.hooks.after = afterHooks;
+
+beforeHooks.outbox = function(){
+
+}
+afterHooks.outbox = function(){
+  
+}
+
 // this.modModifier = {};
 
 // modModifier.outbox = function(modifier, userId) {
@@ -75,18 +89,21 @@ Unionize.connect = function(docs){
   
   docs.startTime = Unionize.getUTC();
 	docs.journey = [{"onConnect": Unionize.getUTC()- docs.startTime}];
-	WI.update(docs.from_user,{$push: {"outbox": docs}});
+  var update = {};
+  update[docs.from_key] = docs;
+	WI.update(docs.from_user,{$push: update});
 }
 
-Unionize.connectF = function(docs){
-  Unionize.validateDocs(docs);
+// depricated
+// Unionize.connectF = function(docs){
+//   Unionize.validateDocs(docs);
   
-  Unionize.prepare(docs.from_user);
+//   Unionize.prepare(docs.from_user);
   
-  docs.startTime = Unionize.getUTC();
-  docs.journey = [{"onConnect": Unionize.getUTC()- docs.startTime}];
-  WI.update(docs.from_user,{$push: {"follow": docs}});
-}
+//   docs.startTime = Unionize.getUTC();
+//   docs.journey = [{"onConnect": Unionize.getUTC()- docs.startTime}];
+//   WI.update(docs.from_user,{$push: {"follow": docs}});
+// }
 // hooks
 
 Unionize.onWUpdateHook = function(userId, docs, key){
@@ -114,7 +131,7 @@ Unionize.onWUpdateHook = function(userId, docs, key){
 
   
   var update = {};
-  update[key] = docs;
+  update[docs.to_key] = docs;
   WI.update(docs.to_user,{$push: update});
   docs.journey.push({"onInsertWIInbox": Unionize.getUTC()- docs.startTime});
   // if(WI.find(docs.to_user).count()){
