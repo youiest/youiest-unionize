@@ -69,7 +69,7 @@ if(Meteor.isServer){
 		WI.insert(fromUser);
 		WI.insert(toUser);
 		WI.insert(unknowUser);
-		test.equal(0,W.find().count())
+		test.equal(true,W.find().count() == WI.find().count());
 	});
 }
 
