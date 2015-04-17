@@ -59,7 +59,8 @@ Package.on_test(function (api) {
       'underscore', 
       'random', 
       'pedrohenriquerls:reactjs',
-      'mongo'
+      'mongo',
+      'session'
     ], 
     [
       'client', 

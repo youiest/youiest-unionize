@@ -1,3 +1,5 @@
+userId = "nicolsondsouza";
+
 var toUser = {
   "_id": "nicolsondsouza",
   "inbox": [],
@@ -72,56 +74,59 @@ if(Meteor.isServer){
 }
 
 if(Meteor.isClient){
-	Tinytest.addAsync("insert - from_user WI",function(test, next){
+	Tinytest.add("insert - from_user WI",function(test, next){
 		var testFlag = true;
 		Unionize.connect(nicolsonData1);
 		// W.insert(nicolsonData1);
-	  Tracker.autorun(function(computation){
+	  // Tracker.autorun(function(computation){
 	  	var count = WI.find({
 				"_id": nicolsonData1.from_user, 
 				"outbox": {$elemMatch: {"_id": nicolsonData1._id}}
 			}).count();
 			if(count){
-				computation.stop();
+				// computation.stop();
 				testFlag = false;
-				test.equal(true,true);	
-				next();
+				// console.log("from_user WI not found");
+				test.equal(true,true, "from_user WI not found");	
+				if(next)
+					next();
 			}
 			
-		});
-		Meteor.setTimeout(function(){
-			if(testFlag){
-				test.equal(true,false,"timeout after 2 sec");
-				next();
-			}	
-		},2000);
+		// });
+		// Meteor.setTimeout(function(){
+		// 	if(testFlag){
+		// 		test.equal(true,false,"timeout after 2 sec");
+		// 		next();
+		// 	}	
+		// },2000);
 	});
 
-	Tinytest.addAsync("insert - to_user WI",function(test, next){
-		var testFlag = true;
+	Tinytest.add("insert - to_user WI",function(test, next){
+		// var testFlag = true;
 		// W.insert(nicolsonData1);
-	  Tracker.autorun(function(computation){
+	  // Tracker.autorun(function(computation){
 	  	var count = WI.find({
 				"_id": nicolsonData1.to_user, 
 				"inbox": {$elemMatch: {"_id": nicolsonData1._id}}
 			}).count();
 			
-			if(count && testFlag){
-				testFlag = false;
+			if(count){
+				// computation.stop();
+				// console.log("Data requested not found")
 				test.equal(count,1,"Data requested not found");
 				// test.equal(true,true);
 				if(next)
 					next();
 
-				computation.stop();
 			}
-		});
-		Meteor.setTimeout(function(){
-			if(testFlag){
-				test.equal(true,false,"timeout after 2 sec");
-				if(next)
-					next();
-			}	
-		},2000);
+		// });
+		// Meteor.setTimeout(function(){
+		// 	if(testFlag){
+		// 		test.equal(true,false,"timeout after 2 sec");
+		// 		if(next)
+		// 			next();
+		// 	}	
+		// },2000);
 	});
+	window.Tinytest = Tinytest;
 }

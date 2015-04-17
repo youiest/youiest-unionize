@@ -1,16 +1,6 @@
 // Meteor.subscribe("users",Meteor.userId());
 
-WI.find({}).observe({
-	"added": function(docs){
-		Unionize.onChangeClient(docs);
-	},
-	"changed": function(docs){
-		Unionize.onChangeClient(docs);
-	},
-	"removed": function(docs){
-		Unionize.onChangeClient(docs);		
-	}
-});
+
 
 Session.setDefault("inbox", []);
 Session.setDefault("outbox", []);
@@ -18,6 +8,7 @@ Session.setDefault("follow", []);
 Session.setDefault("big", []);
 Unionize.onChangeFlag = false;
 Unionize.onChangeClient = function(doc){
+	try{
 	if(Unionize.onChangeFlag)
 		return;
 	if(userId == doc._id){
@@ -31,8 +22,23 @@ Unionize.onChangeClient = function(doc){
 			Session.set("big",doc.big);
 	}
 	Unionize.onChangeFlag = false;
+	}
+	catch(error){
+		console.error(error);
+	}
 }
 
+WI.find({}).observe({
+	"added": function(docs){
+		Unionize.onChangeClient(docs);
+	},
+	"changed": function(docs){
+		Unionize.onChangeClient(docs);
+	},
+	"removed": function(docs){
+		Unionize.onChangeClient(docs);		
+	}
+});
 // WI.after.insert(function(userId, doc, fieldNames, modifier, options){
 	
 // });
