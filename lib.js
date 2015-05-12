@@ -25,10 +25,13 @@ log = console.log.bind(console);
 
 Unionize.hooks = {};
 
-Unionize.hooks.outbox = function(){
+// Unionize.hooks.outbox = function(){
 
-}
-
+// }
+// Unionize.hooks.inbox = function(userId, docs, key){
+//   log(userId, docs, key)
+// }
+// Unionize.hooks.outbox = Unionize.onWUpdateHook = function(userId, docs, key){
 
 
 // this.modModifier = {};
@@ -100,9 +103,16 @@ Unionize.connect = function(docs){
 //   WI.update(docs.from_user,{$push: {"follow": docs}});
 // }
 // hooks
+// Unionize.hooks.inbox = function(docs){
+//   log(docs)
+// }
+Unionize.hooks.inbox = function(userId, docs, key){
+  log("Unionize.inbox");
 
+}
 Unionize.hooks.outbox = Unionize.onWUpdateHook = function(userId, docs, key){
-  // log("Unionize.onWInsertHook");
+  log("Unionize.onWInsertHook");
+  // log( docs)
   // log(docs.clientUpdate,Meteor.isServer)
   if(docs.clientUpdate && Meteor.isServer)
    return docs;
@@ -121,7 +131,7 @@ Unionize.hooks.outbox = Unionize.onWUpdateHook = function(userId, docs, key){
   docs.key = key;
   docs.cycleComplete = true;
   W.insert(docs);
-
+  
   // docs.journey.push({"onInsertW": Unionize.getUTC()- docs.startTime});
 
   
@@ -165,13 +175,18 @@ WI.before.update(function(userId, doc, fieldNames, modifier, options){
     //   }
     // }
     // log(Meteor.isClient,Meteor.isServer)
+    // might need to iterate over the fieldnames if more than one field name is modified
     var key = fieldNames[0];
-    // console.log(keys[key], key)
+    // console.log(userId, doc, fieldNames, modifier, options)
     if(key && Unionize.hooks[key] && modifier["$push"]){ // && modifier["$push"][key]
+    // you could do this and pull in the code without calling the function.
+    // probably harder to track errors though, discuss pros and cons
+    // eval(Unionize.hooks[key])
+    
       var docs = modifier["$push"][key];
       if(docs.cycleComplete)
         return;
-      Unionize.hooks[key](userId, docs);
+      // Unionize.hooks[key](userId, docs);
       // modifier["$push"][key] = Unionize.onWUpdateHook(userId, docs, keys[key]);
       docs = modifier["$push"][key];
       // docs.journey.push({"onInsertWIInbox": Unionize.getUTC() - docs.startTime});
