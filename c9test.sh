@@ -1,0 +1,1 @@
+meteor test-packages ./ --port $PORT
