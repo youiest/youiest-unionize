@@ -13,6 +13,31 @@ var WIModel = function(options){
   }
 }
 }
+var getimages = function(options){
+	return {
+    "XP": 92,
+    "YP": 5,
+    "_id": options._id,
+    "clientUpdate": true,
+    "cycleComplete": false,
+    "from_user": "nicolsondsouza",
+    "imageId": "eRH8i6MTWJG9XtsptfTGqfe34JLs2ZDmvbfrShs3cdyi3JZLtqo",
+    "image_low": "http://i.imgur.com/P96QpsF.jpg",
+    "journey": "Arra",
+    "key": "",
+    "profile_picture": "http://i.imgur.com/vaCjg.jpg",
+    "startTime": 1431521396599,
+    "to_user": "eRH8i6MTWJG9XtsptfTGqfe34JLs2ZDmvbfrShs3cdyi3JZLtqo",
+    "userId": "nicolsondsouza",
+    "source": "instagram"
+  }
+}
+
+
+
+
+
+
 Unionize = {};
 WI = new Mongo.Collection("wi");
 W = new Mongo.Collection("w");
@@ -88,9 +113,18 @@ Unionize.connect = function(docs){
   update["outbox"] = docs;
 	WI.update(docs.from_user,{$push: update});
 }
-Unionize.getNewInages = function(docs){
-	WI.update(userId,{$push: update});
+Unionize.getNewInagesInbox = function(docs){
+  var update = new getimages({"_id": Random.id()});
+	WI.update(userId,{$push: {"inbox":update}});
 }
+Unionize.getNewInagesRecommend = function(docs){
+  var update = new getimages({"_id": Random.id()});
+	WI.update(userId,{$push: {"recommend":update}});
+}
+// Unionize.getNewInagesInbox = function(docs){
+//   var update = new getimages({"_id": Random.id()});
+// 	WI.update(userId,{$push: {"inbox":update}});
+// }
 
 // depricated
 // Unionize.connectF = function(docs){
@@ -133,14 +167,24 @@ WI.before.update(function(userId, doc, fieldNames, modifier, options){
     //     modifier = afterModifier[fieldName](modifier, doc, userId);
     //   }
     // }
-    // log(Meteor.isClient,Meteor.isServer)
+    log(fieldNames, modifier)
     var key = fieldNames[0];
-    // console.log(keys[key], key)
+    console.log(key)
     if(key && Unionize.hooks[key] && modifier["$push"]){ // && modifier["$push"][key]
       var docs = modifier["$push"][key];
       if(docs.cycleComplete)
         return;
-      Unionize.hooks[key](userId, docs);
+        if(key == "inbox"){
+            if(docs.source == "instagram"){
+              Unionize.hooks["frominstagram"](userId, docs);
+            }
+            else if(docs.source == "facebook"){
+              Unionize.hooks["fromFacebook"](userId, docs);
+            }
+        }else{
+            Unionize.hooks[key](userId, docs);
+        }
+      
       // modifier["$push"][key] = Unionize.onWUpdateHook(userId, docs, keys[key]);
       docs = modifier["$push"][key];
       // docs.journey.push({"onInsertWIInbox": Unionize.getUTC() - docs.startTime});
@@ -223,4 +267,4 @@ Unionize.hooks.frominstagram = function(userId, docs, key){
   log("hooks_fromFacebook");
   log(userId, docs, key);
 }
-  
+
