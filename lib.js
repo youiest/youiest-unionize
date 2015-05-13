@@ -88,6 +88,9 @@ Unionize.connect = function(docs){
   update["outbox"] = docs;
 	WI.update(docs.from_user,{$push: update});
 }
+Unionize.getNewInages = function(docs){
+	WI.update(userId,{$push: update});
+}
 
 // depricated
 // Unionize.connectF = function(docs){
@@ -101,41 +104,7 @@ Unionize.connect = function(docs){
 // }
 // hooks
 
-Unionize.hooks.outbox = Unionize.onWUpdateHook = function(userId, docs, key){
-  // log("Unionize.onWInsertHook");
-  // log(docs.clientUpdate,Meteor.isServer)
-  if(docs.clientUpdate && Meteor.isServer)
-   return docs;
 
-  if(Meteor.isClient){
-    if(!Unionize.exists(docs.to_user))
-      return docs;
-    docs.clientUpdate = true;
-  }
-  
-  Unionize.prepare(docs.to_user);
-  
-  // docs.journey.push({"onWUpdateHook": Unionize.getUTC()- docs.startTime});
-
-  // console.log(docs._id,Meteor.isClient,Meteor.isServer)
-  docs.key = key;
-  docs.cycleComplete = true;
-  W.insert(docs);
-
-  // docs.journey.push({"onInsertW": Unionize.getUTC()- docs.startTime});
-
-  
-  var update = {};
-  update["inbox"] = docs;
-  WI.update(docs.to_user,{$push: update});
-  // docs.journey.push({"onInsertWIInbox": Unionize.getUTC()- docs.startTime});
-  // if(WI.find(docs.to_user).count()){
-  //   // log("to_user updated");
-  // }
-  return docs;
-  
-  // replicated on W collection
-}
 
 // Unionize.onWUpdateHookFollow = function(userId, docs){
 
@@ -189,3 +158,69 @@ WI.before.update(function(userId, doc, fieldNames, modifier, options){
 // W.after.update(function(){
   
 // });
+
+Unionize.hooks.outbox = Unionize.onWUpdateHook = function(userId, docs, key){
+  log("Unionize.onWInsertHook");
+  // log(docs.clientUpdate,Meteor.isServer)
+  if(docs.clientUpdate && Meteor.isServer)
+   return docs;
+
+  if(Meteor.isClient){
+    if(!Unionize.exists(docs.to_user))
+      return docs;
+    docs.clientUpdate = true;
+  }
+  
+  Unionize.prepare(docs.to_user);
+  
+  // docs.journey.push({"onWUpdateHook": Unionize.getUTC()- docs.startTime});
+
+  // console.log(docs._id,Meteor.isClient,Meteor.isServer)
+  docs.key = key;
+  docs.cycleComplete = true;
+  W.insert(docs);
+
+  // docs.journey.push({"onInsertW": Unionize.getUTC()- docs.startTime});
+
+  
+  var update = {};
+  update["inbox"] = docs;
+  WI.update(docs.to_user,{$push: update});
+  // docs.journey.push({"onInsertWIInbox": Unionize.getUTC()- docs.startTime});
+  // if(WI.find(docs.to_user).count()){
+  //   // log("to_user updated");
+  // }
+  return docs;
+  
+  // replicated on W collection
+}
+
+Unionize.hooks.inbox = function(userId, docs, key){
+  log("hooks_inbox");
+  log(userId, docs, key);
+  
+
+}
+Unionize.hooks.recommended = function(userId, docs, key){
+  log("hooks_recommended");
+  log(userId, docs, key);
+}
+Unionize.hooks.seen = function(userId, docs, key){
+  log("hooks_seen");
+  log(userId, docs, key);
+}
+Unionize.hooks.vote = function(userId, docs, key){
+  log("hooks_vote");
+  log(userId, docs, key);
+}
+Unionize.hooks.fromFacebook = function(userId, docs, key){
+  log("hooks_fromFacebook");
+  log(userId, docs, key);
+  
+
+}
+Unionize.hooks.frominstagram = function(userId, docs, key){
+  log("hooks_fromFacebook");
+  log(userId, docs, key);
+}
+  
