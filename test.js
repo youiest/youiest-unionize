@@ -34,15 +34,15 @@ if(Meteor.isServer){
 // creating test data
 var nicolsonData1 = {
   "_id": Random.id(),
-  "from_user": fromUser._id,
-  "to_user": toUser._id,
+  "from": fromUser._id,
+  "to": toUser._id,
   "picture_low": Random.id()
 }
 
 var nicolsonData2 = {
   "_id": Random.id(),
-  "from_user": fromUser._id,
-  "to_user": toUser._id,
+  "from": fromUser._id,
+  "to": toUser._id,
   "picture_low": Random.id()
 }
 
@@ -74,20 +74,20 @@ if(Meteor.isServer){
 }
 
 if(Meteor.isClient){
-	Tinytest.add("insert - from_user WI",function(test, next){
+	Tinytest.add("insert - from WI",function(test, next){
 		var testFlag = true;
 		Unionize.connect(nicolsonData1);
 		// W.insert(nicolsonData1);
 	  // Tracker.autorun(function(computation){
 	  	var count = WI.find({
-				"_id": nicolsonData1.from_user, 
+				"_id": nicolsonData1.from, 
 				"outbox": {$elemMatch: {"_id": nicolsonData1._id}}
 			}).count();
 			if(count){
 				// computation.stop();
 				testFlag = false;
-				// console.log("from_user WI not found");
-				test.equal(true,true, "from_user WI not found");	
+				// console.log("from WI not found");
+				test.equal(true,true, "from WI not found");	
 				if(next)
 					next();
 			}
@@ -101,12 +101,12 @@ if(Meteor.isClient){
 		// },2000);
 	});
 
-	Tinytest.add("insert - to_user WI",function(test, next){
+	Tinytest.add("insert - to WI",function(test, next){
 		// var testFlag = true;
 		// W.insert(nicolsonData1);
 	  // Tracker.autorun(function(computation){
 	  	var count = WI.find({
-				"_id": nicolsonData1.to_user, 
+				"_id": nicolsonData1.to, 
 				"inbox": {$elemMatch: {"_id": nicolsonData1._id}}
 			}).count();
 			

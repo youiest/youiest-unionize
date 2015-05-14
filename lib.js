@@ -21,14 +21,14 @@ var getimages = function(options){
     "_id": options._id,
     "clientUpdate": true,
     "cycleComplete": false,
-    "from_user": "nicolsondsouza",
+    "from": "nicolsondsouza",
     "imageId": "eRH8i6MTWJG9XtsptfTGqfe34JLs2ZDmvbfrShs3cdyi3JZLtqo",
     "image_low": "http://i.imgur.com/P96QpsF.jpg",
     "journey": "Arra",
     "key": "",
     "profile_picture": "http://i.imgur.com/vaCjg.jpg",
     "startTime": 1431521396599,
-    "to_user": "eRH8i6MTWJG9XtsptfTGqfe34JLs2ZDmvbfrShs3cdyi3JZLtqo",
+    "to": "eRH8i6MTWJG9XtsptfTGqfe34JLs2ZDmvbfrShs3cdyi3JZLtqo",
     "userId": "nicolsondsouza",
     "source": "instagram"
   }
@@ -97,37 +97,37 @@ Unionize.prepare = function(userId){
 Unionize.validateDocs = function(docs){
   if(!docs)
     throw new Meteor.Error("Please check information provided undefined", "404");
-  if(!docs.from_user){
-    throw new Meteor.Error("Source is not defined from_user", "404");   
+  if(!docs.from){
+    throw new Meteor.Error("Source is not defined from", "404");   
   }
-  if(!docs.to_user)
-    throw new Meteor.Error("Target is not defined to_user", "404");
+  if(!docs.to)
+    throw new Meteor.Error("Target is not defined to", "404");
 }
 Unionize.connect = function(docs){
 	Unionize.validateDocs(docs);
 	
-	Unionize.prepare(docs.from_user);
+	Unionize.prepare(docs.from);
   
   docs.startTime = Unionize.getUTC();
 	docs.journey = [{"onConnect": Unionize.getUTC()- docs.startTime}];
   var update = {};
   update["outbox"] = docs;
-	WI.update(docs.from_user,{$push: update});
+	WI.update(docs.from,{$push: update});
 }
 
 Unionize.sampleFollow = function(){
   WI.update(userId, {$push: {"follow": {
 			  "_id": Random.id(),
-			  "from_user": "eliasmoosman",
-			  "to_user": "nicolsondsouza",
+			  "from": "eliasmoosman",
+			  "to": "nicolsondsouza",
 			  "image_low": "http://i.imgur.com/EAyLXgp.jpg"
 			}}});
 }
 Unionize.samplefeed = function(){
   WI.update(userId, {$push: {"feed": {
 			  "_id": Random.id(),
-			  "from_user": "eliasmoosman",
-			  "to_user": "nicolsondsouza",
+			  "from": "eliasmoosman",
+			  "to": "nicolsondsouza",
 			  "image_low": "http://i.imgur.com/EAyLXgp.jpg"
 			}}});
 }
@@ -156,11 +156,11 @@ Unionize.getNewInagesRecommend = function(docs){
 // Unionize.connectF = function(docs){
 //   Unionize.validateDocs(docs);
   
-//   Unionize.prepare(docs.from_user);
+//   Unionize.prepare(docs.from);
   
 //   docs.startTime = Unionize.getUTC();
 //   docs.journey = [{"onConnect": Unionize.getUTC()- docs.startTime}];
-//   WI.update(docs.from_user,{$push: {"follow": docs}});
+//   WI.update(docs.from,{$push: {"follow": docs}});
 // }
 // hooks
 
@@ -238,12 +238,12 @@ Unionize.hooks.outbox = Unionize.onWUpdateHook = function(userId, docs, key){
    return docs;
 
   if(Meteor.isClient){
-    if(!Unionize.exists(docs.to_user))
+    if(!Unionize.exists(docs.to))
       return docs;
     docs.clientUpdate = true;
   }
   
-  Unionize.prepare(docs.to_user);
+  Unionize.prepare(docs.to);
   
   // docs.journey.push({"onWUpdateHook": Unionize.getUTC()- docs.startTime});
 
@@ -257,10 +257,10 @@ Unionize.hooks.outbox = Unionize.onWUpdateHook = function(userId, docs, key){
   
   var update = {};
   update["inbox"] = docs;
-  WI.update(docs.to_user,{$push: update});
+  WI.update(docs.to,{$push: update});
   // docs.journey.push({"onInsertWIInbox": Unionize.getUTC()- docs.startTime});
-  // if(WI.find(docs.to_user).count()){
-  //   // log("to_user updated");
+  // if(WI.find(docs.to).count()){
+  //   // log("to updated");
   // }
   return docs;
   
