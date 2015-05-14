@@ -114,14 +114,7 @@ Unionize.connect = function(docs){
   update["outbox"] = docs;
 	WI.update(docs.from_user,{$push: update});
 }
-Unionize.getNewInagesInbox = function(docs){
-  var update = new getimages({"_id": Random.id()});
-	WI.update(userId,{$push: {"inbox":update}});
-}
-Unionize.getNewInagesRecommend = function(docs){
-  var update = new getimages({"_id": Random.id()});
-	WI.update(userId,{$push: {"recommend":update}});
-}
+
 Unionize.sampleFollow = function(){
   WI.update(userId, {$push: {"follow": {
 			  "_id": Random.id(),
@@ -144,6 +137,18 @@ Unionize.sampleInbox = function(docs){
    update.source = "";
 	WI.update(userId,{$push: {"inbox":update}});
 }
+
+
+Unionize.getNewInagesInbox = function(docs){
+  var update = new getimages({"_id": Random.id()});
+	WI.update(userId,{$push: {"inbox":update}});
+}
+Unionize.getNewInagesRecommend = function(docs){
+  var update = new getimages({"_id": Random.id()});
+	WI.update(userId,{$push: {"recommend":update}});
+}
+
+
 
 
 
