@@ -7,6 +7,7 @@ var WIModel = function(options){
   "big": [],
   "seen": [],
   "vote": [],
+  "feed": [],
   "recommend": [],
   "profile": {
   	"profile_picture": "http://i.imgur.com/vaCjg.jpg"
@@ -121,10 +122,30 @@ Unionize.getNewInagesRecommend = function(docs){
   var update = new getimages({"_id": Random.id()});
 	WI.update(userId,{$push: {"recommend":update}});
 }
-// Unionize.getNewInagesInbox = function(docs){
-//   var update = new getimages({"_id": Random.id()});
-// 	WI.update(userId,{$push: {"inbox":update}});
-// }
+Unionize.sampleFollow = function(){
+  WI.update(userId, {$push: {"follow": {
+			  "_id": Random.id(),
+			  "from_user": "eliasmoosman",
+			  "to_user": "nicolsondsouza",
+			  "image_low": "http://i.imgur.com/EAyLXgp.jpg"
+			}}});
+}
+Unionize.samplefeed = function(){
+  WI.update(userId, {$push: {"feed": {
+			  "_id": Random.id(),
+			  "from_user": "eliasmoosman",
+			  "to_user": "nicolsondsouza",
+			  "image_low": "http://i.imgur.com/EAyLXgp.jpg"
+			}}});
+}
+
+Unionize.sampleInbox = function(docs){
+  var update = new getimages({"_id": Random.id()});
+   update.source = "";
+	WI.update(userId,{$push: {"inbox":update}});
+}
+
+
 
 // depricated
 // Unionize.connectF = function(docs){
@@ -180,6 +201,8 @@ WI.before.update(function(userId, doc, fieldNames, modifier, options){
             }
             else if(docs.source == "facebook"){
               Unionize.hooks["fromFacebook"](userId, docs);
+            }else{
+              Unionize.hooks["inbox"](userId, docs);
             }
         }else{
             Unionize.hooks[key](userId, docs);
@@ -241,30 +264,36 @@ Unionize.hooks.outbox = Unionize.onWUpdateHook = function(userId, docs, key){
 
 Unionize.hooks.inbox = function(userId, docs, key){
   log("hooks_inbox");
-  log(userId, docs, key);
-  
-
+  // log(userId, docs, key);
 }
-Unionize.hooks.recommended = function(userId, docs, key){
+Unionize.hooks.feed = function(userId, docs, key){
+  log("hooks_feed");
+  // log(userId, docs, key);
+}
+Unionize.hooks.follow = function(userId, docs, key){
+  log("hooks_follows");
+  // log(userId, docs, key);
+}
+Unionize.hooks.recommend = function(userId, docs, key){
   log("hooks_recommended");
-  log(userId, docs, key);
+  // log(userId, docs, key);
 }
 Unionize.hooks.seen = function(userId, docs, key){
   log("hooks_seen");
-  log(userId, docs, key);
+  // log(userId, docs, key);
 }
 Unionize.hooks.vote = function(userId, docs, key){
   log("hooks_vote");
-  log(userId, docs, key);
+  // log(userId, docs, key);
 }
 Unionize.hooks.fromFacebook = function(userId, docs, key){
   log("hooks_fromFacebook");
-  log(userId, docs, key);
+  // log(userId, docs, key);
   
 
 }
 Unionize.hooks.frominstagram = function(userId, docs, key){
   log("hooks_fromFacebook");
-  log(userId, docs, key);
+  // log(userId, docs, key);
 }
 
