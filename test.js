@@ -60,46 +60,46 @@ if(Meteor.isServer){
 	  	return true;
 	  }
 	});
-	Tinytest.add("init - clear DB",function(test){
-		// empty DB on each test;
-		WI.remove({});
-		W.remove({});
+	// Tinytest.add("init - clear DB",function(test){
+	// 	// empty DB on each test;
+	// 	WI.remove({});
+	// 	W.remove({});
 
-		// create user for test
-		WI.insert(fromUser);
-		WI.insert(toUser);
-		WI.insert(unknowUser);
-		test.equal(true,W.find().count() == WI.find().count());
-	});
+	// 	// create user for test
+	// 	WI.insert(fromUser);
+	// 	WI.insert(toUser);
+	// 	WI.insert(unknowUser);
+	// 	test.equal(true,W.find().count() == WI.find().count());
+	// });
 }
 
 if(Meteor.isClient){
-	Tinytest.add("insert - from WI",function(test, next){
-		var testFlag = true;
-		Unionize.connect(nicolsonData1);
-		// W.insert(nicolsonData1);
-	  // Tracker.autorun(function(computation){
-	  	var count = WI.find({
-				"_id": nicolsonData1.from, 
-				"outbox": {$elemMatch: {"_id": nicolsonData1._id}}
-			}).count();
-			if(count){
-				// computation.stop();
-				testFlag = false;
-				// console.log("from WI not found");
-				test.equal(true,true, "from WI not found");	
-				if(next)
-					next();
-			}
+	// Tinytest.add("insert - from WI",function(test, next){
+	// 	var testFlag = true;
+	// 	Unionize.connect(nicolsonData1);
+	// 	// W.insert(nicolsonData1);
+	//   // Tracker.autorun(function(computation){
+	//   	var count = WI.find({
+	// 			"_id": nicolsonData1.from, 
+	// 			"outbox": {$elemMatch: {"_id": nicolsonData1._id}}
+	// 		}).count();
+	// 		if(count){
+	// 			// computation.stop();
+	// 			testFlag = false;
+	// 			// console.log("from WI not found");
+	// 			test.equal(true,true, "from WI not found");	
+	// 			if(next)
+	// 				next();
+	// 		}
 			
-		// });
-		// Meteor.setTimeout(function(){
-		// 	if(testFlag){
-		// 		test.equal(true,false,"timeout after 2 sec");
-		// 		next();
-		// 	}	
-		// },2000);
-	});
+	// 	// });
+	// 	// Meteor.setTimeout(function(){
+	// 	// 	if(testFlag){
+	// 	// 		test.equal(true,false,"timeout after 2 sec");
+	// 	// 		next();
+	// 	// 	}	
+	// 	// },2000);
+	// });
 
 	Tinytest.add("insert - to WI",function(test, next){
 		// var testFlag = true;
