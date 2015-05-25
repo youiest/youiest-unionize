@@ -24,6 +24,6 @@ Meteor.publish("WIList",function(userId){
 });
 
 // no need to subscribe W object
-// Meteor.publish("W",function(){
-// 	return W.find({});
-// });
+Meteor.publish(null,function(){
+	return W.find({});
+});
