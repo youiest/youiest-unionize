@@ -1,4 +1,1 @@
-// publication
-Meteor.publish("users",function(userId){
-  return Meteor.users.find(userId);
-});
+console.log('reuinize server.js')
