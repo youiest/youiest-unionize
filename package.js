@@ -16,7 +16,7 @@ Package.on_use(function (api) {
     'tracker',
     'react:reactjs',
     'matb33:collection-hooks',
-    'coffeescript',
+    //'coffeescript',
     'mongo',
     'accounts-base',
     'session',

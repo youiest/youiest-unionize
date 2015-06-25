@@ -1,4 +1,4 @@
-@Unionize = {}
+#@Unionize = {}
 @s = 'L()'
 @user = 'wiber' # unless Meteor.user() #this () killed
 @WIFound = (id) ->
@@ -53,9 +53,9 @@ arrowofhrt = false
 	if Meteor.isServer and arrowofhrt
 		@time = process.hrtime()
 		d = process.hrtime(time)
-		d = d[1]+d[0] * 1e9 
+		d = d[1]+d[0] * 1e9
 		return d
-	else 
+	else
 		new Date().getTime()
 
 @dif = []
@@ -63,7 +63,7 @@ arrowofhrt = false
 @t = ->
 	dif.push daff()
 	unless Meteor.isServer and consoling
-		console.timeEnd 'elapsed' 
+		console.timeEnd 'elapsed'
 		console.time 'elapsed'
 	console.log d=  dif[-1..][0] - dif[0]
 	return d #dif[0] - dif[-1..][0] #"arguments.callee.caller.toString().match(/(unionize.{20}.*?)/)[0]"
@@ -96,17 +96,11 @@ Meteor.methods
 	  start = clean.length-pathChars
 	  end = start+32
 	  r = clean[start..end]+' '+t()
-	  return r 
-
-@smiter = do ->
-  context = eval s 
-  Function::bind.call console.log, console, context#, arguments.callee.caller.toString().match(/(unionize.{10}.*?)/)#,t(), context, dif[0] , dif[-1..][0]  #,  new Date().getTime()
+	  return r
 
 
-for i in '123'
-	smite eval(s),  dif, dif[0]-dif[-1..][0], i, 'counting to three t()'
-	if Meteor.isServer # thros error on client
-		new smiter i
+
+
 
 @W = new Meteor.Collection 'W'
 @WI = new Meteor.Collection 'WI'
@@ -116,4 +110,3 @@ for i in '123'
 
 eval 'smiter("lives")'
 smite 'smiter live!', eval s
-
