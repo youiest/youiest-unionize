@@ -1,3 +1,30 @@
+W = new Mongo.Collection( "W" );
+W.allow( {
+  insert: function () {
+    return true;
+  },
+  update: function () {
+    return false;
+  },
+  remove: function () {
+    return false;
+  }
+} );
+
+WI = new Mongo.Collection( "WI" );
+WI.allow( {
+  insert: function () {
+    return true;
+  },
+  update: function () {
+    return true;
+  },
+  remove: function () {
+    return false;
+  }
+} );
+
+
 if ( Meteor.isServer ) {
   ConsoleMe.enabled = true
 } else {
@@ -52,24 +79,24 @@ afterConnect = function afterConnect( error, result ) {
   }
 }
 
-Meteor.call( 'connect', payload, afterConnect( error, result ) )
-var afterConnect = function ( error, result ) {
-if ( error ) {
-  // handle error
-} else {
-  // examine result
-}
-};
+Meteor.call( 'connect', payload, function ( error, result ) {
+  if ( error ) {
+    // handle error
+  } else {
+    // examine result
+  }
+} )
 
-WI.before.update( distributor( 'WI.before.update', userId, doc, fieldNames, modifier, options ) );
-WI.after.update( distributor( 'WI.before.update', userId, doc, fieldNames, modifier, options ) );
-W.after.insert(distributor( 'WI.before.update', userId, doc, fieldNames, modifier, options ) );
+WI.before.update( function ( userId, doc, fieldNames, modifier, options ) {
+	distributor( 'WI.before.update', userId, doc, fieldNames, modifier, options )
+} )
+
 var distributor = function ( namespace, userId, doc, fieldNames, modifier, options ) {
-  console.time(namespace)
-	for ( var field in fieldNames ) {
+  console.time( namespace )
+  for ( var field in fieldNames ) {
     if ( object.hasOwnProperty( field ) ) {
       try {
-				console.time(field)
+        console.time( field )
         payload = {}
         payload.name = name
         payload.doc = doc
@@ -88,10 +115,10 @@ var distributor = function ( namespace, userId, doc, fieldNames, modifier, optio
       } catch ( e ) {
         throw new Meteor.Error( '201 method error', e );
       } finally {
-				console.timeEnd(field)
+        console.timeEnd( field )
 
       }
     }
   }
-console.timEnd(namespace)
+  console.timEnd( namespace )
 }
