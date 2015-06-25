@@ -10,7 +10,6 @@ W.allow( {
     return false;
   }
 } );
-
 WI = new Mongo.Collection( "WI" );
 WI.allow( {
   insert: function () {
@@ -23,8 +22,6 @@ WI.allow( {
     return false;
   }
 } );
-
-
 if ( Meteor.isServer ) {
   ConsoleMe.enabled = true
 } else {
@@ -60,7 +57,7 @@ Ve.allow( {
 
 
 
-console.log( 'lib.js', arguments.callee.caller )
+
 
 Meteor.methods( {
   connect: function ( from, to, payload ) {
@@ -78,8 +75,10 @@ afterConnect = function afterConnect( error, result ) {
     console.log( 'connect expected a callback on client', error, result );
   }
 }
-
-Meteor.call( 'connect', payload, function ( error, result ) {
+payload = {}
+payload.from ='here'
+payload.to = 'there'
+Meteor.call( 'connect', payload , function ( error, result ) {
   if ( error ) {
     // handle error
   } else {
@@ -89,6 +88,15 @@ Meteor.call( 'connect', payload, function ( error, result ) {
 
 WI.before.update( function ( userId, doc, fieldNames, modifier, options ) {
 	distributor( 'WI.before.update', userId, doc, fieldNames, modifier, options )
+} )
+WI.after.update( function ( userId, doc, fieldNames, modifier, options ) {
+	distributor( 'WI.after.update', userId, doc, fieldNames, modifier, options )
+} )
+W.before.insert( function ( userId, doc, fieldNames, modifier, options ) {
+	distributor( 'W.before.insert', userId, doc, fieldNames, modifier, options )
+} )
+W.after.insert( function ( userId, doc, fieldNames, modifier, options ) {
+	distributor( 'W.after.insert', userId, doc, fieldNames, modifier, options )
 } )
 
 var distributor = function ( namespace, userId, doc, fieldNames, modifier, options ) {
