@@ -1,6 +1,7 @@
 Package.describe({
-  name: 'youiest:reuinize',
-  version: '0.0.1',
+  summary: 'React! You, that character FROM ... go TO ... and ...',
+  name: 'youiest:unionize',
+  version: '0.0.5',
   summary: 'React! You, that character FROM ... go TO ... and ...',
   git: 'https://github.com/youiest/youiest-reunionize.git',
   documentation: 'README.md'
@@ -14,13 +15,12 @@ Package.on_use(function (api) {
     'templating',
     'deps',
     'tracker',
-    'react:reactjs',
+    'pedrohenriquerls:reactjs',
     'matb33:collection-hooks',
     //'coffeescript',
     'mongo',
     'accounts-base',
     'session',
-    'reactjs:react',
     'aldeed:console-me',
     'livedata',
     ], ['client', 'server']);
@@ -52,7 +52,7 @@ Package.on_test(function (api) {
       'templating',
       'deps',
       'session',
-      'pedrohenriquerls:reactjs',
+
       'underscore',
       'ground:db',
       'aldeed:console-me',
